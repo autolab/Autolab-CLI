@@ -4,7 +4,7 @@
 #include <string>
 
 // read tokens from file. If nonexistent, return false.
-bool get_tokens(std::string &at, std::string &rt);
+bool load_tokens(std::string &at, std::string &rt);
 
 // store tokens to file.
 void store_tokens(std::string at, std::string rt);

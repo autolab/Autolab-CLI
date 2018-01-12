@@ -2,7 +2,7 @@
 #include "file_utils.h"
 #include "logger.h"
 
-#define TOKEN_CACHE_FILE_MAXSIZE 128
+#define TOKEN_CACHE_FILE_MAXSIZE 256
 
 const std::string token_cache_filename = ".arcache";
 const std::string cred_dirname = ".autolab";
@@ -63,7 +63,7 @@ void store_tokens(std::string at, std::string rt) {
 
 // returns true if got token, false if failed to get token.
 // Failure likely because token cache file doesn't exist.
-bool get_tokens(std::string &at, std::string &rt) {
+bool load_tokens(std::string &at, std::string &rt) {
   if (!check_and_create_token_directory()) return false;
   if (!token_cache_file_exists()) return false;
 
@@ -73,12 +73,13 @@ bool get_tokens(std::string &at, std::string &rt) {
   err_assert(res);
 
   std::string result(raw_result);
-  std::size_t split_pos = result.find("\n");
-  if (split_pos == std::string::npos) return false;
+  std::string::size_type split_pos_1 = result.find('\n');
+  if (split_pos_1 == std::string::npos) return false;
+  std::string::size_type split_pos_2 = result.find('\n', split_pos_1+1);
 
-  at.assign(result.substr(0, split_pos));
-  rt.assign(result.substr(split_pos+1, std::string::npos));
-
+  at.assign(result.substr(0, split_pos_1));
+  rt.assign(result.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
+  
   return true;
 }
 
