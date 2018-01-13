@@ -5,7 +5,7 @@
 
 #include "autolab_client.h"
 #include "client_helpers.h"
-#include "config_manager.h"
+#include "context_manager.h"
 #include "file_utils.h"
 #include "logger.h"
 
@@ -359,19 +359,17 @@ int user_setup(int argc, char *argv[]) {
 
   if (!option_force) {
     // perform a check if not a forced setup
-    if (user_exists) {
-      bool token_valid = true;
-      rapidjson::Document user_info;
-      try {
-        ac.get_user_info(user_info);
-      } catch (AutolabClient::InvalidTokenException &e) {
-        token_valid = false;
-      }
-      if (token_valid && user_info.HasMember("first_name")) {
-        Logger::info << "User '" << user_info["first_name"].GetString() << "' is currently set up on this client." << Logger::endl <<
-          "To force reset of user info, use the '-f' option." << Logger::endl;
-        return 0;
-      }
+    bool token_valid = true;
+    rapidjson::Document user_info;
+    try {
+      ac.get_user_info(user_info);
+    } catch (AutolabClient::InvalidTokenException &e) {
+      token_valid = false;
+    }
+    if (token_valid && user_info.HasMember("first_name")) {
+      Logger::info << "User '" << user_info["first_name"].GetString() << "' is currently set up on this client." << Logger::endl <<
+        "To force reset of user info, use the '-f' option." << Logger::endl;
+      return 0;
     }
   }
 
