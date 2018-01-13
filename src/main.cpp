@@ -8,6 +8,7 @@
 #include "context_manager.h"
 #include "file_utils.h"
 #include "logger.h"
+#include "build_config.h"
 
 /* globals */
 const std::string client_id = "c021c9b12dc597b5b42d783ee285a2bc9a8afcce4a60db5b4b97a1cda551f48d";
@@ -24,7 +25,7 @@ void init_autolab_client(AutolabClient &ac) {
 
 /* help texts */
 void print_help() {
-  Logger::info << "usage: autolab <command> [command-args] [OPTIONS]" << Logger::endl
+  Logger::info << "usage: autolab [OPTIONS] <command> [command-args] [command-opts]" << Logger::endl
     << Logger::endl
     << "commands:" << Logger::endl
     << "  courses             List all courses" << Logger::endl
@@ -33,7 +34,15 @@ void print_help() {
     << "  submit              Submit a file to an assessment" << Logger::endl
     << "  setup               Setup the user of the client" << Logger::endl
     << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help      Show this help message" << Logger::endl
+    << "  -v,--version   Show the version number of this build" << Logger::endl
+    << Logger::endl
     << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
+}
+
+void print_version() {
+  Logger::info << "autolab-cli version " << VERSION_MAJOR << "." << VERSION_MINOR << Logger::endl;
 }
 
 void print_download_help() {
@@ -387,6 +396,10 @@ int main(int argc, char *argv[]) {
   if (argc < 2 ||
       (argc == 2 && includes_option(argc, argv, 1, "-h", "--help"))) {
     print_help();
+    return 0;
+  }
+  if (argc == 2 && includes_option(argc, argv, 1, "-v", "--version")) {
+    print_version();
     return 0;
   }
 

@@ -1,0 +1,7 @@
+#ifndef BUILD_CONFIG_H
+#define BUILD_CONFIG_H
+
+const int VERSION_MAJOR = @VERSION_MAJOR@;
+const int VERSION_MINOR = @VERSION_MINOR@;
+
+#endif /* BUILD_CONFIG_H */
