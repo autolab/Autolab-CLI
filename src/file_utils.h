@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #define MAX_DIR_LENGTH 256
-#define DEFAULT_RECUR_LEVEL 5
+#define DEFAULT_RECUR_LEVEL 8
 
 bool dir_find(const char *dirname, const char *targetname, bool target_is_dir = false);
 bool recur_find(char *result, const char *dirstart, const char *targetname, 

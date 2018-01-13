@@ -105,11 +105,12 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name) {
   err_assert(res);
 
   std::string result(buffer);
-  std::size_t split_pos = result.find("\n");
-  if (split_pos == std::string::npos) return false;
+  std::string::size_type split_pos_1 = result.find('\n');
+  if (split_pos_1 == std::string::npos) return false;
+  std::string::size_type split_pos_2 = result.find('\n', split_pos_1+1);
 
-  course_name.assign(result.substr(0, split_pos));
-  asmt_name.assign(result.substr(split_pos+1, std::string::npos));
+  course_name.assign(result.substr(0, split_pos_1));
+  asmt_name.assign(result.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
 
   return true;
 }
