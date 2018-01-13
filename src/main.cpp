@@ -14,6 +14,12 @@ const string redirect_uri = "http://localhost:3000/device_flow_auth_cb";
 
 AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
 
+void init_autolab_client(AutolabClient &ac) {
+  string at, rt;
+  load_tokens(at, rt);
+  ac.set_tokens(at, rt);
+}
+
 void print_download_help() {
   cout << "Usage: autolab download [asmt-name-hint]" << endl;
 }
@@ -52,18 +58,21 @@ int perform_device_flow(AutolabClient &ac) {
   return 0;
 }
 
-/* if course name not provided:
- * find course_name from environment
- * if not found, return error and display
- * if found
- * if course name provided
- * get all asmts
- * loop through and find the one that includes the asmt_hint
- * if not found, return error and display
- * if found:
- *   create directory using asmt name
- *   create and write .autolab-asmt in it
- *   download handout and writeup into directory
+/* return false if failed to parse */
+bool parse_course_and_asmt(std::string raw_input, std::string &course, std::string &asmt) {
+  string::size_type split_pos = raw_input.find(":");
+  if (split_pos == string::npos) {
+    // the entire string is the assessment name.
+    // attempt to load course name from config if exists,
+    // otherwise report error.
+    return false;
+  }
+  course = raw_input.substr(0, split_pos);
+  asmt = raw_input.substr(split_pos + 1, string::npos);
+  return true;
+}
+
+/* download assessment into a new directory
  */
 int download_asmt(int argc, char *argv[]) {
   if (argc < 3) {
@@ -75,25 +84,17 @@ int download_asmt(int argc, char *argv[]) {
   Logger::fatal.set_prefix("Cannot download assessment");
 
   // parse course and assessment name
-  string raw_input(argv[2]);
-  string::size_type split_pos = raw_input.find(":");
-  if (split_pos == string::npos) {
-    // the entire string is the assessment name.
-    // attempt to load course name from config if exists,
-    // otherwise report error.
-    Logger::fatal << "Please specify course name." << Logger::endl;
+  string course_name, asmt_name;
+  if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
+    Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
     return 0;
   }
-  string course_name = raw_input.substr(0, split_pos);
-  string asmt_name = raw_input.substr(split_pos + 1, string::npos);
 
   Logger::info << "Querying assessment '" << asmt_name << "' of course '" << 
     course_name << "' ..." << Logger::endl;
 
   // setup AutolabClient
-  string at, rt;
-  load_tokens(at, rt);
-  ac.set_tokens(at, rt);
+  init_autolab_client(ac);
 
   // look for course
   if (!find_course(ac, course_name)) {
@@ -140,6 +141,47 @@ int download_asmt(int argc, char *argv[]) {
   write_asmt_file(new_dir, course_name, asmt_name);
 
   return 0;
+}
+
+int submit_asmt(int argc, char *argv[]) {
+  std::string course_name, asmt_name, course_name_config, asmt_name_config;
+  bool user_specified_names = false;
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot submit assessment");
+
+  if (argc == 3) {
+    // user specified course and assessment name
+    user_specified_names = true;
+    if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
+      Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
+      return 0;
+    }
+  }
+
+  // attempt to load names from asmt-file
+  bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
+  if (!found_asmt_file && !user_specified_names) {
+    Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
+      << "Please change directory or specify the course and assessment names" << Logger::endl;
+    return 0;
+  }
+
+  if (found_asmt_file && user_specified_names) {
+    if ((course_name != course_name_config) || (asmt_name != asmt_name_config)) {
+      Logger::fatal << "The provided names and the configured names for this autolab assessment directory do not match:" << Logger::endl
+        << "Provided names:   " << course_name  << ":" << asmt_name << Logger::endl
+        << "Configured names: " << course_name_config << ":" << asmt_name_config << Logger::endl << Logger::endl
+        << "Please resolve this conflict, or use the '-f' option to force the use of the provided names." << Logger::endl;
+      return 0;
+    }
+  }
+
+  // conflicts resolved, use course_name and asmt_name from now on
+  init_autolab_client(ac);
+
+  rapidjson::Document response;
+  ac.submit_assessment(response, course_name, asmt_name);
 }
 
 int user_setup(int argc, char *argv[]) {
@@ -193,6 +235,8 @@ int main(int argc, char *argv[]) {
     return user_setup(argc, argv);
   } else if ("download" == command) {
     return download_asmt(argc, argv);
+  } else if ("submit") {
+    return submit_asmt(argc, argv);
   } else {
     Logger::fatal << "Unrecognized command: " << command << Logger::endl;
   }

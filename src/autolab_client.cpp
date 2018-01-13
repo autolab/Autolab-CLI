@@ -94,6 +94,19 @@ static size_t write_callback(char *data, size_t size, size_t nmemb,
   return size*nmemb;
 }
 
+void setup_multipart_form(CURL *curl, std::string filename) {
+  curl_mimepart *field = NULL;
+  /* Create the form */ 
+  curl_mime *form = curl_mime_init(curl);
+
+  /* Fill in the file upload field */ 
+  field = curl_mime_addpart(form);
+  curl_mime_name(field, "submission[file]");
+  curl_mime_filedata(field, filename.c_str());
+
+  curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
+}
+
 std::string AutolabClient::construct_params(CURL *curl, AutolabClient::param_list &params) {
   std::string result;
   size_t length = params.size();
@@ -120,7 +133,9 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
 {
   CURL *curl;
   CURLcode res;
-  struct curl_slist *header = NULL;
+  curl_mime *form = nullptr;
+  curl_mimepart *field = nullptr;
+
   curl = curl_easy_init();
   err_assert(curl, "Error init-ing easy interface");
 
@@ -131,19 +146,26 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
 
   Logger::debug << "Requesting " << path << " with params " << param_str << Logger::endl << Logger::endl;
 
-  if (method == GET) {
-    // GET: append params to query string
+  if (method == GET) { // GET
     full_path.append("?" + param_str);
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-  } else {
-    // POST: set params separately
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, param_str.c_str());
+  } else {             // POST
+    if (rstate->file_upload) {
+      // setup form
+      form = curl_mime_init(curl);
+      field = curl_mime_addpart(form);
+      curl_mime_name(field, "submission[file]");
+      curl_mime_filedata(field, rstate->upload_filename.c_str());
+      // insert form
+      curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
+      // add params
+      full_path.append("?" + param_str);
+    } else {
+      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, param_str.c_str());
+    }
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, full_path.c_str());
-
-  header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, rstate);
@@ -157,8 +179,9 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
   rstate->response_code = response_code;
 
-  // free escaped strings
+  // free resources
   free_params(params);
+  if (form) curl_mime_free(form);
 
   curl_easy_cleanup(curl);
 
@@ -217,17 +240,23 @@ long AutolabClient::raw_request_optional_refresh(
  *   - refresh:  if true, automatically calls perform_token_refresh when the
  *               request fails the first time, and retries the request.
  *   - download_dir: the directory to download the file if the response is a
- *                   file download.
+ *                   file download. (full path)
  *   - suggested_filename: the default filename if the server didn't provide
- *                         the filename for the downloaded file.
+ *                         the filename for the downloaded file. (name only)
+ *   - upload_filename: the name of the file to upload. (relative path)
  */
 long AutolabClient::make_request(rapidjson::Document &response,
   const std::string &path, AutolabClient::param_list &params,
   AutolabClient::HttpMethod method = GET, bool refresh = true,
   const std::string &download_dir = "",
-  const std::string &suggested_filename = "")
+  const std::string &suggested_filename = "",
+  const std::string &upload_filename = "")
 {
   AutolabClient::request_state rstate(download_dir, suggested_filename);
+  if (upload_filename.length() > 0) {
+    rstate.upload_filename = upload_filename;
+    rstate.file_upload = true;
+  }
 
   long rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
 
@@ -422,4 +451,15 @@ void AutolabClient::download_writeup(rapidjson::Document &result, std::string do
   init_regular_params(params);
 
   make_request(result, path, params, GET, true, download_dir, "writeup");
+}
+
+void AutolabClient::submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+  std::string path;
+  init_regular_path(path);
+  path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submit");
+
+  AutolabClient::param_list params;
+  init_regular_params(params);
+
+  make_request(result, path, params, POST, true, "", "", "test.txt");
 }
