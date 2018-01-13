@@ -16,8 +16,10 @@ const std::string device_flow_authorize_path = "/oauth/device_flow_authorize";
 /* initialization */
 int AutolabClient::curl_ready = false;
 
-AutolabClient::AutolabClient(const std::string &id, const std::string &st, const std::string &ru) :
-  client_id(id), client_secret(st), redirect_uri(ru), api_version(1)
+AutolabClient::AutolabClient(const std::string &id, const std::string &st, 
+  const std::string &ru, void (*tk_cb)(std::string, std::string)) :
+  client_id(id), client_secret(st), redirect_uri(ru), api_version(1),
+  new_tokens_callback(tk_cb)
 {
   AutolabClient::init_curl();
 }
@@ -37,6 +39,8 @@ void AutolabClient::set_tokens(std::string at, std::string rt) {
   access_token = at;
   refresh_token = rt;
 }
+
+// set the function that should be called when tokens are refreshed
 
 /* Basic request helper */
 
@@ -108,7 +112,12 @@ void AutolabClient::free_params(AutolabClient::param_list &params) {
   }
 }
 
-long AutolabClient::raw_request(AutolabClient::request_state *rstate, const std::string &path, AutolabClient::param_list &params, AutolabClient::HttpMethod method = GET) {
+/* actually perform the HTTP request using libcurl.
+ */
+long AutolabClient::raw_request(AutolabClient::request_state *rstate,
+  const std::string &path, AutolabClient::param_list &params,
+  AutolabClient::HttpMethod method = GET)
+{
   CURL *curl;
   CURLcode res;
   struct curl_slist *header = NULL;
@@ -156,7 +165,9 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate, const std:
   return response_code;
 }
 
-bool AutolabClient::document_has_error(AutolabClient::request_state *rstate, const std::string &error_msg) {
+bool AutolabClient::document_has_error(AutolabClient::request_state *rstate, 
+  const std::string &error_msg)
+{
   if (rstate->is_download) return false;
   rapidjson::Document response;
   response.Parse(rstate->string_output.c_str());
@@ -167,10 +178,15 @@ bool AutolabClient::document_has_error(AutolabClient::request_state *rstate, con
   return false;
 }
 
-// performs json_request, and if error is authorization_failed, refresh tokens
-// and try again.
+/* performs raw_request, and if error is authorization_failed, refresh tokens
+ * and try again.
+ */
 const std::string oauth_auth_failed_response = "OAuth2 authorization failed";
-long AutolabClient::raw_request_optional_refresh(AutolabClient::request_state *rstate, const std::string &path, AutolabClient::param_list &params, AutolabClient::HttpMethod method = GET, bool refresh = true) {
+long AutolabClient::raw_request_optional_refresh(
+  AutolabClient::request_state *rstate, 
+  const std::string &path, AutolabClient::param_list &params, 
+  AutolabClient::HttpMethod method = GET, bool refresh = true)
+{
   long rc = raw_request(rstate, path, params, method);
   if (!refresh) return rc;
 
@@ -191,28 +207,37 @@ long AutolabClient::raw_request_optional_refresh(AutolabClient::request_state *r
   throw InvalidTokenException();
 }
 
-long AutolabClient::download_request(const std::string &download_dir, const std::string &suggested_filename, const std::string &path, AutolabClient::param_list &params, AutolabClient::HttpMethod method = GET, bool refresh = true) {
+/* make a HTTP request
+ *
+ * params:
+ *   - response: stores the JSON response
+ *   - path:     HTTP request path
+ *   - params:   HTTP request params
+ *   - method:   HTTP request method
+ *   - refresh:  if true, automatically calls perform_token_refresh when the
+ *               request fails the first time, and retries the request.
+ *   - download_dir: the directory to download the file if the response is a
+ *                   file download.
+ *   - suggested_filename: the default filename if the server didn't provide
+ *                         the filename for the downloaded file.
+ */
+long AutolabClient::make_request(rapidjson::Document &response,
+  const std::string &path, AutolabClient::param_list &params,
+  AutolabClient::HttpMethod method = GET, bool refresh = true,
+  const std::string &download_dir = "",
+  const std::string &suggested_filename = "")
+{
   AutolabClient::request_state rstate(download_dir, suggested_filename);
-  long rc;
 
-  rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
+  long rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
 
-  Logger::debug << "Completed file download" << Logger::endl;
+  Logger::debug << "Completed make request" << Logger::endl;
 
-  if (rstate.file_output.is_open()) rstate.file_output.close();
-  return rc;
-}
-
-long AutolabClient::json_request(rapidjson::Document &response, const std::string &path, AutolabClient::param_list &params, AutolabClient::HttpMethod method = GET, bool refresh = true) {
-  AutolabClient::request_state rstate;
-  long rc;
-
-  rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
-
-  Logger::debug << rstate.string_output << Logger::endl;
-
-  // parse
-  response.Parse(rstate.string_output.c_str());
+  rstate.close_file_output();
+  if (!rstate.is_download) {
+    Logger::debug << rstate.string_output << Logger::endl;
+    response.Parse(rstate.string_output.c_str());
+  }
 
   return rc;
 }
@@ -225,7 +250,7 @@ void AutolabClient::device_flow_init(std::string &user_code, std::string &verifi
   params.emplace_back("client_id", client_id);
 
   rapidjson::Document response;
-  json_request(response, device_flow_init_path, params, GET, false);
+  make_request(response, device_flow_init_path, params, GET, false);
 
   err_assert(response.HasMember("device_code") && response.HasMember("user_code"),
     "Expected keys not found in response during device_flow_init");
@@ -265,7 +290,7 @@ int AutolabClient::device_flow_authorize(size_t timeout) {
   // find out end time
 
   while (t_now < t_end) {
-    json_request(response, device_flow_authorize_path, params, GET, false);
+    make_request(response, device_flow_authorize_path, params, GET, false);
     if (response.HasMember("code")) {
       // success!
       std::string code = response["code"].GetString();
@@ -297,6 +322,9 @@ bool AutolabClient::save_tokens_from_response(rapidjson::Document &response) {
     // looks good
     access_token = response["access_token"].GetString();
     refresh_token = response["refresh_token"].GetString();
+    if (new_tokens_callback) {
+      new_tokens_callback(access_token, refresh_token);
+    }
     return true;
   }
   return false;
@@ -311,7 +339,7 @@ bool AutolabClient::get_token_from_authorization_code(std::string authorization_
   params.emplace_back("code", authorization_code);
 
   rapidjson::Document response;
-  json_request(response, oauth_token_path, params, POST, false);
+  make_request(response, oauth_token_path, params, POST, false);
 
   return save_tokens_from_response(response);
 }
@@ -324,7 +352,7 @@ bool AutolabClient::perform_token_refresh() {
   params.emplace_back("refresh_token", refresh_token);
 
   rapidjson::Document response;
-  json_request(response, oauth_token_path, params, POST, false);
+  make_request(response, oauth_token_path, params, POST, false);
 
   return save_tokens_from_response(response);
 }
@@ -348,7 +376,7 @@ void AutolabClient::get_user_info(rapidjson::Document &result) {
   AutolabClient::param_list params;
   init_regular_params(params);
 
-  json_request(result, path, params);
+  make_request(result, path, params);
 }
 
 void AutolabClient::get_courses(rapidjson::Document &result) {
@@ -360,7 +388,7 @@ void AutolabClient::get_courses(rapidjson::Document &result) {
   init_regular_params(params);
   params.emplace_back("state", "current");
 
-  json_request(result, path, params);
+  make_request(result, path, params);
 }
 
 void AutolabClient::get_assessments(rapidjson::Document &result, std::string course_name) {
@@ -371,7 +399,7 @@ void AutolabClient::get_assessments(rapidjson::Document &result, std::string cou
   AutolabClient::param_list params;
   init_regular_params(params);
 
-  json_request(result, path, params);
+  make_request(result, path, params);
 }
 
 void AutolabClient::download_handout(std::string download_dir, std::string course_name, std::string asmt_name) {
@@ -382,5 +410,6 @@ void AutolabClient::download_handout(std::string download_dir, std::string cours
   AutolabClient::param_list params;
   init_regular_params(params);
 
-  download_request(download_dir, "handout", path, params);
+  rapidjson::Document response;
+  make_request(response, path, params, GET, true, download_dir, "handout");
 }

@@ -12,6 +12,8 @@ const string client_id = "c021c9b12dc597b5b42d783ee285a2bc9a8afcce4a60db5b4b97a1
 const string client_secret = "5cce1a3f5968308defe8a15d4cb1e47250fc88976ebf9c084155fc86da8050f1";
 const string redirect_uri = "http://localhost:3000/device_flow_auth_cb";
 
+AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
+
 void print_download_help() {
   cout << "Usage: autolab download [asmt-name-hint]" << endl;
 }
@@ -89,8 +91,6 @@ int download_asmt(int argc, char *argv[]) {
     course_name << "' ..." << Logger::endl;
 
   // setup AutolabClient
-  AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri);
-
   string at, rt;
   load_tokens(at, rt);
   ac.set_tokens(at, rt);
@@ -132,7 +132,6 @@ int user_setup(int argc, char *argv[]) {
 
   string at, rt;
   bool user_exists = load_tokens(at, rt);
-  AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri);
   ac.set_tokens(at, rt);
 
   if (!force_setup) {

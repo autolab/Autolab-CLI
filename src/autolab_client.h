@@ -11,12 +11,15 @@
 
 class AutolabClient {
 public:
-  AutolabClient(const std::string &id, const std::string &st, const std::string &ru);
+  AutolabClient(const std::string &id, const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string));
 
   // setters and getters
   void set_tokens(std::string at, std::string rt);
   const std::string get_access_token() { return access_token; }
   const std::string get_refresh_token() { return refresh_token; }
+  void set_new_tokens_callback(void (*cb)(std::string, std::string)) {
+    new_tokens_callback = cb;
+  }
 
   /* oauth-related */
   void device_flow_init(std::string &user_code, std::string &verification_uri);
@@ -57,6 +60,10 @@ public:
       string_output.clear();
     }
 
+    void close_file_output() {
+      if (file_output.is_open()) file_output.close();
+    }
+
     bool consider_download() {
       return download_dir.length() > 0;
     }
@@ -72,6 +79,9 @@ private:
   // initializes curl interface. Must be called before anything else.
   static int curl_ready;
   static int init_curl();
+
+  // tokens-related
+  void (*new_tokens_callback)(std::string, std::string);
 
   enum HttpMethod {GET, POST};
 
@@ -104,8 +114,8 @@ private:
   // perform HTTP request and return result, default method is GET.
   long raw_request(request_state *rstate, const std::string &path, param_list &params, HttpMethod method);
   long raw_request_optional_refresh(request_state *rstate, const std::string &path, param_list &params, HttpMethod method, bool refresh);
-  long download_request(const std::string &download_dir, const std::string &suggested_filename, const std::string &path, param_list &params, HttpMethod method, bool refresh);
-  long json_request(rapidjson::Document &response, const std::string &path, param_list &params, HttpMethod method, bool refresh);
+  long make_request(rapidjson::Document &response, const std::string &path, param_list &params, HttpMethod method, bool refresh, 
+    const std::string &download_dir, const std::string &suggested_filename);
 
   void clear_device_flow_strings();
 

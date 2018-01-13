@@ -58,6 +58,7 @@ void store_tokens(std::string at, std::string rt) {
 
   int res = write_file(get_token_cache_file_full_path().c_str(),
                        token_pair_to_string(at, rt).c_str());
+  Logger::debug << "[FileUtils] tokens stored" << Logger::endl;
   err_assert(res);
 }
 
@@ -79,7 +80,7 @@ bool load_tokens(std::string &at, std::string &rt) {
 
   at.assign(result.substr(0, split_pos_1));
   rt.assign(result.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
-  
+  Logger::debug << "[FileUtils] tokens loaded" << Logger::endl;
   return true;
 }
 
