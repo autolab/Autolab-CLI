@@ -7,6 +7,7 @@ bool find_course(AutolabClient &ac, std::string &name_hint) {
   std::string course_name;
   rapidjson::Document courses;
   ac.get_courses(courses);
+  check_error_and_exit(courses);
 
   Logger::debug << "Found " << courses.Size() << " current courses." << Logger::endl;
   bool found = false;
@@ -26,6 +27,7 @@ bool find_assessment(AutolabClient &ac, const std::string &course_name, std::str
   std::string asmt_name;
   rapidjson::Document asmts;
   ac.get_assessments(asmts, course_name);
+  check_error_and_exit(asmts);
 
   Logger::info << "Found " << asmts.Size() << " assessments." << Logger::endl;
   bool found = false;

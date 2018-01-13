@@ -5,8 +5,11 @@
 
 #include <iostream>
 
+#include <rapidjson/document.h>
+
 void err_assert(bool value);
 void err_assert(bool value, const char *msg);
+void check_error_and_exit(rapidjson::Document &response);
 
 namespace Logger {
 

@@ -20,15 +20,6 @@ void init_autolab_client(AutolabClient &ac) {
   ac.set_tokens(at, rt);
 }
 
-/* if response is an error response, print error and exit */
-void check_error_and_exit(rapidjson::Document &response) {
-  if (response.IsObject() &&
-      response.HasMember("error")) {
-    Logger::fatal << response["error"].GetString() << Logger::endl;
-    exit(0);
-  }
-}
-
 void print_download_help() {
   cout << "Usage: autolab download [asmt-name-hint]" << endl;
 }
@@ -93,12 +84,6 @@ int download_asmt(int argc, char *argv[]) {
   // setup AutolabClient
   init_autolab_client(ac);
 
-  // look for course
-  if (!find_course(ac, course_name)) {
-    Logger::fatal << "Failed to find the specified course" << Logger::endl;
-    return 0;
-  }
-
   // find assessment
   if (!find_assessment(ac, course_name, asmt_name)) {
     Logger::fatal << "Failed to find the specified assessment" << Logger::endl;
@@ -122,12 +107,15 @@ int download_asmt(int argc, char *argv[]) {
   // download files into directory
   rapidjson::Document response;
   ac.download_handout(response, new_dir, course_name, asmt_name);
+  check_error_and_exit(response);
   if (response.IsObject() && response.HasMember("url")) {
     Logger::info << "Handout URL: " << response["url"].GetString() << Logger::endl;
   } else {
     Logger::info << "Handout downloaded into assessment directory" << Logger::endl;
   }
+
   ac.download_writeup(response, new_dir, course_name, asmt_name);
+  check_error_and_exit(response);
   if (response.IsObject() && response.HasMember("url")) {
     Logger::info << "Writeup URL: " << response["url"].GetString() << Logger::endl;
   } else {
