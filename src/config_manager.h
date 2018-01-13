@@ -10,7 +10,7 @@ bool load_tokens(std::string &at, std::string &rt);
 void store_tokens(std::string at, std::string rt);
 
 bool read_asmt_file(std::string &course_name, std::string &asmt_name);
-bool write_asmt_file(std::string filename, std::string course_name, std::string asmt_name);
+void write_asmt_file(std::string filename, std::string course_name, std::string asmt_name);
 
 
 #endif /* CONFIG_MANAGER_H */

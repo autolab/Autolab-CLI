@@ -115,14 +115,8 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name) {
 }
 
 // write asmt file in directory named dir_name under curr directory
-bool write_asmt_file(std::string dir_name, std::string course_name, std::string asmt_name) {
-  std::string full_path(get_curr_dir());
-  full_path.append("/");
-  full_path.append(dir_name);
-  if (!dir_find(get_curr_dir(), dir_name.c_str(), true)) {
-    create_dir(full_path.c_str());
-  }
-
+void write_asmt_file(std::string dir_name, std::string course_name, std::string asmt_name) {
+  std::string full_path(dir_name);
   full_path.append("/");
   full_path.append(asmt_filename);
   int res = write_file(full_path.c_str(),

@@ -136,6 +136,9 @@ int download_asmt(int argc, char *argv[]) {
     Logger::info << "Writeup downloaded into assessment directory" << Logger::endl;
   }
 
+  // write assessment file
+  write_asmt_file(new_dir, course_name, asmt_name);
+
   return 0;
 }
 
