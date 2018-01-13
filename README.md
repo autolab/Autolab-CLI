@@ -10,6 +10,12 @@ This project uses CMake. To build:
 
 The built binary is /build/src/autolab.
 
+### Build Options
+
+There are two builds available: release and non-release. Release builds do not contain debug output (output that uses Logger::debug).
+
+The default is non-release builds. To build a release version, when inside 'build' directory, run 'cmake -Dreleaese=ON .', then run 'make'.
+
 ## How to use
 
 Run 'autolab -h' to find out the commands available.

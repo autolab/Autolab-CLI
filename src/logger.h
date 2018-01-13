@@ -1,7 +1,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#define PRINT_DEBUG
+#include "build_config.h"
 
 #include <iostream>
 

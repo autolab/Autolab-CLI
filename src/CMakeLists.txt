@@ -1,3 +1,7 @@
+if (NOT release)
+  set(PRINT_DEBUG TRUE)
+endif (NOT release)
+
 # configure a header file to pass some the version number to the source code
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/build_config.h.in"
