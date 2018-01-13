@@ -84,11 +84,10 @@ int download_asmt(int argc, char *argv[]) {
   // setup AutolabClient
   init_autolab_client(ac);
 
-  // find assessment
-  if (!find_assessment(ac, course_name, asmt_name)) {
-    Logger::fatal << "Failed to find the specified assessment" << Logger::endl;
-    return 0;
-  }
+  // make sure assessment exists
+  rapidjson::Document asmt;
+  ac.get_assessment_details(asmt, course_name, asmt_name);
+  check_error_and_exit(asmt);
 
   // setup directory
   bool dir_exists = dir_find(get_curr_dir(), asmt_name.c_str(), true);
@@ -108,16 +107,22 @@ int download_asmt(int argc, char *argv[]) {
   rapidjson::Document response;
   ac.download_handout(response, new_dir, course_name, asmt_name);
   check_error_and_exit(response);
-  if (response.IsObject() && response.HasMember("url")) {
-    Logger::info << "Handout URL: " << response["url"].GetString() << Logger::endl;
+  if (response.IsObject()) {
+    if (response.HasMember("url"))
+      Logger::info << "Handout URL: " << response["url"].GetString() << Logger::endl;
+    else
+      Logger::info << "Assessment has no handout" << Logger::endl;
   } else {
     Logger::info << "Handout downloaded into assessment directory" << Logger::endl;
   }
 
   ac.download_writeup(response, new_dir, course_name, asmt_name);
   check_error_and_exit(response);
-  if (response.IsObject() && response.HasMember("url")) {
-    Logger::info << "Writeup URL: " << response["url"].GetString() << Logger::endl;
+  if (response.IsObject()) {
+    if (response.HasMember("url"))
+      Logger::info << "Writeup URL: " << response["url"].GetString() << Logger::endl;
+    else
+      Logger::info << "Assessment has no writeup" << Logger::endl;
   } else {
     Logger::info << "Writeup downloaded into assessment directory" << Logger::endl;
   }
