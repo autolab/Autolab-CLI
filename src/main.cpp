@@ -122,9 +122,21 @@ int download_asmt(int argc, char *argv[]) {
   err_assert(created);
 
   // download files into directory
-  ac.download_handout(new_dir, course_name, asmt_name);
+  rapidjson::Document response;
+  ac.download_handout(response, new_dir, course_name, asmt_name);
+  if (response.IsObject() && response.HasMember("url")) {
+    Logger::info << "Handout URL: " << response["url"].GetString() << Logger::endl;
+  } else {
+    Logger::info << "Handout downloaded into assessment directory" << Logger::endl;
+  }
+  ac.download_writeup(response, new_dir, course_name, asmt_name);
+  if (response.IsObject() && response.HasMember("url")) {
+    Logger::info << "Writeup URL: " << response["url"].GetString() << Logger::endl;
+  } else {
+    Logger::info << "Writeup downloaded into assessment directory" << Logger::endl;
+  }
 
-  Logger::debug << "success" << Logger::endl;
+  return 0;
 }
 
 int user_setup(int argc, char *argv[]) {

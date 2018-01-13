@@ -402,7 +402,7 @@ void AutolabClient::get_assessments(rapidjson::Document &result, std::string cou
   make_request(result, path, params);
 }
 
-void AutolabClient::download_handout(std::string download_dir, std::string course_name, std::string asmt_name) {
+void AutolabClient::download_handout(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/handout");
@@ -410,6 +410,16 @@ void AutolabClient::download_handout(std::string download_dir, std::string cours
   AutolabClient::param_list params;
   init_regular_params(params);
 
-  rapidjson::Document response;
-  make_request(response, path, params, GET, true, download_dir, "handout");
+  make_request(result, path, params, GET, true, download_dir, "handout");
+}
+
+void AutolabClient::download_writeup(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
+  std::string path;
+  init_regular_path(path);
+  path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/writeup");
+
+  AutolabClient::param_list params;
+  init_regular_params(params);
+
+  make_request(result, path, params, GET, true, download_dir, "writeup");
 }

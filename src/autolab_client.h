@@ -73,7 +73,8 @@ public:
   void get_user_info(rapidjson::Document &result);
   void get_courses(rapidjson::Document &result);
   void get_assessments(rapidjson::Document &result, std::string course_name);
-  void download_handout(std::string filename, std::string course_name, std::string asmt_name);
+  void download_handout(rapidjson::Document &result, std::string filename, std::string course_name, std::string asmt_name);
+  void download_writeup(rapidjson::Document &result, std::string filename, std::string course_name, std::string asmt_name);
 
 private:
   // initializes curl interface. Must be called before anything else.
