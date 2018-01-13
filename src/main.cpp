@@ -20,19 +20,17 @@ void init_autolab_client(AutolabClient &ac) {
   ac.set_tokens(at, rt);
 }
 
-void print_download_help() {
-  cout << "Usage: autolab download [asmt-name-hint]" << endl;
+/* if response is an error response, print error and exit */
+void check_error_and_exit(rapidjson::Document &response) {
+  if (response.IsObject() &&
+      response.HasMember("error")) {
+    Logger::fatal << response["error"].GetString() << Logger::endl;
+    exit(0);
+  }
 }
 
-void save_tokens(AutolabClient &ac) {
-  string at = ac.get_access_token();
-  string rt = ac.get_refresh_token();
-
-  Logger::debug << "Saving tokens to arcache: " << Logger::endl <<
-                   "access_token: " << at << Logger::endl <<
-                   "refresh_token: " << rt << Logger::endl;
-
-  store_tokens(at, rt);
+void print_download_help() {
+  cout << "Usage: autolab download [asmt-name-hint]" << endl;
 }
 
 int perform_device_flow(AutolabClient &ac) {
@@ -54,7 +52,6 @@ int perform_device_flow(AutolabClient &ac) {
   // res == 0
   Logger::info << "Received authorization!" << Logger::endl;
 
-  save_tokens(ac);  
   return 0;
 }
 
@@ -182,6 +179,9 @@ int submit_asmt(int argc, char *argv[]) {
 
   rapidjson::Document response;
   ac.submit_assessment(response, course_name, asmt_name);
+
+  check_error_and_exit(response);
+  return 0;
 }
 
 int user_setup(int argc, char *argv[]) {
