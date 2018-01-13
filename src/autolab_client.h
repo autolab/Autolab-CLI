@@ -76,6 +76,7 @@ public:
   void get_user_info(rapidjson::Document &result);
   void get_courses(rapidjson::Document &result);
   void get_assessments(rapidjson::Document &result, std::string course_name);
+  void get_assessment_details(rapidjson::Document &result, std::string course_name, std::string asmt_name);
   void download_handout(rapidjson::Document &result, std::string filename, std::string course_name, std::string asmt_name);
   void download_writeup(rapidjson::Document &result, std::string filename, std::string course_name, std::string asmt_name);
   void submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name);
