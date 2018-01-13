@@ -9,6 +9,7 @@
 #include "file_utils.h"
 #include "logger.h"
 
+/* globals */
 const std::string client_id = "c021c9b12dc597b5b42d783ee285a2bc9a8afcce4a60db5b4b97a1cda551f48d";
 const std::string client_secret = "5cce1a3f5968308defe8a15d4cb1e47250fc88976ebf9c084155fc86da8050f1";
 const std::string redirect_uri = "http://localhost:3000/device_flow_auth_cb";
@@ -21,14 +22,77 @@ void init_autolab_client(AutolabClient &ac) {
   ac.set_tokens(at, rt);
 }
 
+/* help texts */
+void print_help() {
+  Logger::info << "usage: autolab <command> [command-args] [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "commands:" << Logger::endl
+    << "  courses             List all courses" << Logger::endl
+    << "  assessments/asmts   List all assessments" << Logger::endl
+    << "  download            Download files needed for an assessment" << Logger::endl
+    << "  submit              Submit a file to an assessment" << Logger::endl
+    << "  setup               Setup the user of the client" << Logger::endl
+    << Logger::endl
+    << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
+}
+
 void print_download_help() {
-  Logger::info << "Usage: autolab download [course_name]:[assessment_name]" << Logger::endl;
+  Logger::info << "usage: autolab download <course_name>:<assessment_name> [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << Logger::endl
+    << "Create a directory for working on the specified assessment. The writeup and the" << Logger::endl
+    << "handout are downloaded into the directory if they are files. The assessment" << Logger::endl
+    << "directory is also setup with a local config so that running" << Logger::endl
+    << "'autolab submit <filename>' works without the need to specify the names of the" << Logger::endl
+    << "course and assessment." << Logger::endl;
+}
+
+void print_submit_help() {
+  Logger::info << "usage: autolab submit [<course_name>:<assessment_name>] <filename> [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << "  -f,--force  Force use the specified course:assessment pair, overriding the" << Logger::endl
+    << "              local config" << Logger::endl
+    << Logger::endl
+    << "Submit a file to an assessment. The course and assessment names are not needed" << Logger::endl
+    << "if the current directory or its parent directory (up to " << DEFAULT_RECUR_LEVEL << " levels) includes" << Logger::endl
+    << "an assessment config file. The operation fails if the specified names and the" << Logger::endl
+    << "config file do not match, unless the '-f' option is used, in which case the" << Logger::endl
+    << "assessment config file is ignored." << Logger::endl;
+}
+
+void print_courses_help() {
+  Logger::info << "usage: autolab courses [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << Logger::endl
+    << "List all current courses of the user." << Logger::endl;
 }
 
 void print_assessments_help() {
-  Logger::info << "Usage: autolab assessments [course_name]" << Logger::endl;
+  Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << Logger::endl
+    << "List all available assessments of a course." << Logger::endl;
 }
 
+void print_setup_help() {
+  Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << "  -f,--force  Force user setup, removing the current user" << Logger::endl
+    << Logger::endl
+    << "Initiate user setup for the current user." << Logger::endl;
+}
+
+/* helpers */
 int perform_device_flow(AutolabClient &ac) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
   std::string user_code, verification_uri;
@@ -49,6 +113,20 @@ int perform_device_flow(AutolabClient &ac) {
   Logger::info << "Received authorization!" << Logger::endl;
 
   return 0;
+}
+
+bool includes_option(int argc, char *argv[], int arg_start, 
+  const char *target, const char *alt_target)
+{
+  for (int i = arg_start; i < argc; i++) {
+    if (strcmp(argv[i], target) == 0) {
+      return true;
+    }
+    if (alt_target && strcmp(argv[i], alt_target) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /* return false if failed to parse */
@@ -76,10 +154,12 @@ bool namepair_comparator(const namepair &a, const namepair &b) {
   return a.name < b.name;
 }
 
+/* commands */
+
 /* download assessment into a new directory
  */
 int download_asmt(int argc, char *argv[]) {
-  if (argc < 3) {
+  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
     print_download_help();
     return 0;
   }
@@ -147,48 +227,72 @@ int download_asmt(int argc, char *argv[]) {
 }
 
 int submit_asmt(int argc, char *argv[]) {
+  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+    print_submit_help();
+    return 0;
+  }
+
+  bool option_force = includes_option(argc, argv, 3, "-f", "--force");
+
   std::string course_name, asmt_name, course_name_config, asmt_name_config;
   bool user_specified_names = false;
 
   // set up logger
   Logger::fatal.set_prefix("Cannot submit assessment");
 
-  if (argc == 3) {
+  if (argc >= 4) {
     // user specified course and assessment name
     user_specified_names = true;
     if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
-      Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
+      Logger::fatal << "The course and assessment name must be the second argument, if specified" << Logger::endl;
       return 0;
     }
   }
 
-  // attempt to load names from asmt-file
-  bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
-  if (!found_asmt_file && !user_specified_names) {
-    Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
-      << "Please change directory or specify the course and assessment names" << Logger::endl;
-    return 0;
-  }
-
-  if (found_asmt_file && user_specified_names) {
-    if ((course_name != course_name_config) || (asmt_name != asmt_name_config)) {
-      Logger::fatal << "The provided names and the configured names for this autolab assessment directory do not match:" << Logger::endl
-        << "Provided names:   " << course_name  << ":" << asmt_name << Logger::endl
-        << "Configured names: " << course_name_config << ":" << asmt_name_config << Logger::endl << Logger::endl
-        << "Please resolve this conflict, or use the '-f' option to force the use of the provided names." << Logger::endl;
+  if (!option_force) {
+    // attempt to load names from asmt-file
+    bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
+    if (!found_asmt_file && !user_specified_names) {
+      Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
+        << "Please change directory or specify the course and assessment names" << Logger::endl;
       return 0;
     }
+
+    if (found_asmt_file && user_specified_names) {
+      if ((course_name != course_name_config) || (asmt_name != asmt_name_config)) {
+        Logger::fatal << "The provided names and the configured names for this autolab assessment directory do not match:" << Logger::endl
+          << "Provided names:   " << course_name  << ":" << asmt_name << Logger::endl
+          << "Configured names: " << course_name_config << ":" << asmt_name_config << Logger::endl << Logger::endl
+          << "Please resolve this conflict, or use the '-f' option to force the use of the provided names." << Logger::endl;
+        return 0;
+      }
+    }
+  }
+
+  Logger::info << "Submitting to " << course_name << ":" << asmt_name << " ...";
+  if (option_force) {
+    Logger::info << " (force)" << Logger::endl;
+  } else {
+    Logger::info << Logger::endl;
   }
 
   // conflicts resolved, use course_name and asmt_name from now on
   rapidjson::Document response;
   ac.submit_assessment(response, course_name, asmt_name);
-
   check_error_and_exit(response);
+
+  if (response.IsObject()) {
+    Logger::info << "Successfully submitted to Autolab (version " << response["version"].GetInt() << ")" << Logger::endl;
+  }
   return 0;
 }
 
 int show_courses(int argc, char *argv[]) {
+  if (includes_option(argc, argv, 2, "-h", "--help")) {
+    print_courses_help();
+    return 0;
+  }
+
   // set up logger
   Logger::fatal.set_prefix("Cannot get courses");
 
@@ -214,7 +318,7 @@ int show_courses(int argc, char *argv[]) {
 }
 
 int show_assessments(int argc, char *argv[]) {
-  if (argc < 3) {
+  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
     print_assessments_help();
     return 0;
   }
@@ -246,13 +350,14 @@ int show_assessments(int argc, char *argv[]) {
 }
 
 int user_setup(int argc, char *argv[]) {
-  bool force_setup = false;
+  if (includes_option(argc, argv, 2, "-h", "--help")) {
+    print_setup_help();
+    return 0;
+  }
 
-  std::string at, rt;
-  bool user_exists = load_tokens(at, rt);
-  ac.set_tokens(at, rt);
+  bool option_force = includes_option(argc, argv, 3, "-f", "--force");
 
-  if (!force_setup) {
+  if (!option_force) {
     // perform a check if not a forced setup
     if (user_exists) {
       bool token_valid = true;
@@ -280,12 +385,9 @@ int user_setup(int argc, char *argv[]) {
   return -1;
 }
 
-void print_help() {
-  Logger::info << "HELP TEXT" << Logger::endl;
-}
-
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
+  if (argc < 2 ||
+      (argc == 2 && includes_option(argc, argv, 1, "-h", "--help"))) {
     print_help();
     return 0;
   }
