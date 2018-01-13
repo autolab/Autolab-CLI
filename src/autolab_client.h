@@ -131,6 +131,7 @@ private:
   bool document_has_error(request_state *rstate, const std::string &error_msg);
   void init_regular_path(std::string &path);
   void init_regular_params(param_list &params);
+  void update_access_token_in_params(param_list &params);
 };
 
 #endif /* AUTOLAB_CLIENT_H */

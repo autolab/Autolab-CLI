@@ -219,6 +219,7 @@ long AutolabClient::raw_request_optional_refresh(
 
   if (perform_token_refresh()) {
     rstate->reset();
+    update_access_token_in_params(params);
     rc = raw_request(rstate, path, params, method);
     if (rc == 200 || !document_has_error(rstate, oauth_auth_failed_response)) {
       // all good now
@@ -395,6 +396,15 @@ void AutolabClient::init_regular_path(std::string &path) {
 void AutolabClient::init_regular_params(AutolabClient::param_list &params) {
   params.clear();
   params.emplace_back("access_token", access_token);
+}
+
+void AutolabClient::update_access_token_in_params(AutolabClient::param_list &params) {
+  for (auto &param : params) {
+    if (param.key == "access_token") {
+      param.value = access_token;
+      break;
+    }
+  }
 }
 
 void AutolabClient::get_user_info(rapidjson::Document &result) {
