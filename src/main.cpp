@@ -1,7 +1,9 @@
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <utility>
+#include <iomanip>
 
 #include "cmdargs.h"
 #include "autolab_client.h"
@@ -30,9 +32,11 @@ void print_help() {
     << Logger::endl
     << "commands:" << Logger::endl
     << "  courses             List all courses" << Logger::endl
-    << "  assessments/asmts   List all assessments" << Logger::endl
+    << "  assessments/asmts   List all assessments of a course" << Logger::endl
+    << "  problems            List all problems in an assessment" << Logger::endl
     << "  download            Download files needed for an assessment" << Logger::endl
     << "  submit              Submit a file to an assessment" << Logger::endl
+    << "  scores              Show scores got on an assessment" << Logger::endl
     << "  setup               Setup the user of the client" << Logger::endl
     << Logger::endl
     << "options:" << Logger::endl
@@ -107,6 +111,7 @@ void print_scores_help() {
     << Logger::endl
     << "options:" << Logger::endl
     << "  -h,--help   Show this help message" << Logger::endl
+    << "  -a,--all    Show scores from all submission. Default shows only the latest" << Logger::endl
     << Logger::endl
     << "Show all scores the user got for an assessment. Course and assessment names are" << Logger::endl
     << "optional if inside an autolab assessment directory." << Logger::endl;
@@ -390,17 +395,21 @@ int show_assessments(cmdargs &cmd) {
 }
 
 int show_problems(cmdargs &cmd) {
-  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
+  if (cmd.has_option("-h", "--help")) {
     print_problems_help();
     return 0;
   }
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get problems");
-
-  // parse course and assessment name
+  
   std::string course_name, asmt_name;
-  parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+  // user-specified names take precedence
+  if (cmd.nargs() >= 3) {
+    parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+  } else {
+    read_asmt_file(course_name, asmt_name);
+  }
 
   rapidjson::Document problems;
   ac.get_problems(problems, course_name, asmt_name);
@@ -417,6 +426,79 @@ int show_problems(cmdargs &cmd) {
     } else {
       Logger::info << Logger::endl;
     }
+  }
+
+  return 0;
+}
+
+int show_scores(cmdargs &cmd) {
+  static const int col1_length = 9;
+
+  if (cmd.has_option("-h", "--help")) {
+    print_scores_help();
+    return 0;
+  }
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot get scores");
+
+  bool option_all = cmd.has_option("-a", "--all");
+
+  std::string course_name, asmt_name;
+  // user-specified names take precedence
+  if (cmd.nargs() >= 3) {
+    parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+  } else {
+    read_asmt_file(course_name, asmt_name);
+  }
+
+  rapidjson::Document problems;
+  ac.get_problems(problems, course_name, asmt_name);
+  check_error_and_exit(problems);
+
+  Logger::info << "Scores for " << course_name << ":" << asmt_name << Logger::endl
+    << "(Only submissions made via this client can be shown)" << Logger::endl
+    << Logger::endl;
+
+  std::vector<std::pair<std::string, int>> prob_list;
+  Logger::info << "| version | ";
+  for (auto &p : problems.GetArray()) {
+    std::string problem_name = p.GetObject()["name"].GetString();
+    std::ostringstream column;
+    column << problem_name;
+    if (p.GetObject()["max_score"].IsFloat()) {
+      float max_score = p.GetObject()["max_score"].GetFloat();
+      column << " (" << max_score << ")";
+    }
+    column << " | ";
+    Logger::info << column.str();
+    prob_list.push_back({problem_name, column.str().length() - 1});
+  }
+  Logger::info << Logger::endl;
+
+  rapidjson::Document subs;
+  ac.get_submissions(subs, course_name, asmt_name);
+  check_error_and_exit(subs);
+
+  Logger::debug << "Found " << subs.Size() << " submissions." << Logger::endl;
+
+  int nprint = option_all ? subs.Size() : 1;
+  for (int i = 0; i < nprint; i++) {
+    const auto &s = subs.GetArray()[i].GetObject();
+    Logger::info << "|" << std::setw(col1_length) << s["version"].GetInt() << "|";
+
+    const auto &score = s["scores"].GetObject();
+    for (auto &p : prob_list) {
+      Logger::info << std::setw(p.second);
+      if (score.HasMember(p.first.c_str()) && score[p.first.c_str()].IsFloat()) {
+        Logger::info << score[p.first.c_str()].GetFloat();
+      } else {
+        Logger::info << "--";
+      }
+      Logger::info << "|";
+    }
+    
+    Logger::info << Logger::endl;
   }
 
   return 0;
@@ -491,6 +573,8 @@ int main(int argc, char *argv[]) {
     return show_assessments(cmd);
   } else if ("problems" == command) {
     return show_problems(cmd);
+  } else if ("scores" == command) {
+    return show_scores(cmd);
   } else {
     Logger::fatal << "Unrecognized command: " << command << Logger::endl;
   }
