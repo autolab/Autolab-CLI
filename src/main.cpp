@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "cmdargs.h"
 #include "autolab_client.h"
 #include "client_helpers.h"
 #include "context_manager.h"
@@ -92,12 +93,23 @@ void print_assessments_help() {
 }
 
 void print_problems_help() {
-  Logger::info << "usage: autolab problems <course_name>:<assessment_name> [OPTIONS]" << Logger::endl
+  Logger::info << "usage: autolab problems [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
     << Logger::endl
     << "options:" << Logger::endl
     << "  -h,--help   Show this help message" << Logger::endl
     << Logger::endl
-    << "List all problems of an assessment." << Logger::endl;
+    << "List all problems of an assessment. Course and assessment names are optional if" << Logger::endl
+    << "inside an autolab assessment directory." << Logger::endl;
+}
+
+void print_scores_help() {
+  Logger::info << "usage: autolab scores [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << Logger::endl
+    << "Show all scores the user got for an assessment. Course and assessment names are" << Logger::endl
+    << "optional if inside an autolab assessment directory." << Logger::endl;
 }
 
 void print_setup_help() {
@@ -133,32 +145,48 @@ int perform_device_flow(AutolabClient &ac) {
   return 0;
 }
 
-bool includes_option(int argc, char *argv[], int arg_start, 
-  const char *target, const char *alt_target)
-{
-  for (int i = arg_start; i < argc; i++) {
-    if (strcmp(argv[i], target) == 0) {
-      return true;
-    }
-    if (alt_target && strcmp(argv[i], alt_target) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/* return false if failed to parse */
-bool parse_course_and_asmt(std::string raw_input, std::string &course, std::string &asmt) {
+/* exit if failed to parse */
+void parse_course_and_asmt(std::string raw_input, std::string &course, std::string &asmt) {
   std::string::size_type split_pos = raw_input.find(":");
   if (split_pos == std::string::npos) {
-    // the entire string is the assessment name.
-    // attempt to load course name from config if exists,
-    // otherwise report error.
-    return false;
+    Logger::fatal << "Failed to parse course name and assessment name: " << raw_input << Logger::endl;
+    exit(0);
   }
   course = raw_input.substr(0, split_pos);
   asmt = raw_input.substr(split_pos + 1, std::string::npos);
-  return true;
+}
+
+/* if the supplied names are empty, it assigns them the values from the autolab asmt file.
+ * if the context file doesn't exist, it reports an error and exits.
+ * If the user does specify names and they don't match, it reports an error and exits.
+ */
+void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name) {
+  bool user_specified_names = (course_name.length() > 0) || (asmt_name.length() > 0);
+  std::string course_name_config, asmt_name_config;
+  // attempt to load names from asmt-file
+  bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
+  if (!found_asmt_file && !user_specified_names) {
+    Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
+      << "Please change directory or specify the course and assessment names" << Logger::endl;
+    exit(0);
+  }
+
+  if (found_asmt_file && user_specified_names) {
+    if ((course_name != course_name_config) || (asmt_name != asmt_name_config)) {
+      Logger::fatal << "The provided names and the configured names for this autolab assessment directory do not match:" << Logger::endl
+        << "Provided names:   " << course_name  << ":" << asmt_name << Logger::endl
+        << "Configured names: " << course_name_config << ":" << asmt_name_config << Logger::endl << Logger::endl
+        << "Please resolve this conflict, or use the '-f' option to force the use of the provided names." << Logger::endl;
+      exit(0);
+    }
+  }
+
+  if (found_asmt_file && !user_specified_names) {
+    course_name = course_name_config;
+    asmt_name = asmt_name_config;
+  }
+
+  // if !found_asmt_file && user_specified_names, we don't need to do anything
 }
 
 struct namepair {
@@ -176,8 +204,8 @@ bool namepair_comparator(const namepair &a, const namepair &b) {
 
 /* download assessment into a new directory
  */
-int download_asmt(int argc, char *argv[]) {
-  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+int download_asmt(cmdargs &cmd) {
+  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
     print_download_help();
     return 0;
   }
@@ -187,10 +215,7 @@ int download_asmt(int argc, char *argv[]) {
 
   // parse course and assessment name
   std::string course_name, asmt_name;
-  if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
-    Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
-    return 0;
-  }
+  parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
 
   Logger::info << "Querying assessment '" << asmt_name << "' of course '" << 
     course_name << "' ..." << Logger::endl;
@@ -244,47 +269,44 @@ int download_asmt(int argc, char *argv[]) {
   return 0;
 }
 
-int submit_asmt(int argc, char *argv[]) {
-  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+/* two ways of calling:
+ *   1. autolab submit <filename>                  (must have autolab-asmt file)
+ *   2. autolab submit <course>:<asmt> <filename>  (from anywhere)
+ */
+int submit_asmt(cmdargs &cmd) {
+  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
     print_submit_help();
     return 0;
   }
 
-  bool option_force = includes_option(argc, argv, 3, "-f", "--force");
+  bool option_force = cmd.has_option("-f", "--force");
 
-  std::string course_name, asmt_name, course_name_config, asmt_name_config;
-  bool user_specified_names = false;
+  std::string course_name, asmt_name, filename;
 
   // set up logger
   Logger::fatal.set_prefix("Cannot submit assessment");
 
-  if (argc >= 4) {
-    // user specified course and assessment name
-    user_specified_names = true;
-    if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
-      Logger::fatal << "The course and assessment name must be the second argument, if specified" << Logger::endl;
+  if (cmd.nargs() >= 4) {
+    // user provided course and assessment name with filename
+    parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+    filename = cmd.args[3];
+  } else {
+    // user only provided filename
+    if (option_force) {
+      Logger::fatal << "The '-f' option can only be used when the course and assessment names are also specified." << Logger::endl;
       return 0;
     }
+    filename = cmd.args[2];
   }
 
   if (!option_force) {
-    // attempt to load names from asmt-file
-    bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
-    if (!found_asmt_file && !user_specified_names) {
-      Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
-        << "Please change directory or specify the course and assessment names" << Logger::endl;
-      return 0;
-    }
+    // only check local version if non-force
+    check_names_with_asmt_file(course_name, asmt_name);
+  }
 
-    if (found_asmt_file && user_specified_names) {
-      if ((course_name != course_name_config) || (asmt_name != asmt_name_config)) {
-        Logger::fatal << "The provided names and the configured names for this autolab assessment directory do not match:" << Logger::endl
-          << "Provided names:   " << course_name  << ":" << asmt_name << Logger::endl
-          << "Configured names: " << course_name_config << ":" << asmt_name_config << Logger::endl << Logger::endl
-          << "Please resolve this conflict, or use the '-f' option to force the use of the provided names." << Logger::endl;
-        return 0;
-      }
-    }
+  if (!dir_find(get_curr_dir(), filename.c_str())) {
+    Logger::fatal << "File not found in current directory: " << filename << Logger::endl;
+    return 0;
   }
 
   Logger::info << "Submitting to " << course_name << ":" << asmt_name << " ...";
@@ -293,6 +315,8 @@ int submit_asmt(int argc, char *argv[]) {
   } else {
     Logger::info << Logger::endl;
   }
+
+  return 0;
 
   // conflicts resolved, use course_name and asmt_name from now on
   rapidjson::Document response;
@@ -305,8 +329,8 @@ int submit_asmt(int argc, char *argv[]) {
   return 0;
 }
 
-int show_courses(int argc, char *argv[]) {
-  if (includes_option(argc, argv, 2, "-h", "--help")) {
+int show_courses(cmdargs &cmd) {
+  if (cmd.has_option("-h", "--help")) {
     print_courses_help();
     return 0;
   }
@@ -335,8 +359,8 @@ int show_courses(int argc, char *argv[]) {
   return 0;
 }
 
-int show_assessments(int argc, char *argv[]) {
-  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+int show_assessments(cmdargs &cmd) {
+  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
     print_assessments_help();
     return 0;
   }
@@ -344,7 +368,7 @@ int show_assessments(int argc, char *argv[]) {
   // set up logger
   Logger::fatal.set_prefix("Cannot get assessments");
 
-  std::string course_name(argv[2]);
+  std::string course_name(cmd.args[2]);
 
   rapidjson::Document asmts;
   ac.get_assessments(asmts, course_name);
@@ -367,8 +391,8 @@ int show_assessments(int argc, char *argv[]) {
   return 0;
 }
 
-int show_problems(int argc, char *argv[]) {
-  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+int show_problems(cmdargs &cmd) {
+  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
     print_problems_help();
     return 0;
   }
@@ -378,10 +402,7 @@ int show_problems(int argc, char *argv[]) {
 
   // parse course and assessment name
   std::string course_name, asmt_name;
-  if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
-    Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
-    return 0;
-  }
+  parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
 
   rapidjson::Document problems;
   ac.get_problems(problems, course_name, asmt_name);
@@ -403,13 +424,13 @@ int show_problems(int argc, char *argv[]) {
   return 0;
 }
 
-int user_setup(int argc, char *argv[]) {
-  if (includes_option(argc, argv, 2, "-h", "--help")) {
+int user_setup(cmdargs &cmd) {
+  if (cmd.has_option("-h", "--help")) {
     print_setup_help();
     return 0;
   }
 
-  bool option_force = includes_option(argc, argv, 3, "-f", "--force");
+  bool option_force = cmd.has_option("-f", "--force");
 
   if (!option_force) {
     // perform a check if not a forced setup
@@ -438,33 +459,40 @@ int user_setup(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2 ||
-      (argc == 2 && includes_option(argc, argv, 1, "-h", "--help"))) {
-    print_help();
-    return 0;
-  }
-  if (argc == 2 && includes_option(argc, argv, 1, "-v", "--version")) {
-    print_version();
+  cmdargs cmd;
+  if (!parse_cmdargs(cmd, argc, argv)) {
+    Logger::fatal << "Invalid command line arguments. All options must come after" << Logger::endl
+      << "all positional arguments (e.g. commands). For detailed usage, run with '-h'." << Logger::endl;
     return 0;
   }
 
+  if (cmd.nargs() == 1) {
+    // not a command
+    if (cmd.has_option("-v", "--version")) {
+      print_version();
+      return 0;
+    }
+    print_help();
+    return 0;
+  }
+  
   init_autolab_client(ac);
 
   // determine what command it is
   std::string command(argv[1]);
   if ("setup" == command) {
-    return user_setup(argc, argv);
+    return user_setup(cmd);
   } else if ("download" == command) {
-    return download_asmt(argc, argv);
+    return download_asmt(cmd);
   } else if ("submit" == command) {
-    return submit_asmt(argc, argv);
+    return submit_asmt(cmd);
   } else if ("courses" == command) {
-    return show_courses(argc, argv);
+    return show_courses(cmd);
   } else if ("assessments" == command ||
              "asmts" == command) {
-    return show_assessments(argc, argv);
+    return show_assessments(cmd);
   } else if ("problems" == command) {
-    return show_problems(argc, argv);
+    return show_problems(cmd);
   } else {
     Logger::fatal << "Unrecognized command: " << command << Logger::endl;
   }

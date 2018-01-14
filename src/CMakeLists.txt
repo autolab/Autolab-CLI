@@ -10,7 +10,7 @@ configure_file(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-add_executable(autolab main.cpp file_utils.cpp context_manager.cpp autolab_client.cpp client_helpers.cpp logger.cpp)
+add_executable(autolab main.cpp file_utils.cpp context_manager.cpp autolab_client.cpp client_helpers.cpp logger.cpp cmdargs.cpp)
 
 find_library(CURL_LIB curl)
 target_link_libraries(autolab ${CURL_LIB})
