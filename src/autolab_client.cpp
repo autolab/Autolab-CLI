@@ -495,3 +495,14 @@ void AutolabClient::submit_assessment(rapidjson::Document &result, std::string c
 
   make_request(result, path, params, POST, true, "", "", filename);
 }
+
+void AutolabClient::get_submissions(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+  std::string path;
+  init_regular_path(path);
+  path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submissions");
+
+  AutolabClient::param_list params;
+  init_regular_params(params);
+
+  make_request(result, path, params);
+}
