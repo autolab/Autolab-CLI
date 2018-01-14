@@ -6,6 +6,7 @@
 #define MAX_DIR_LENGTH 256
 #define DEFAULT_RECUR_LEVEL 8
 
+bool file_exists(const char *path_to_file);
 bool dir_find(const char *dirname, const char *targetname, bool target_is_dir = false);
 bool recur_find(char *result, const char *dirstart, const char *targetname, 
                   bool target_is_dir = false, int levels = DEFAULT_RECUR_LEVEL);

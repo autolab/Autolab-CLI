@@ -304,8 +304,8 @@ int submit_asmt(cmdargs &cmd) {
     check_names_with_asmt_file(course_name, asmt_name);
   }
 
-  if (!dir_find(get_curr_dir(), filename.c_str())) {
-    Logger::fatal << "File not found in current directory: " << filename << Logger::endl;
+  if (!file_exists(filename.c_str())) {
+    Logger::fatal << "File not found: " << filename << Logger::endl;
     return 0;
   }
 
@@ -316,11 +316,9 @@ int submit_asmt(cmdargs &cmd) {
     Logger::info << Logger::endl;
   }
 
-  return 0;
-
   // conflicts resolved, use course_name and asmt_name from now on
   rapidjson::Document response;
-  ac.submit_assessment(response, course_name, asmt_name);
+  ac.submit_assessment(response, course_name, asmt_name, filename);
   check_error_and_exit(response);
 
   if (response.IsObject()) {

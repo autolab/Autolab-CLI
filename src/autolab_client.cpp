@@ -485,7 +485,7 @@ void AutolabClient::download_writeup(rapidjson::Document &result, std::string do
   make_request(result, path, params, GET, true, download_dir, "writeup");
 }
 
-void AutolabClient::submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+void AutolabClient::submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name, std::string filename) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submit");
@@ -493,5 +493,5 @@ void AutolabClient::submit_assessment(rapidjson::Document &result, std::string c
   AutolabClient::param_list params;
   init_regular_params(params);
 
-  make_request(result, path, params, POST, true, "", "", "test.txt");
+  make_request(result, path, params, POST, true, "", "", filename);
 }

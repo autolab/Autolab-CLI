@@ -2,7 +2,7 @@
 
 #include <string.h>
 #include <dirent.h>   // dir-related
-#include <sys/stat.h> // mkdir
+#include <sys/stat.h> // mkdir, stat
 #include <fcntl.h>    // open
 #include <unistd.h>   // close, write
 #include <pwd.h>      // getpwuid
@@ -11,6 +11,13 @@
 
 const char *home_directory = NULL;
 char curr_directory[MAX_DIR_LENGTH];
+
+/* checks if file exists. Does not allow directories */
+bool file_exists(const char *path_to_file) {
+  struct stat buffer;   
+  if(stat (path_to_file, &buffer) != 0) return false;
+  return S_ISREG(buffer.st_mode);
+}
 
 bool dir_find(const char *dirname, const char *targetname, bool target_is_dir) {
   bool found = false;
