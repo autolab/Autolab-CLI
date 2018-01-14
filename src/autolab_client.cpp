@@ -452,6 +452,17 @@ void AutolabClient::get_assessment_details(rapidjson::Document &result, std::str
   make_request(result, path, params);
 }
 
+void AutolabClient::get_problems(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+  std::string path;
+  init_regular_path(path);
+  path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/problems");
+
+  AutolabClient::param_list params;
+  init_regular_params(params);
+
+  make_request(result, path, params);
+}
+
 void AutolabClient::download_handout(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);

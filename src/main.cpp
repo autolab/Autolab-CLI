@@ -91,6 +91,15 @@ void print_assessments_help() {
     << "List all available assessments of a course." << Logger::endl;
 }
 
+void print_problems_help() {
+  Logger::info << "usage: autolab problems <course_name>:<assessment_name> [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -h,--help   Show this help message" << Logger::endl
+    << Logger::endl
+    << "List all problems of an assessment." << Logger::endl;
+}
+
 void print_setup_help() {
   Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
     << Logger::endl
@@ -358,6 +367,42 @@ int show_assessments(int argc, char *argv[]) {
   return 0;
 }
 
+int show_problems(int argc, char *argv[]) {
+  if (argc < 3 || includes_option(argc, argv, 2, "-h", "--help")) {
+    print_problems_help();
+    return 0;
+  }
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot get problems");
+
+  // parse course and assessment name
+  std::string course_name, asmt_name;
+  if (!parse_course_and_asmt(argv[2], course_name, asmt_name)) {
+    Logger::fatal << "Please specify both course and assessment name." << Logger::endl;
+    return 0;
+  }
+
+  rapidjson::Document problems;
+  ac.get_problems(problems, course_name, asmt_name);
+  check_error_and_exit(problems);
+
+  Logger::debug << "Found " << problems.Size() << " problems." << Logger::endl;
+
+  for (auto &p : problems.GetArray()) {
+    std::string problem_name = p.GetObject()["name"].GetString();
+    Logger::info << problem_name;
+    if (p.GetObject()["max_score"].IsFloat()) {
+      float max_score = p.GetObject()["max_score"].GetFloat();
+      Logger::info << " (" << max_score << ")" << Logger::endl;
+    } else {
+      Logger::info << Logger::endl;
+    }
+  }
+
+  return 0;
+}
+
 int user_setup(int argc, char *argv[]) {
   if (includes_option(argc, argv, 2, "-h", "--help")) {
     print_setup_help();
@@ -418,6 +463,8 @@ int main(int argc, char *argv[]) {
   } else if ("assessments" == command ||
              "asmts" == command) {
     return show_assessments(argc, argv);
+  } else if ("problems" == command) {
+    return show_problems(argc, argv);
   } else {
     Logger::fatal << "Unrecognized command: " << command << Logger::endl;
   }
