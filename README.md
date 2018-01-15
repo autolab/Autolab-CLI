@@ -18,4 +18,6 @@ The default is non-release builds. To build a release version, when inside 'buil
 
 ## How to use
 
+First, register a new application on your deployment of Autolab. The redirect_uri should be '<host>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method. Enter the generated client_id and client_secret in the source code. (Right now, this is done by modifying the constants defined on the top of 'src/main.c'.
+
 Run 'autolab -h' to find out the commands available.
