@@ -565,28 +565,36 @@ int main(int argc, char *argv[]) {
   if ("setup" == command) {
     return user_setup(cmd);
   } else {
+    Logger::fatal.set_prefix("Cannot start autolab client");
+
     if (!init_autolab_client(ac)) {
       Logger::fatal << "No user set up on this client yet." << Logger::endl
         << Logger::endl
         << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
       return 0;
     }
-
-    if ("download" == command) {
-      return download_asmt(cmd);
-    } else if ("submit" == command) {
-      return submit_asmt(cmd);
-    } else if ("courses" == command) {
-      return show_courses(cmd);
-    } else if ("assessments" == command ||
-               "asmts" == command) {
-      return show_assessments(cmd);
-    } else if ("problems" == command) {
-      return show_problems(cmd);
-    } else if ("scores" == command) {
-      return show_scores(cmd);
-    } else {
-      Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+    try {
+      if ("download" == command) {
+        return download_asmt(cmd);
+      } else if ("submit" == command) {
+        return submit_asmt(cmd);
+      } else if ("courses" == command) {
+        return show_courses(cmd);
+      } else if ("assessments" == command ||
+                 "asmts" == command) {
+        return show_assessments(cmd);
+      } else if ("problems" == command) {
+        return show_problems(cmd);
+      } else if ("scores" == command) {
+        return show_scores(cmd);
+      } else {
+        Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+      }
+    } catch (AutolabClient::InvalidTokenException &e) {
+      Logger::fatal << "Authorization invalid or expired." << Logger::endl
+        << Logger::endl
+        << "Please re-authorize this client by running 'autolab-setup'" << Logger::endl;
+      return 0;
     }
   }
 
