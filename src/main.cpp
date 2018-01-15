@@ -20,10 +20,11 @@ const std::string redirect_uri = "http://localhost:3000/device_flow_auth_cb";
 
 AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
 
-void init_autolab_client(AutolabClient &ac) {
+bool init_autolab_client(AutolabClient &ac) {
   std::string at, rt;
-  load_tokens(at, rt);
+  if (!load_tokens(at, rt)) return false;
   ac.set_tokens(at, rt);
+  return true;
 }
 
 /* help texts */
@@ -556,7 +557,12 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   
-  init_autolab_client(ac);
+  if (!init_autolab_client(ac)) {
+    Logger::fatal << "No user set up on this client yet." << Logger::endl
+      << Logger::endl
+      << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
+    return 0;
+  }
 
   // determine what command it is
   std::string command(argv[1]);
