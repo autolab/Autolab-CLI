@@ -21,6 +21,8 @@ This project uses CMake. To build:
 
 The built binary is /build/src/autolab.
 
+You can optionally run `make install` to install the built binaries (typically to `/usr/local/bin/`).
+
 ### Build Options
 
 There are two builds available: release and non-release. Release builds do not contain debug output (output that uses Logger::debug).

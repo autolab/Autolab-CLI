@@ -16,3 +16,5 @@ find_library(CURL_LIB curl)
 target_link_libraries(autolab ${CURL_LIB})
 
 include_directories(. "${PROJECT_BINARY_DIR}")
+
+install (TARGETS autolab DESTINATION bin)
