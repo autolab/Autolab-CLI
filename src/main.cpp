@@ -134,7 +134,7 @@ int perform_device_flow(AutolabClient &ac) {
   std::string user_code, verification_uri;
   ac.device_flow_init(user_code, verification_uri);
   Logger::info << "Please visit " << verification_uri << " and enter the code: " << user_code << Logger::endl;
-  Logger::info << "Waiting for user authorization ..." << Logger::endl;
+  Logger::info << Logger::endl << "Waiting for user authorization ..." << Logger::endl;
 
   int res = ac.device_flow_authorize(300); // wait for 5 minutes max
   if (res == 1) {
@@ -505,6 +505,7 @@ int show_scores(cmdargs &cmd) {
   return 0;
 }
 
+/* must manually init ac */
 int user_setup(cmdargs &cmd) {
   if (cmd.has_option("-h", "--help")) {
     print_setup_help();
@@ -513,7 +514,9 @@ int user_setup(cmdargs &cmd) {
 
   bool option_force = cmd.has_option("-f", "--force");
 
-  if (!option_force) {
+  bool user_exists = init_autolab_client(ac);
+
+  if (user_exists && !option_force) {
     // perform a check if not a forced setup
     bool token_valid = true;
     rapidjson::Document user_info;
@@ -529,7 +532,7 @@ int user_setup(cmdargs &cmd) {
     }
   }
 
-  // user non-existant, or existing user's credentials no longer work
+  // user non-existant, or existing user's credentials no longer work, or forced
   int result = perform_device_flow(ac);
   if (result == 0) {
     Logger::info << Logger::endl << "User setup complete." << Logger::endl;
@@ -557,32 +560,34 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   
-  if (!init_autolab_client(ac)) {
-    Logger::fatal << "No user set up on this client yet." << Logger::endl
-      << Logger::endl
-      << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
-    return 0;
-  }
-
   // determine what command it is
   std::string command(argv[1]);
   if ("setup" == command) {
     return user_setup(cmd);
-  } else if ("download" == command) {
-    return download_asmt(cmd);
-  } else if ("submit" == command) {
-    return submit_asmt(cmd);
-  } else if ("courses" == command) {
-    return show_courses(cmd);
-  } else if ("assessments" == command ||
-             "asmts" == command) {
-    return show_assessments(cmd);
-  } else if ("problems" == command) {
-    return show_problems(cmd);
-  } else if ("scores" == command) {
-    return show_scores(cmd);
   } else {
-    Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+    if (!init_autolab_client(ac)) {
+      Logger::fatal << "No user set up on this client yet." << Logger::endl
+        << Logger::endl
+        << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
+      return 0;
+    }
+
+    if ("download" == command) {
+      return download_asmt(cmd);
+    } else if ("submit" == command) {
+      return submit_asmt(cmd);
+    } else if ("courses" == command) {
+      return show_courses(cmd);
+    } else if ("assessments" == command ||
+               "asmts" == command) {
+      return show_assessments(cmd);
+    } else if ("problems" == command) {
+      return show_problems(cmd);
+    } else if ("scores" == command) {
+      return show_scores(cmd);
+    } else {
+      Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+    }
   }
 
   return 0;
