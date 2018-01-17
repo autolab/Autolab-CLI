@@ -128,6 +128,12 @@ void print_setup_help() {
     << "Initiate user setup for the current user." << Logger::endl;
 }
 
+void print_not_in_asmt_dir_error() {
+  Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl
+    << Logger::endl
+    << "Please change directory or specify the course and assessment names" << Logger::endl;
+}
+
 /* helpers */
 int perform_device_flow(AutolabClient &ac) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
@@ -172,8 +178,7 @@ void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name
   // attempt to load names from asmt-file
   bool found_asmt_file = read_asmt_file(course_name_config, asmt_name_config);
   if (!found_asmt_file && !user_specified_names) {
-    Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl << Logger::endl
-      << "Please change directory or specify the course and assessment names" << Logger::endl;
+    print_not_in_asmt_dir_error();
     exit(0);
   }
 
@@ -409,7 +414,10 @@ int show_problems(cmdargs &cmd) {
   if (cmd.nargs() >= 3) {
     parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
   } else {
-    read_asmt_file(course_name, asmt_name);
+    if (!read_asmt_file(course_name, asmt_name)) {
+      print_not_in_asmt_dir_error();
+      exit(0);
+    }
   }
 
   rapidjson::Document problems;
@@ -450,7 +458,10 @@ int show_scores(cmdargs &cmd) {
   if (cmd.nargs() >= 3) {
     parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
   } else {
-    read_asmt_file(course_name, asmt_name);
+    if (!read_asmt_file(course_name, asmt_name)) {
+      print_not_in_asmt_dir_error();
+      exit(0);
+    }
   }
 
   rapidjson::Document problems;
