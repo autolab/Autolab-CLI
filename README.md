@@ -11,6 +11,14 @@ This C++ project has the following dependencies:
 
 Please make sure the dependencies are installed prior to building.
 
+### Getting Client Credentials
+
+The program requires client credentials in order to build.
+
+First, register a new application on your deployment of Autolab. The redirect_uri should be '\<host\>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method. To test building without credentials, use empty strings as credentials and continue.
+
+Then, create file src/app_credentials.h by making a copy of src/app_credentials.h.template, and enter the generated client_id and client_secret into the predefined fields in the file.
+
 ### Build Instructions
 
 This project uses CMake. To build:
@@ -30,7 +38,5 @@ There are two builds available: release and non-release. Release builds do not c
 The default is non-release builds. To build a release version, when inside 'build' directory, run `cmake -Dreleaese=ON .` (note the period at the end), then run `make`.
 
 ## How to use
-
-First, register a new application on your deployment of Autolab. The redirect_uri should be '\<host\>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method. Enter the generated client_id and client_secret in the source code. (Right now, this is done by modifying the constants defined on the top of 'src/main.c').
 
 Run 'autolab -h' to find out the commands available.

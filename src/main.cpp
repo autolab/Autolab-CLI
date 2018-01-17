@@ -13,11 +13,9 @@
 #include "logger.h"
 #include "build_config.h"
 
-/* globals */
-const std::string client_id = "c021c9b12dc597b5b42d783ee285a2bc9a8afcce4a60db5b4b97a1cda551f48d";
-const std::string client_secret = "5cce1a3f5968308defe8a15d4cb1e47250fc88976ebf9c084155fc86da8050f1";
-const std::string redirect_uri = "http://localhost:3000/device_flow_auth_cb";
+#include "app_credentials.h"
 
+/* globals */
 AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
 
 bool init_autolab_client(AutolabClient &ac) {
