@@ -94,19 +94,6 @@ static size_t write_callback(char *data, size_t size, size_t nmemb,
   return size*nmemb;
 }
 
-void setup_multipart_form(CURL *curl, std::string filename) {
-  curl_mimepart *field = NULL;
-  /* Create the form */ 
-  curl_mime *form = curl_mime_init(curl);
-
-  /* Fill in the file upload field */ 
-  field = curl_mime_addpart(form);
-  curl_mime_name(field, "submission[file]");
-  curl_mime_filedata(field, filename.c_str());
-
-  curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
-}
-
 std::string AutolabClient::construct_params(CURL *curl, AutolabClient::param_list &params) {
   std::string result;
   size_t length = params.size();
@@ -133,8 +120,9 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
 {
   CURL *curl;
   CURLcode res;
-  curl_mime *form = nullptr;
   curl_mimepart *field = nullptr;
+  struct curl_httppost *formpost = nullptr;
+  struct curl_httppost *lastptr = nullptr;
 
   curl = curl_easy_init();
   err_assert(curl, "Error init-ing easy interface");
@@ -152,12 +140,13 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
   } else {             // POST
     if (rstate->file_upload) {
       // setup form
-      form = curl_mime_init(curl);
-      field = curl_mime_addpart(form);
-      curl_mime_name(field, "submission[file]");
-      curl_mime_filedata(field, rstate->upload_filename.c_str());
+      curl_formadd(&formpost,
+                   &lastptr,
+                   CURLFORM_COPYNAME, "submission[file]",
+                   CURLFORM_FILE, rstate->upload_filename.c_str(),
+                   CURLFORM_END);
       // insert form
-      curl_easy_setopt(curl, CURLOPT_MIMEPOST, form);
+      curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
       // add params
       full_path.append("?" + param_str);
     } else {
@@ -181,7 +170,7 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
 
   // free resources
   free_params(params);
-  if (form) curl_mime_free(form);
+  if (formpost) curl_formfree(formpost);
 
   curl_easy_cleanup(curl);
 
