@@ -461,6 +461,7 @@ int show_scores(cmdargs &cmd) {
     << "(Only submissions made via this client can be shown)" << Logger::endl
     << Logger::endl;
 
+  // print table header
   std::vector<std::pair<std::string, int>> prob_list;
   Logger::info << "| version | ";
   for (auto &p : problems.GetArray()) {
@@ -477,29 +478,42 @@ int show_scores(cmdargs &cmd) {
   }
   Logger::info << Logger::endl;
 
+  // print horizontal line
+  Logger::info << "+" << std::string(col1_length, '-') << "+";
+  for (auto &p : prob_list) {
+    Logger::info << std::string(p.second, '-') << "+";
+  }
+  Logger::info << Logger::endl;
+
+  // get submissions
   rapidjson::Document subs;
   ac.get_submissions(subs, course_name, asmt_name);
   check_error_and_exit(subs);
 
   Logger::debug << "Found " << subs.Size() << " submissions." << Logger::endl;
 
-  int nprint = option_all ? subs.Size() : 1;
-  for (int i = 0; i < nprint; i++) {
-    const auto &s = subs.GetArray()[i].GetObject();
-    Logger::info << "|" << std::setw(col1_length) << s["version"].GetInt() << "|";
+  // print actual table
+  if (subs.Size() == 0) {
+    Logger::info << "[none]" << Logger::endl;
+  } else {
+    int nprint = option_all ? subs.Size() : 1;
+    for (int i = 0; i < nprint; i++) {
+      const auto &s = subs.GetArray()[i].GetObject();
+      Logger::info << "|" << std::setw(col1_length) << s["version"].GetInt() << "|";
 
-    const auto &score = s["scores"].GetObject();
-    for (auto &p : prob_list) {
-      Logger::info << std::setw(p.second);
-      if (score.HasMember(p.first.c_str()) && score[p.first.c_str()].IsFloat()) {
-        Logger::info << score[p.first.c_str()].GetFloat();
-      } else {
-        Logger::info << "--";
+      const auto &score = s["scores"].GetObject();
+      for (auto &p : prob_list) {
+        Logger::info << std::setw(p.second);
+        if (score.HasMember(p.first.c_str()) && score[p.first.c_str()].IsFloat()) {
+          Logger::info << score[p.first.c_str()].GetFloat();
+        } else {
+          Logger::info << "--";
+        }
+        Logger::info << "|";
       }
-      Logger::info << "|";
+      
+      Logger::info << Logger::endl;
     }
-    
-    Logger::info << Logger::endl;
   }
 
   return 0;
