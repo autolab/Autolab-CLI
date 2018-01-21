@@ -1,6 +1,7 @@
 #include <chrono>
 #include <thread> // sleep_for
 #include <sstream>
+#include <string>
 
 #include "autolab_client.h"
 #include "logger.h"
@@ -492,6 +493,18 @@ void AutolabClient::get_submissions(rapidjson::Document &result, std::string cou
 
   AutolabClient::param_list params;
   init_regular_params(params);
+
+  make_request(result, path, params);
+}
+
+void AutolabClient::get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name) {
+  std::string path;
+  init_regular_path(path);
+  path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submissions/" + std::to_string(sub_version) + "/feedback");
+
+  AutolabClient::param_list params;
+  init_regular_params(params);
+  params.emplace_back("problem", problem_name);
 
   make_request(result, path, params);
 }

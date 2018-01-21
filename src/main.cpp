@@ -116,6 +116,20 @@ void print_scores_help() {
     << "optional if inside an autolab assessment directory." << Logger::endl;
 }
 
+void print_feedback_help() {
+  Logger::info << "usage: autolab feedback [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
+    << Logger::endl
+    << "options:" << Logger::endl
+    << "  -v,--version <version_num>    Get feedback for this particular version" << Logger::endl
+    << "  -p,--problem <problem_name>   Get feedback for this problem" << Logger::endl
+    << "  -h,--help                     Show this help message" << Logger::endl
+    << Logger::endl
+    << "Gets feedback for a problem of an assessment. If version number is not given, " << Logger::endl
+    << "the latest version will be used. If problem_name is not given, the first" << Logger::endl
+    << "problem will be used. Course and assessment names are optional if inside" << Logger::endl
+    << "an autolab assessment directory." << Logger::endl;
+}
+
 void print_setup_help() {
   Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
     << Logger::endl
@@ -528,6 +542,77 @@ int show_scores(cmdargs &cmd) {
   return 0;
 }
 
+int show_feedback(cmdargs &cmd) {
+  if (cmd.has_option("-h", "--help")) {
+    print_feedback_help();
+    return 0;
+  }
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot get feedback");
+
+  bool option_all = cmd.has_option("-a", "--all");
+  std::string option_problem = cmd.get_option("-p", "--problem");
+  std::string option_version = cmd.get_option("-v", "--version");
+
+  std::string course_name, asmt_name;
+  // user-specified names take precedence
+  if (cmd.nargs() >= 3) {
+    parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+  } else {
+    if (!read_asmt_file(course_name, asmt_name)) {
+      print_not_in_asmt_dir_error();
+      exit(0);
+    }
+  }
+
+  // determine version number
+  int version = -1;
+  if (option_version.length() == 0) {
+    // use latest version
+    rapidjson::Document subs;
+    ac.get_submissions(subs, course_name, asmt_name);
+    check_error_and_exit(subs);
+
+    if (subs.Size() == 0) {
+      Logger::fatal << "No submissions available for this assessment." << Logger::endl;
+      return 0;
+    }
+
+    version = subs.GetArray()[0].GetObject()["version"].GetInt();
+  } else {
+    version = std::stoi(option_version);
+  }
+
+  // determine problem name
+  if (option_problem.length() == 0) {
+    // use first problem
+    rapidjson::Document problems;
+    ac.get_problems(problems, course_name, asmt_name);
+    check_error_and_exit(problems);
+
+    if (problems.Size() == 0) {
+      Logger::fatal << "This assessment has no problems." << Logger::endl;
+      return 0;
+    }
+
+    option_problem = problems.GetArray()[0].GetObject()["name"].GetString();
+  }
+  Logger::debug << "Using problem name: " << option_problem << Logger::endl;
+
+  rapidjson::Document feedback;
+  ac.get_feedback(feedback, course_name, asmt_name, version, option_problem);
+  check_error_and_exit(feedback);
+
+  if (!feedback.HasMember("feedback")) {
+    Logger::fatal << "Unexpected response. Expected 'feedback' key." << Logger::endl;
+    return 0;
+  }
+
+  Logger::info << feedback["feedback"].GetString() << Logger::endl;
+  return 0;  
+}
+
 /* must manually init ac */
 int user_setup(cmdargs &cmd) {
   if (cmd.has_option("-h", "--help")) {
@@ -610,6 +695,8 @@ int main(int argc, char *argv[]) {
         return show_problems(cmd);
       } else if ("scores" == command) {
         return show_scores(cmd);
+      } else if ("feedback" == command) {
+        return show_feedback(cmd);
       } else {
         Logger::fatal << "Unrecognized command: " << command << Logger::endl;
       }
