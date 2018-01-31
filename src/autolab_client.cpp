@@ -121,7 +121,6 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
 {
   CURL *curl;
   CURLcode res;
-  curl_mimepart *field = nullptr;
   struct curl_httppost *formpost = nullptr;
   struct curl_httppost *lastptr = nullptr;
 
