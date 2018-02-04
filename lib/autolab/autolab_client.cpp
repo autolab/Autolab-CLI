@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "autolab_client.h"
+#include "autolab/autolab_client.h"
 #include "logger.h"
 
 const std::chrono::seconds device_flow_authorize_wait_duration(5);

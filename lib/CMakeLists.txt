@@ -1,0 +1,2 @@
+add_subdirectory(autolab)
+add_subdirectory(logger)

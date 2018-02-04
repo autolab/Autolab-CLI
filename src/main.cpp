@@ -6,8 +6,8 @@
 #include <iomanip>
 
 #include "cmdargs.h"
-#include "autolab_client.h"
-#include "client_helpers.h"
+#include "autolab/autolab_client.h"
+#include "autolab/client_helpers.h"
 #include "context_manager.h"
 #include "file_utils.h"
 #include "logger.h"

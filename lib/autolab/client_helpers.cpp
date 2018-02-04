@@ -1,4 +1,4 @@
-#include "client_helpers.h"
+#include "autolab/client_helpers.h"
 #include "logger.h"
 
 /* find course using name_hint

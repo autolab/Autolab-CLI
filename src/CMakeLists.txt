@@ -8,13 +8,14 @@ configure_file(
   "${PROJECT_BINARY_DIR}/build_config.h"
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_executable(autolab-client 
+  main.cpp file_utils.cpp context_manager.cpp cmdargs.cpp)
+set_target_properties(autolab-client PROPERTIES OUTPUT_NAME autolab)
 
-add_executable(autolab main.cpp file_utils.cpp context_manager.cpp autolab_client.cpp client_helpers.cpp logger.cpp cmdargs.cpp)
+target_include_directories(autolab-client
+  PRIVATE . "${PROJECT_BINARY_DIR}")
 
-find_library(CURL_LIB curl)
-target_link_libraries(autolab ${CURL_LIB})
+target_link_libraries(autolab-client
+  autolab logger)
 
-include_directories(. "${PROJECT_BINARY_DIR}")
-
-install (TARGETS autolab DESTINATION bin)
+install (TARGETS autolab-client DESTINATION bin)
