@@ -6,12 +6,18 @@
 
 namespace Autolab {
 
+  /* resource packages */
   enum authorization {student,
                       course_assistant,
                       instructor,
                       administrator};
 
   enum attachment_format {none, url, file};
+
+  struct Attachment {
+    attachment_format format;
+    std::string url;
+  };
 
   struct Course {
     std::string name;
@@ -62,6 +68,43 @@ namespace Autolab {
     time_t created_at;
     std::string filename;
     std::vector<Score> scores;
+  };
+
+  struct User {
+    std::string first_name;
+    std::string last_name;
+    std::string email;
+    std::string school;
+    std::string major;
+    std::string year;
+  };
+
+  /* classes and methods */
+  class Client {
+  public:
+    /* setup-related */
+    Client(std::string client_id, std::string client_secret, std::string redirect_uri,
+           void (*new_token_callback)(std::string, std::string));
+    void SetTokens(std::string access_token, std::string refresh_token);
+
+    /* oauth-related */
+    void DeviceFlowInit(std::string &user_code, std::string &verification_uri);
+    int DeviceFlowAuthorize(size_t timeout);
+
+    /* resource-related */
+    void GetUserInfo(User &user);
+    void GetCourses(Course &course);
+    void GetAssessments(std::vector<Assessment> &asmts, std::string course_name);
+    void GetAssessmentDetails(DetailedAssessment &asmt, std::string course_name, std::string asmt_name);
+    void GetProblems(std::vector<Problem> &probs, std::string course_name, std::string asmt_name);
+    void GetSubmissions(std::vector<Submission> &subs, std::string course_name, std::string asmt_name);
+    
+    /* action-related */
+    std::string GetFeedback(std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
+    void DownloadHandout(Attachment &handout, std::string download_dir, std::string course_name, std::string asmt_name);
+    void DownloadWriteup(Attachment &writeup, std::string download_dir, std::string course_name, std::string asmt_name);
+    // returns the new submission version number on success
+    int SubmitAssessment(std::string course_name, std::string asmt_name, std::string filename);
   };
 
 }
