@@ -1,9 +1,9 @@
-#ifndef BUILD_CONFIG_H
-#define BUILD_CONFIG_H
+#ifndef AUTOLAB_BUILD_CONFIG_H_
+#define AUTOLAB_BUILD_CONFIG_H_
 
 const int VERSION_MAJOR = @VERSION_MAJOR@;
 const int VERSION_MINOR = @VERSION_MINOR@;
 
 #cmakedefine PRINT_DEBUG
 
-#endif /* BUILD_CONFIG_H */
+#endif /* AUTOLAB_BUILD_CONFIG_H_ */

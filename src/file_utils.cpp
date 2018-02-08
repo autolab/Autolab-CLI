@@ -1,13 +1,13 @@
 #include "file_utils.h"
 
-#include <string.h>
 #include <dirent.h>   // dir-related
-#include <sys/stat.h> // mkdir, stat
-#include <fcntl.h>    // open
-#include <unistd.h>   // close, write
-#include <pwd.h>      // getpwuid
 #include <errno.h>
+#include <fcntl.h>    // open
+#include <pwd.h>      // getpwuid
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h> // mkdir, stat
+#include <unistd.h>   // close, write
 
 const char *home_directory = NULL;
 char curr_directory[MAX_DIR_LENGTH];

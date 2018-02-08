@@ -1,18 +1,18 @@
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
-#include <algorithm>
-#include <utility>
-#include <iomanip>
-
-#include "cmdargs.h"
-#include "autolab/raw_client.h"
-#include "context_manager.h"
-#include "file_utils.h"
-#include "logger.h"
-#include "build_config.h"
 
 #include "app_credentials.h"
+#include "build_config.h"
+#include "cmdargs.h"
+#include "context_manager.h"
+#include "file_utils.h"
+
+#include "autolab/raw_client.h"
+#include "logger.h"
 
 typedef Autolab::RawClient AutolabClient;
 

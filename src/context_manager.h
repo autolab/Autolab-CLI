@@ -1,5 +1,5 @@
-#ifndef CONTEXT_MANAGER_H
-#define CONTEXT_MANAGER_H
+#ifndef AUTOLAB_CONTEXT_MANAGER_H_
+#define AUTOLAB_CONTEXT_MANAGER_H_
 
 #include <string>
 
@@ -13,4 +13,4 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name);
 void write_asmt_file(std::string filename, std::string course_name, std::string asmt_name);
 
 
-#endif /* CONTEXT_MANAGER_H */
+#endif /* AUTOLAB_CONTEXT_MANAGER_H_ */

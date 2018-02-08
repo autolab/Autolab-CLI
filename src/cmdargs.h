@@ -1,9 +1,9 @@
-#ifndef CMDARGS_H
-#define CMDARGS_H
+#ifndef AUTOLAB_CMDARGS_H_
+#define AUTOLAB_CMDARGS_H_
 
-#include <vector>
 #include <string>
 #include <utility> // pair
+#include <vector>
 
 struct cmdargs {
   // matches option name/key to option value
@@ -34,4 +34,4 @@ struct cmdargs {
 
 bool parse_cmdargs(cmdargs &cmd, int argc, char *argv[]);
 
-#endif /* CMDARGS_H */
+#endif /* AUTOLAB_CMDARGS_H_ */

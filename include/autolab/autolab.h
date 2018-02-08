@@ -1,7 +1,8 @@
 #ifndef LIBAUTOLAB_AUTOLAB_H_
 #define LIBAUTOLAB_AUTOLAB_H_
 
-#include <ctime>
+#include <time.h>
+
 #include <string>
 #include <vector>
 

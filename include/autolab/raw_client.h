@@ -1,12 +1,12 @@
 #ifndef LIBAUTOLAB_RAW_CLIENT_H_
 #define LIBAUTOLAB_RAW_CLIENT_H_
 
-#include <ostream>
 #include <fstream>
+#include <ostream>
+#include <string>
 #include <vector>
 
 #include <curl/curl.h>
-
 #include <rapidjson/document.h>
 
 namespace Autolab {

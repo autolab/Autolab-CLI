@@ -1,7 +1,7 @@
+#include "logger.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "logger.h"
 
 void err_assert(bool value) {
   if (!value) {

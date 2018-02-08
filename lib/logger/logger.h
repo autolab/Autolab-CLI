@@ -1,11 +1,12 @@
-#ifndef LOGGER_H
-#define LOGGER_H
-
-#include "build_config.h"
+#ifndef AUTOLAB_LOGGER_H_
+#define AUTOLAB_LOGGER_H_
 
 #include <iostream>
+#include <string>
 
 #include <rapidjson/document.h>
+
+#include "build_config.h"
 
 void err_assert(bool value);
 void err_assert(bool value, const char *msg);
@@ -66,4 +67,4 @@ namespace Logger {
   debug_logger &debug_logger::operator<<(line_ending_symbol end);
 }
 
-#endif /* LOGGER_H */
+#endif /* AUTOLAB_LOGGER_H_ */
