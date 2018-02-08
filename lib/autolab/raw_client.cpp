@@ -3,8 +3,10 @@
 #include <sstream>
 #include <string>
 
-#include "autolab/autolab_client.h"
+#include "autolab/raw_client.h"
 #include "logger.h"
+
+namespace Autolab {
 
 const std::chrono::seconds device_flow_authorize_wait_duration(5);
 
@@ -15,28 +17,28 @@ const std::string device_flow_init_path = "/oauth/device_flow_init";
 const std::string device_flow_authorize_path = "/oauth/device_flow_authorize";
 
 /* initialization */
-int AutolabClient::curl_ready = false;
+int RawClient::curl_ready = false;
 
-AutolabClient::AutolabClient(const std::string &id, const std::string &st, 
+RawClient::RawClient(const std::string &id, const std::string &st, 
   const std::string &ru, void (*tk_cb)(std::string, std::string)) :
   client_id(id), client_secret(st), redirect_uri(ru), api_version(1),
   new_tokens_callback(tk_cb)
 {
-  AutolabClient::init_curl();
+  RawClient::init_curl();
 }
 
-int AutolabClient::init_curl() {
-  if (AutolabClient::curl_ready) return 0;
+int RawClient::init_curl() {
+  if (RawClient::curl_ready) return 0;
 
   CURLcode err = curl_global_init(CURL_GLOBAL_DEFAULT);
   if (err) return -1;
 
-  AutolabClient::curl_ready = true;
+  RawClient::curl_ready = true;
   return 0;
 }
 
 // set access_token and refresh_token
-void AutolabClient::set_tokens(std::string at, std::string rt) {
+void RawClient::set_tokens(std::string at, std::string rt) {
   access_token = at;
   refresh_token = rt;
 }
@@ -48,7 +50,7 @@ void AutolabClient::set_tokens(std::string at, std::string rt) {
 
 // libcurl header callback function
 size_t header_callback(char *data, size_t size, size_t nmemb, 
-                  AutolabClient::request_state *rstate) {
+                  RawClient::request_state *rstate) {
   if (!data) return 0;
 
   if (rstate->consider_download()) {
@@ -83,7 +85,7 @@ size_t header_callback(char *data, size_t size, size_t nmemb,
 
 // libcurl write callback function
 static size_t write_callback(char *data, size_t size, size_t nmemb,
-                  AutolabClient::request_state *rstate) {
+                  RawClient::request_state *rstate) {
   if (!data) return 0;
 
   if (rstate->is_download) {
@@ -95,7 +97,7 @@ static size_t write_callback(char *data, size_t size, size_t nmemb,
   return size*nmemb;
 }
 
-std::string AutolabClient::construct_params(CURL *curl, AutolabClient::param_list &params) {
+std::string RawClient::construct_params(CURL *curl, RawClient::param_list &params) {
   std::string result;
   size_t length = params.size();
   for (size_t i = 0; i < length; i++) {
@@ -107,7 +109,7 @@ std::string AutolabClient::construct_params(CURL *curl, AutolabClient::param_lis
   return result;
 }
 
-void AutolabClient::free_params(AutolabClient::param_list &params) {
+void RawClient::free_params(RawClient::param_list &params) {
   for (auto item : params) {
     curl_free(item.escaped_value);
   }
@@ -115,9 +117,9 @@ void AutolabClient::free_params(AutolabClient::param_list &params) {
 
 /* actually perform the HTTP request using libcurl.
  */
-long AutolabClient::raw_request(AutolabClient::request_state *rstate,
-  const std::string &path, AutolabClient::param_list &params,
-  AutolabClient::HttpMethod method = GET)
+long RawClient::raw_request(RawClient::request_state *rstate,
+  const std::string &path, RawClient::param_list &params,
+  RawClient::HttpMethod method = GET)
 {
   CURL *curl;
   CURLcode res;
@@ -177,7 +179,7 @@ long AutolabClient::raw_request(AutolabClient::request_state *rstate,
   return response_code;
 }
 
-bool AutolabClient::document_has_error(AutolabClient::request_state *rstate, 
+bool RawClient::document_has_error(RawClient::request_state *rstate, 
   const std::string &error_msg)
 {
   if (rstate->is_download) return false;
@@ -194,10 +196,10 @@ bool AutolabClient::document_has_error(AutolabClient::request_state *rstate,
  * and try again.
  */
 const std::string oauth_auth_failed_response = "OAuth2 authorization failed";
-long AutolabClient::raw_request_optional_refresh(
-  AutolabClient::request_state *rstate, 
-  const std::string &path, AutolabClient::param_list &params, 
-  AutolabClient::HttpMethod method = GET, bool refresh = true)
+long RawClient::raw_request_optional_refresh(
+  RawClient::request_state *rstate, 
+  const std::string &path, RawClient::param_list &params, 
+  RawClient::HttpMethod method = GET, bool refresh = true)
 {
   long rc = raw_request(rstate, path, params, method);
   if (!refresh) return rc;
@@ -235,14 +237,14 @@ long AutolabClient::raw_request_optional_refresh(
  *                         the filename for the downloaded file. (name only)
  *   - upload_filename: the name of the file to upload. (relative path)
  */
-long AutolabClient::make_request(rapidjson::Document &response,
-  const std::string &path, AutolabClient::param_list &params,
-  AutolabClient::HttpMethod method = GET, bool refresh = true,
+long RawClient::make_request(rapidjson::Document &response,
+  const std::string &path, RawClient::param_list &params,
+  RawClient::HttpMethod method = GET, bool refresh = true,
   const std::string &download_dir = "",
   const std::string &suggested_filename = "",
   const std::string &upload_filename = "")
 {
-  AutolabClient::request_state rstate(download_dir, suggested_filename);
+  RawClient::request_state rstate(download_dir, suggested_filename);
   if (upload_filename.length() > 0) {
     rstate.upload_filename = upload_filename;
     rstate.file_upload = true;
@@ -263,9 +265,9 @@ long AutolabClient::make_request(rapidjson::Document &response,
 
 /* Authorization (device-flow) & Authentication */
 
-void AutolabClient::device_flow_init(std::string &user_code, std::string &verification_uri) {
+void RawClient::device_flow_init(std::string &user_code, std::string &verification_uri) {
   // make a local copy and start building params
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   params.emplace_back("client_id", client_id);
 
   rapidjson::Document response;
@@ -279,7 +281,7 @@ void AutolabClient::device_flow_init(std::string &user_code, std::string &verifi
   verification_uri = response["verification_uri"].GetString();
 }
 
-void AutolabClient::clear_device_flow_strings() {
+void RawClient::clear_device_flow_strings() {
   device_flow_device_code.clear();
   device_flow_user_code.clear();
 }
@@ -291,13 +293,13 @@ void AutolabClient::clear_device_flow_strings() {
  *           -1 - error, device_flow_init not called
  *           -2 - timed out
  */          
-int AutolabClient::device_flow_authorize(size_t timeout) {
+int RawClient::device_flow_authorize(size_t timeout) {
   if (!device_flow_device_code.length()) {
     // device flow init not called
     return -1;
   }
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   params.emplace_back("client_id", client_id);
   params.emplace_back("device_code", device_flow_device_code);
 
@@ -336,7 +338,7 @@ int AutolabClient::device_flow_authorize(size_t timeout) {
   return -2;
 }
 
-bool AutolabClient::save_tokens_from_response(rapidjson::Document &response) {
+bool RawClient::save_tokens_from_response(rapidjson::Document &response) {
   if (response.HasMember("access_token") && response.HasMember("refresh_token")) {
     // looks good
     access_token = response["access_token"].GetString();
@@ -349,8 +351,8 @@ bool AutolabClient::save_tokens_from_response(rapidjson::Document &response) {
   return false;
 }
 
-bool AutolabClient::get_token_from_authorization_code(std::string authorization_code) {
-  AutolabClient::param_list params;
+bool RawClient::get_token_from_authorization_code(std::string authorization_code) {
+  RawClient::param_list params;
   params.emplace_back("grant_type", "authorization_code");
   params.emplace_back("client_id", client_id);
   params.emplace_back("client_secret", client_secret);
@@ -363,8 +365,8 @@ bool AutolabClient::get_token_from_authorization_code(std::string authorization_
   return save_tokens_from_response(response);
 }
 
-bool AutolabClient::perform_token_refresh() {
-  AutolabClient::param_list params;
+bool RawClient::perform_token_refresh() {
+  RawClient::param_list params;
   params.emplace_back("grant_type", "refresh_token");
   params.emplace_back("client_id", client_id);
   params.emplace_back("client_secret", client_secret);
@@ -377,17 +379,17 @@ bool AutolabClient::perform_token_refresh() {
 }
 
 /* REST Interface wrappers */
-void AutolabClient::init_regular_path(std::string &path) {
+void RawClient::init_regular_path(std::string &path) {
   path.clear();
   path.append("/api/v" + std::to_string(api_version));
 }
 
-void AutolabClient::init_regular_params(AutolabClient::param_list &params) {
+void RawClient::init_regular_params(RawClient::param_list &params) {
   params.clear();
   params.emplace_back("access_token", access_token);
 }
 
-void AutolabClient::update_access_token_in_params(AutolabClient::param_list &params) {
+void RawClient::update_access_token_in_params(RawClient::param_list &params) {
   for (auto &param : params) {
     if (param.key == "access_token") {
       param.value = access_token;
@@ -396,114 +398,116 @@ void AutolabClient::update_access_token_in_params(AutolabClient::param_list &par
   }
 }
 
-void AutolabClient::get_user_info(rapidjson::Document &result) {
+void RawClient::get_user_info(rapidjson::Document &result) {
   std::string path;
   init_regular_path(path);
   path.append("/user");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params);
 }
 
-void AutolabClient::get_courses(rapidjson::Document &result) {
+void RawClient::get_courses(rapidjson::Document &result) {
   std::string path;
   init_regular_path(path);
   path.append("/courses");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
   params.emplace_back("state", "current");
 
   make_request(result, path, params);
 }
 
-void AutolabClient::get_assessments(rapidjson::Document &result, std::string course_name) {
+void RawClient::get_assessments(rapidjson::Document &result, std::string course_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params);
 }
 
-void AutolabClient::get_assessment_details(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+void RawClient::get_assessment_details(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name);
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params);
 }
 
-void AutolabClient::get_problems(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+void RawClient::get_problems(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/problems");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params);
 }
 
-void AutolabClient::download_handout(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
+void RawClient::download_handout(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/handout");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params, GET, true, download_dir, "handout");
 }
 
-void AutolabClient::download_writeup(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
+void RawClient::download_writeup(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/writeup");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params, GET, true, download_dir, "writeup");
 }
 
-void AutolabClient::submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name, std::string filename) {
+void RawClient::submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name, std::string filename) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submit");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params, POST, true, "", "", filename);
 }
 
-void AutolabClient::get_submissions(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
+void RawClient::get_submissions(rapidjson::Document &result, std::string course_name, std::string asmt_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submissions");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
 
   make_request(result, path, params);
 }
 
-void AutolabClient::get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name) {
+void RawClient::get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name) {
   std::string path;
   init_regular_path(path);
   path.append("/courses/" + course_name + "/assessments/" + asmt_name + "/submissions/" + std::to_string(sub_version) + "/feedback");
 
-  AutolabClient::param_list params;
+  RawClient::param_list params;
   init_regular_params(params);
   params.emplace_back("problem", problem_name);
 
   make_request(result, path, params);
 }
+
+} /* namespace Autolab */

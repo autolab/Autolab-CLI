@@ -1,5 +1,5 @@
-#ifndef AUTOLAB_CLIENT_H
-#define AUTOLAB_CLIENT_H
+#ifndef LIBAUTOLAB_RAW_CLIENT_H_
+#define LIBAUTOLAB_RAW_CLIENT_H_
 
 #include <ostream>
 #include <fstream>
@@ -9,9 +9,11 @@
 
 #include <rapidjson/document.h>
 
-class AutolabClient {
+namespace Autolab {
+
+class RawClient {
 public:
-  AutolabClient(const std::string &id, const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string));
+  RawClient(const std::string &id, const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string));
 
   // setters and getters
   void set_tokens(std::string at, std::string rt);
@@ -138,4 +140,6 @@ private:
   void update_access_token_in_params(param_list &params);
 };
 
-#endif /* AUTOLAB_CLIENT_H */
+}
+
+#endif /* LIBAUTOLAB_RAW_CLIENT_H_ */

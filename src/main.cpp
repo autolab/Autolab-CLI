@@ -6,14 +6,15 @@
 #include <iomanip>
 
 #include "cmdargs.h"
-#include "autolab/autolab_client.h"
-#include "autolab/client_helpers.h"
+#include "autolab/raw_client.h"
 #include "context_manager.h"
 #include "file_utils.h"
 #include "logger.h"
 #include "build_config.h"
 
 #include "app_credentials.h"
+
+typedef Autolab::RawClient AutolabClient;
 
 /* globals */
 AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
