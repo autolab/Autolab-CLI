@@ -1,5 +1,5 @@
 add_library(autolab
-  raw_client.cpp)
+  json_helpers.cpp client.cpp raw_client.cpp)
 
 target_include_directories(autolab
   PUBLIC "${PROJECT_SOURCE_DIR}/include"
