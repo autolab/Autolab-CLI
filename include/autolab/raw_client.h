@@ -27,22 +27,6 @@ public:
   void device_flow_init(std::string &user_code, std::string &verification_uri);
   int device_flow_authorize(size_t timeout);
 
-  class HTTPException: public std::exception {
-  private:
-    std::string msg;
-  public:
-    explicit HTTPException(const char *m) : msg(m) {}
-    virtual const char* what() const throw() {
-        return msg.c_str();
-    }
-  };
-  class InvalidTokenException: public std::exception {
-  public:
-    virtual const char* what() const throw() {
-        return "The provided access token is invalid and the refresh operation failed.";
-    }
-  };
-
   // keeps track of state and config for the current request.
   struct request_state {
     bool file_upload;

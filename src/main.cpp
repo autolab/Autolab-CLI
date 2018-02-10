@@ -11,6 +11,7 @@
 #include "context_manager.h"
 #include "file_utils.h"
 
+#include "autolab/autolab.h"
 #include "autolab/raw_client.h"
 #include "logger.h"
 
@@ -631,7 +632,7 @@ int user_setup(cmdargs &cmd) {
     rapidjson::Document user_info;
     try {
       ac.get_user_info(user_info);
-    } catch (AutolabClient::InvalidTokenException &e) {
+    } catch (Autolab::InvalidTokenException &e) {
       token_valid = false;
     }
     if (token_valid && user_info.HasMember("first_name")) {
@@ -701,7 +702,7 @@ int main(int argc, char *argv[]) {
       } else {
         Logger::fatal << "Unrecognized command: " << command << Logger::endl;
       }
-    } catch (AutolabClient::InvalidTokenException &e) {
+    } catch (Autolab::InvalidTokenException &e) {
       Logger::fatal << "Authorization invalid or expired." << Logger::endl
         << Logger::endl
         << "Please re-authorize this client by running 'autolab-setup'" << Logger::endl;

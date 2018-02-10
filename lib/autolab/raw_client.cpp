@@ -6,6 +6,7 @@
 #include <string>
 #include <thread> // sleep_for
 
+#include "autolab/autolab.h"
 #include "logger.h"
 
 namespace Autolab {

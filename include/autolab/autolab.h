@@ -8,6 +8,7 @@
 
 namespace Autolab {
 
+/* resources */
 enum AuthorizationLevel {student,
                          course_assistant,
                          instructor,
@@ -78,6 +79,40 @@ struct User {
   std::string school;
   std::string major;
   std::string year;
+};
+
+/* exceptions */
+
+// Indicates an error that occurred in HTTP operations.
+class HTTPException: public std::exception {
+private:
+  std::string msg;
+public:
+  explicit HTTPException(std::string m) : msg(m) {}
+  virtual const char* what() const throw() {
+      return msg.c_str();
+  }
+};
+
+// Indicates the current access token and refresh token both do not work.
+// A new set of tokens should be acquired by re-preforming user authorization.
+class InvalidTokenException: public std::exception {
+public:
+  virtual const char* what() const throw() {
+      return "The provided access token is invalid and the refresh operation failed.";
+  }
+};
+
+// Indicates the client failed to receive the data it expected.
+// This likely indicates a version mismatch between the client and the server.
+class InvalidResponseException: public std::exception {
+private:
+  std::string msg;
+public:
+  explicit InvalidResponseException(std::string m) : msg(m) {}
+  virtual const char* what() const throw() {
+      return msg.c_str();
+  }
 };
 
 }
