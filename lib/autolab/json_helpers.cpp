@@ -13,27 +13,27 @@ void throw_unexpected_null_error(std::string key, std::string expected_type) {
   throw Autolab::InvalidResponseException(msg_builder.str());
 }
 
-void assert_invalid_response(bool guard, std::string msg) {
+void require_or_throw_invalid_response(bool guard, std::string msg) {
   if (!guard) {
     throw Autolab::InvalidResponseException(msg);
   }
 }
 
-void assert_is_array(rapidjson::Value &obj) {
-  assert_invalid_response(obj.IsArray(), "Expected json array not found");
+void require_is_array(rapidjson::Value &obj) {
+  require_or_throw_invalid_response(obj.IsArray(), "Expected json array not found");
 }
 
-void assert_is_object(rapidjson::Value &obj) {
-  assert_invalid_response(obj.IsObject(), "Expected json object not found");
+void require_is_object(rapidjson::Value &obj) {
+  require_or_throw_invalid_response(obj.IsObject(), "Expected json object not found");
 }
 
-void assert_key_exists(rapidjson::Value &obj, std::string key) {
-  assert_invalid_response(obj.HasMember(key.c_str()),
+void require_key_exists(rapidjson::Value &obj, std::string key) {
+  require_or_throw_invalid_response(obj.HasMember(key.c_str()),
     "Expected key " + key + " not found in json object.");
 }
 
 rapidjson::Value &get_candidate(rapidjson::Value &obj, std::string key) {
-  assert_key_exists(obj, key);
+  require_key_exists(obj, key);
   return obj[key.c_str()];
 }
 

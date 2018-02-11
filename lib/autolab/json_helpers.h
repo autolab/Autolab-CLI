@@ -3,8 +3,8 @@
 
 #include <rapidjson/document.h>
 
-void assert_is_array(rapidjson::Value &obj);
-void assert_is_object(rapidjson::Value &obj);
+void require_is_array(rapidjson::Value &obj);
+void require_is_object(rapidjson::Value &obj);
 
 // Methods for getting basic types from objects: Bool, Double, Int, String
 // Only get_string has a default fallback value of empty string "". All other

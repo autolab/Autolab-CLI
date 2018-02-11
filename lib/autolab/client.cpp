@@ -60,7 +60,7 @@ void Client::get_user_info(User &user) {
   raw_client.get_user_info(user_info_doc);
   check_for_error_response(user_info_doc);
 
-  assert_is_object(user_info_doc);
+  require_is_object(user_info_doc);
 
   user.first_name = get_string_force(user_info_doc, "first_name");
   user.last_name  = get_string_force(user_info_doc, "last_name");
@@ -75,7 +75,7 @@ void Client::get_courses(std::vector<Course> &courses) {
   raw_client.get_courses(courses_doc);
   check_for_error_response(courses_doc);
 
-  assert_is_array(courses_doc);
+  require_is_array(courses_doc);
   for (auto &c_doc : courses_doc.GetArray()) {
     Course course;
     course.name         = get_string_force(c_doc, "name");
@@ -95,7 +95,7 @@ void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_
   raw_client.get_assessments(asmts_doc, course_name);
   check_for_error_response(asmts_doc);
 
-  assert_is_array(asmts_doc);
+  require_is_array(asmts_doc);
   for (auto &a_doc : asmts_doc.GetArray()) {
     Assessment asmt;
     asmt.name          = get_string_force(a_doc, "name");
@@ -116,7 +116,7 @@ void Client::get_assessment_details(DetailedAssessment &dasmt,
   raw_client.get_assessments(dasmt_doc, course_name);
   check_for_error_response(dasmt_doc);
 
-  assert_is_object(dasmt_doc);
+  require_is_object(dasmt_doc);
 
   Assessment &asmt = dasmt.asmt;
   asmt.name             = get_string_force(dasmt_doc, "name");
@@ -146,7 +146,7 @@ void Client::get_problems(std::vector<Problem> &probs, std::string course_name,
   raw_client.get_problems(probs_doc, course_name, asmt_name);
   check_for_error_response(probs_doc);
 
-  assert_is_array(probs_doc);
+  require_is_array(probs_doc);
   for (auto &p_doc : probs_doc.GetArray()) {
     Problem prob;
     prob.name        = get_string_force(p_doc, "name");
@@ -164,7 +164,7 @@ void Client::get_submissions(std::vector<Submission> &subs,
   raw_client.get_submissions(subs_doc, course_name, asmt_name);
   check_for_error_response(subs_doc);
 
-  assert_is_array(subs_doc);
+  require_is_array(subs_doc);
   for (auto &s_doc : subs_doc.GetArray()) {
     Submission sub;
     sub.version    = get_int_force(s_doc, "version");
@@ -173,7 +173,7 @@ void Client::get_submissions(std::vector<Submission> &subs,
     std::vector<Score> scores;
 
     rapidjson::Value &scores_doc = s_doc["scores"];
-    assert_is_array(scores_doc);
+    require_is_array(scores_doc);
     for (auto &sc_doc : scores_doc.GetArray()) {
       Score score;
       score.problem_name = get_string_force(sc_doc, "problem_name");
@@ -195,7 +195,7 @@ std::string Client::get_feedback(std::string course_name, std::string asmt_name,
   raw_client.get_feedback(feedback_doc, course_name, asmt_name, sub_version, problem_name);
   check_for_error_response(feedback_doc);
 
-  assert_is_object(feedback_doc);
+  require_is_object(feedback_doc);
   return get_string_force(feedback_doc, "feedback");
 }
 
@@ -223,7 +223,7 @@ int Client::submit_assessment(std::string course_name, std::string asmt_name,
   raw_client.submit_assessment(response_doc, course_name, asmt_name, filename);
   check_for_error_response(response_doc);
 
-  assert_is_object(response_doc);
+  require_is_object(response_doc);
   return get_int_force(response_doc, "version");
 }
 
