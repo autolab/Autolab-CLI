@@ -6,6 +6,7 @@
 
 #include "autolab/raw_client.h"
 #include "json_helpers.h"
+#include "logger.h"
 
 namespace Autolab {
 
@@ -44,10 +45,20 @@ void download_response_to_attachment_format(Attachment &attachment,
   }
 }
 
+void check_for_error_response(rapidjson::Value &response) {
+  if (response.IsObject() &&
+      response.HasMember("error")) {
+    std::string error_msg = get_string(response, "error");
+    Logger::debug << "API returned error: " << error_msg << Logger::endl;
+    throw ErrorResponseException(error_msg);
+  }
+}
+
 /* resource-related */
 void Client::get_user_info(User &user) {
   rapidjson::Document user_info_doc;
   raw_client.get_user_info(user_info_doc);
+  check_for_error_response(user_info_doc);
 
   assert_is_object(user_info_doc);
 
@@ -62,6 +73,7 @@ void Client::get_user_info(User &user) {
 void Client::get_courses(std::vector<Course> &courses) {
   rapidjson::Document courses_doc;
   raw_client.get_courses(courses_doc);
+  check_for_error_response(courses_doc);
 
   assert_is_array(courses_doc);
   for (auto &c_doc : courses_doc.GetArray()) {
@@ -81,6 +93,7 @@ void Client::get_courses(std::vector<Course> &courses) {
 void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_name) {
   rapidjson::Document asmts_doc;
   raw_client.get_assessments(asmts_doc, course_name);
+  check_for_error_response(asmts_doc);
 
   assert_is_array(asmts_doc);
   for (auto &a_doc : asmts_doc.GetArray()) {
@@ -101,6 +114,7 @@ void Client::get_assessment_details(DetailedAssessment &dasmt,
     std::string course_name, std::string asmt_name) {
   rapidjson::Document dasmt_doc;
   raw_client.get_assessments(dasmt_doc, course_name);
+  check_for_error_response(dasmt_doc);
 
   assert_is_object(dasmt_doc);
 
@@ -130,6 +144,7 @@ void Client::get_problems(std::vector<Problem> &probs, std::string course_name,
     std::string asmt_name) {
   rapidjson::Document probs_doc;
   raw_client.get_problems(probs_doc, course_name, asmt_name);
+  check_for_error_response(probs_doc);
 
   assert_is_array(probs_doc);
   for (auto &p_doc : probs_doc.GetArray()) {
@@ -147,6 +162,7 @@ void Client::get_submissions(std::vector<Submission> &subs,
     std::string course_name, std::string asmt_name) {
   rapidjson::Document subs_doc;
   raw_client.get_submissions(subs_doc, course_name, asmt_name);
+  check_for_error_response(subs_doc);
 
   assert_is_array(subs_doc);
   for (auto &s_doc : subs_doc.GetArray()) {
@@ -177,6 +193,7 @@ std::string Client::get_feedback(std::string course_name, std::string asmt_name,
     int sub_version, std::string problem_name) {
   rapidjson::Document feedback_doc;
   raw_client.get_feedback(feedback_doc, course_name, asmt_name, sub_version, problem_name);
+  check_for_error_response(feedback_doc);
 
   assert_is_object(feedback_doc);
   return get_string_force(feedback_doc, "feedback");
@@ -186,6 +203,7 @@ void Client::download_handout(Attachment &handout, std::string download_dir,
     std::string course_name, std::string asmt_name) {
   rapidjson::Document response_doc;
   raw_client.download_handout(response_doc, download_dir, course_name, asmt_name);
+  check_for_error_response(response_doc);
 
   download_response_to_attachment_format(handout, response_doc);
 }
@@ -194,6 +212,7 @@ void Client::download_writeup(Attachment &writeup, std::string download_dir,
     std::string course_name, std::string asmt_name) {
   rapidjson::Document response_doc;
   raw_client.download_writeup(response_doc, download_dir, course_name, asmt_name);
+  check_for_error_response(response_doc);
 
   download_response_to_attachment_format(writeup, response_doc);
 }
@@ -202,6 +221,7 @@ int Client::submit_assessment(std::string course_name, std::string asmt_name,
       std::string filename) {
   rapidjson::Document response_doc;
   raw_client.submit_assessment(response_doc, course_name, asmt_name, filename);
+  check_for_error_response(response_doc);
 
   assert_is_object(response_doc);
   return get_int_force(response_doc, "version");

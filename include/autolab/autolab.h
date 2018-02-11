@@ -115,6 +115,16 @@ public:
   }
 };
 
+class ErrorResponseException: public std::exception {
+private:
+  std::string msg;
+public:
+  explicit ErrorResponseException(std::string m) : msg(m) {}
+  virtual const char* what() const throw() {
+      return msg.c_str();
+  }
+};
+
 namespace Utility {
 
 std::time_t string_to_time(std::string str);
