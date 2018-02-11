@@ -1,7 +1,7 @@
 #ifndef LIBAUTOLAB_AUTOLAB_H_
 #define LIBAUTOLAB_AUTOLAB_H_
 
-#include <time.h>
+#include <ctime>
 
 #include <string>
 #include <vector>
@@ -34,14 +34,14 @@ struct Assessment {
   std::string name;
   std::string display_name;
   std::string category_name;
-  time_t start_at;
-  time_t due_at;
-  time_t end_at;
-  time_t grading_deadline;
+  std::time_t start_at;
+  std::time_t due_at;
+  std::time_t end_at;
+  std::time_t grading_deadline;
 };
 
 struct DetailedAssessment {
-  Assessment brief;
+  Assessment asmt;
   std::string description;
   int max_grace_days;
   int max_submissions;
@@ -49,8 +49,8 @@ struct DetailedAssessment {
   bool disable_handins;
   bool has_scoreboard;
   bool has_autograder;
-  AttachmentFormat writeup_format;
   AttachmentFormat handout_format;
+  AttachmentFormat writeup_format;
 };
 
 struct Problem {
@@ -67,7 +67,7 @@ struct Score {
 
 struct Submission {
   int version;
-  time_t created_at;
+  std::time_t created_at;
   std::string filename;
   std::vector<Score> scores;
 };
@@ -114,6 +114,14 @@ public:
       return msg.c_str();
   }
 };
+
+namespace Utility {
+
+std::time_t string_to_time(std::string str);
+AuthorizationLevel string_to_authorization_level(std::string str);
+AttachmentFormat string_to_attachment_format(std::string str_format);
+
+}
 
 }
 
