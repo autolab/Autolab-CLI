@@ -27,7 +27,7 @@ public:
   void get_user_info(User &user);
   void get_courses(std::vector<Course> &courses);
   void get_assessments(std::vector<Assessment> &asmts, std::string course_name);
-  void get_assessment_details(DetailedAssessment &asmt, std::string course_name, std::string asmt_name);
+  void get_assessment_details(DetailedAssessment &dasmt, std::string course_name, std::string asmt_name);
   void get_problems(std::vector<Problem> &probs, std::string course_name, std::string asmt_name);
   void get_submissions(std::vector<Submission> &subs, std::string course_name, std::string asmt_name);
   
