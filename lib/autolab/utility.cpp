@@ -83,8 +83,13 @@ AttachmentFormat string_to_attachment_format(std::string str_format) {
 }
 
 // comparators
-bool compare_courses_by_name(Course &a, Course &b) {
-  if (a.name == b.name) return a.display_name < b.display_name;
+bool compare_courses_by_name(const Course &a, const Course &b) {
+  if (a.name == b.name) return a.semester < b.semester;
+  return a.name < b.name;
+}
+
+bool compare_assessments_by_name(const Assessment &a, const Assessment &b) {
+  if (a.name == b.name) return a.category_name < b.category_name;
   return a.name < b.name;
 }
 

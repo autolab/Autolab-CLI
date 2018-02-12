@@ -129,7 +129,8 @@ AuthorizationLevel string_to_authorization_level(std::string str);
 AttachmentFormat string_to_attachment_format(std::string str_format);
 
 // comparators
-bool compare_courses_by_name(Course &a, Course &b);
+bool compare_courses_by_name(const Course &a, const Course &b);
+bool compare_assessments_by_name(const Assessment &a, const Assessment &b);
 }
 
 }
