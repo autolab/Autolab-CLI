@@ -4,13 +4,10 @@
 #include <iostream>
 #include <string>
 
-#include <rapidjson/document.h>
-
 #include "build_config.h"
 
 void err_assert(bool value);
 void err_assert(bool value, const char *msg);
-void check_error_and_exit(rapidjson::Document &response);
 
 namespace Logger {
 

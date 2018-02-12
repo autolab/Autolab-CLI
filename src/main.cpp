@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -5,27 +7,22 @@
 #include <string>
 #include <vector>
 
+#include "autolab/autolab.h"
+#include "autolab/client.h"
+#include "logger.h"
+
 #include "app_credentials.h"
 #include "build_config.h"
 #include "cmdargs.h"
 #include "context_manager.h"
 #include "file_utils.h"
 
-#include "autolab/autolab.h"
-#include "autolab/client.h"
-#include "autolab/raw_client.h"
-#include "logger.h"
-
-typedef Autolab::RawClient AutolabClient;
-
 /* globals */
-AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
 Autolab::Client client(client_id, client_secret, redirect_uri, store_tokens);
 
-bool init_autolab_client(AutolabClient &ac) {
+bool init_autolab_client() {
   std::string at, rt;
   if (!load_tokens(at, rt)) return false;
-  ac.set_tokens(at, rt);
   client.set_tokens(at, rt);
   return true;
 }
@@ -152,20 +149,21 @@ void print_not_in_asmt_dir_error() {
 }
 
 /* helpers */
-int perform_device_flow(AutolabClient &ac) {
+int perform_device_flow(Autolab::Client &client) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
   std::string user_code, verification_uri;
-  ac.device_flow_init(user_code, verification_uri);
+  client.device_flow_init(user_code, verification_uri);
   Logger::info << "Please visit " << verification_uri << " and enter the code: " << user_code << Logger::endl;
   Logger::info << Logger::endl << "Waiting for user authorization ..." << Logger::endl;
 
-  int res = ac.device_flow_authorize(300); // wait for 5 minutes max
-  if (res == 1) {
-    Logger::info << "User denied authorization." << Logger::endl;
-    return 1;
-  } else if (res < 0) {
-    Logger::info << "Error occurred during authorization." << Logger::endl;
-    return -1;
+  int res = client.device_flow_authorize(300); // wait for 5 minutes max
+  switch (res) {
+    case 1:
+      Logger::info << "User denied authorization." << Logger::endl;
+      return 1;
+    case -2:
+      Logger::info << "Timed out while waiting for user action. Please try again." << Logger::endl;
+      return 1;
   }
 
   // res == 0
@@ -217,17 +215,6 @@ void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name
   // if !found_asmt_file && user_specified_names, we don't need to do anything
 }
 
-struct namepair {
-  std::string name;
-  std::string display_name;
-  namepair(std::string n, std::string dn) :
-    name(n), display_name(dn) {}
-};
-bool namepair_comparator(const namepair &a, const namepair &b) {
-  if (a.name == b.name) return a.display_name < b.display_name;
-  return a.name < b.name;
-}
-
 /* commands */
 
 /* download assessment into a new directory
@@ -249,14 +236,14 @@ int download_asmt(cmdargs &cmd) {
     course_name << "' ..." << Logger::endl;
 
   // make sure assessment exists
-  rapidjson::Document asmt;
-  ac.get_assessment_details(asmt, course_name, asmt_name);
-  check_error_and_exit(asmt);
+  Autolab::DetailedAssessment dasmt;
+  client.get_assessment_details(dasmt, course_name, asmt_name);
 
   // setup directory
   bool dir_exists = dir_find(get_curr_dir(), asmt_name.c_str(), true);
   if (dir_exists) {
-    Logger::fatal << "Directory named '" << asmt_name << "' already exists. Please delete or rename before proceeding." << Logger::endl;
+    Logger::fatal << "Directory named '" << asmt_name << "' already exists. "
+      << "Please delete or rename before proceeding." << Logger::endl;
     return 0;
   }
 
@@ -268,27 +255,31 @@ int download_asmt(cmdargs &cmd) {
   err_assert(created);
 
   // download files into directory
-  rapidjson::Document response;
-  ac.download_handout(response, new_dir, course_name, asmt_name);
-  check_error_and_exit(response);
-  if (response.IsObject()) {
-    if (response.HasMember("url"))
-      Logger::info << "Handout URL: " << response["url"].GetString() << Logger::endl;
-    else
+  Autolab::Attachment handout, writeup;
+  client.download_handout(handout, new_dir, course_name, asmt_name);
+  switch (handout.format) {
+    case Autolab::AttachmentFormat::none:
       Logger::info << "Assessment has no handout" << Logger::endl;
-  } else {
-    Logger::info << "Handout downloaded into assessment directory" << Logger::endl;
+      break;
+    case Autolab::AttachmentFormat::url:
+      Logger::info << "Handout URL: " << handout.url << Logger::endl;
+      break;
+    case Autolab::AttachmentFormat::file:
+      Logger::info << "Handout downloaded into assessment directory" << Logger::endl;
+      break;
   }
 
-  ac.download_writeup(response, new_dir, course_name, asmt_name);
-  check_error_and_exit(response);
-  if (response.IsObject()) {
-    if (response.HasMember("url"))
-      Logger::info << "Writeup URL: " << response["url"].GetString() << Logger::endl;
-    else
+  client.download_writeup(writeup, new_dir, course_name, asmt_name);
+  switch (writeup.format) {
+    case Autolab::AttachmentFormat::none:
       Logger::info << "Assessment has no writeup" << Logger::endl;
-  } else {
-    Logger::info << "Writeup downloaded into assessment directory" << Logger::endl;
+      break;
+    case Autolab::AttachmentFormat::url:
+      Logger::info << "Writeup URL: " << writeup.url << Logger::endl;
+      break;
+    case Autolab::AttachmentFormat::file:
+      Logger::info << "Writeup downloaded into assessment directory" << Logger::endl;
+      break;
   }
 
   // write assessment file
@@ -345,13 +336,10 @@ int submit_asmt(cmdargs &cmd) {
   }
 
   // conflicts resolved, use course_name and asmt_name from now on
-  rapidjson::Document response;
-  ac.submit_assessment(response, course_name, asmt_name, filename);
-  check_error_and_exit(response);
+  int version = client.submit_assessment(course_name, asmt_name, filename);
 
-  if (response.IsObject()) {
-    Logger::info << "Successfully submitted to Autolab (version " << response["version"].GetInt() << ")" << Logger::endl;
-  }
+  Logger::info << "Successfully submitted to Autolab (version " << version << ")" << Logger::endl;
+  
   return 0;
 }
 
@@ -387,22 +375,14 @@ int show_assessments(cmdargs &cmd) {
 
   std::string course_name(cmd.args[2]);
 
-  rapidjson::Document asmts;
-  ac.get_assessments(asmts, course_name);
-  check_error_and_exit(asmts);
+  std::vector<Autolab::Assessment> asmts;
+  client.get_assessments(asmts, course_name);
 
-  Logger::debug << "Found " << asmts.Size() << " assessments." << Logger::endl;
+  Logger::debug << "Found " << asmts.size() << " assessments." << Logger::endl;
 
-  std::vector<namepair> asmt_list;
-  for (auto &a : asmts.GetArray()) {
-    std::string asmt_name = a.GetObject()["name"].GetString();
-    std::string asmt_display_name = a.GetObject()["display_name"].GetString();
-    asmt_list.emplace_back(asmt_name, asmt_display_name);
-  }
-  std::sort(asmt_list.begin(), asmt_list.end(), namepair_comparator);
-
-  for (auto &c : asmt_list) {
-    Logger::info << c.name << " (" << c.display_name << ")" << Logger::endl;
+  std::sort(asmts.begin(), asmts.end(), Autolab::Utility::compare_assessments_by_name);
+  for (auto &a : asmts) {
+    Logger::info << a.name << " (" << a.display_name << ")" << Logger::endl;
   }
 
   return 0;
@@ -428,18 +408,15 @@ int show_problems(cmdargs &cmd) {
     }
   }
 
-  rapidjson::Document problems;
-  ac.get_problems(problems, course_name, asmt_name);
-  check_error_and_exit(problems);
+  std::vector<Autolab::Problem> problems;
+  client.get_problems(problems, course_name, asmt_name);
 
-  Logger::debug << "Found " << problems.Size() << " problems." << Logger::endl;
+  Logger::debug << "Found " << problems.size() << " problems." << Logger::endl;
 
-  for (auto &p : problems.GetArray()) {
-    std::string problem_name = p.GetObject()["name"].GetString();
-    Logger::info << problem_name;
-    if (p.GetObject()["max_score"].IsFloat()) {
-      float max_score = p.GetObject()["max_score"].GetFloat();
-      Logger::info << " (" << max_score << ")" << Logger::endl;
+  for (auto &p : problems) {
+    Logger::info << p.name;
+    if (!std::isnan(p.max_score)) {
+      Logger::info << " (" << p.max_score << ")" << Logger::endl;
     } else {
       Logger::info << Logger::endl;
     }
@@ -472,9 +449,8 @@ int show_scores(cmdargs &cmd) {
     }
   }
 
-  rapidjson::Document problems;
-  ac.get_problems(problems, course_name, asmt_name);
-  check_error_and_exit(problems);
+  std::vector<Autolab::Problem> problems;
+  client.get_problems(problems, course_name, asmt_name);
 
   Logger::info << "Scores for " << course_name << ":" << asmt_name << Logger::endl
     << "(Only submissions made via this client can be shown)" << Logger::endl
@@ -483,17 +459,15 @@ int show_scores(cmdargs &cmd) {
   // print table header
   std::vector<std::pair<std::string, int>> prob_list;
   Logger::info << "| version | ";
-  for (auto &p : problems.GetArray()) {
-    std::string problem_name = p.GetObject()["name"].GetString();
+  for (auto &p : problems) {
     std::ostringstream column;
-    column << problem_name;
-    if (p.GetObject()["max_score"].IsFloat()) {
-      float max_score = p.GetObject()["max_score"].GetFloat();
-      column << " (" << max_score << ")";
+    column << p.name;
+    if (!std::isnan(p.max_score)) {
+      column << " (" << p.max_score << ")";
     }
     column << " | ";
     Logger::info << column.str();
-    prob_list.push_back({problem_name, column.str().length() - 1});
+    prob_list.push_back({p.name, column.str().length() - 1});
   }
   Logger::info << Logger::endl;
 
@@ -505,26 +479,26 @@ int show_scores(cmdargs &cmd) {
   Logger::info << Logger::endl;
 
   // get submissions
-  rapidjson::Document subs;
-  ac.get_submissions(subs, course_name, asmt_name);
-  check_error_and_exit(subs);
+  std::vector<Autolab::Submission> subs;
+  client.get_submissions(subs, course_name, asmt_name);
 
-  Logger::debug << "Found " << subs.Size() << " submissions." << Logger::endl;
+  Logger::debug << "Found " << subs.size() << " submissions." << Logger::endl;
 
   // print actual table
-  if (subs.Size() == 0) {
+  if (subs.size() == 0) {
     Logger::info << "[none]" << Logger::endl;
   } else {
-    int nprint = option_all ? subs.Size() : 1;
+    int nprint = option_all ? subs.size() : 1;
     for (int i = 0; i < nprint; i++) {
-      const auto &s = subs.GetArray()[i].GetObject();
-      Logger::info << "|" << std::setw(col1_length) << s["version"].GetInt() << "|";
+      Autolab::Submission &s = subs[i];
+      Logger::info << "|" << std::setw(col1_length) << s.version << "|";
 
-      const auto &score = s["scores"].GetObject();
+      auto &scores_map = s.scores;
       for (auto &p : prob_list) {
         Logger::info << std::setw(p.second);
-        if (score.HasMember(p.first.c_str()) && score[p.first.c_str()].IsFloat()) {
-          Logger::info << score[p.first.c_str()].GetFloat();
+        auto score = scores_map.find(p.first); // find by problem name
+        if (score != scores_map.end() && !isnan(score->second)) {
+          Logger::info << score->second;
         } else {
           Logger::info << "--";
         }
@@ -566,16 +540,15 @@ int show_feedback(cmdargs &cmd) {
   int version = -1;
   if (option_version.length() == 0) {
     // use latest version
-    rapidjson::Document subs;
-    ac.get_submissions(subs, course_name, asmt_name);
-    check_error_and_exit(subs);
+    std::vector<Autolab::Submission> subs;
+    client.get_submissions(subs, course_name, asmt_name);
 
-    if (subs.Size() == 0) {
+    if (subs.size() == 0) {
       Logger::fatal << "No submissions available for this assessment." << Logger::endl;
       return 0;
     }
 
-    version = subs.GetArray()[0].GetObject()["version"].GetInt();
+    version = subs[0].version;
   } else {
     version = std::stoi(option_version);
   }
@@ -583,33 +556,26 @@ int show_feedback(cmdargs &cmd) {
   // determine problem name
   if (option_problem.length() == 0) {
     // use first problem
-    rapidjson::Document problems;
-    ac.get_problems(problems, course_name, asmt_name);
-    check_error_and_exit(problems);
+    std::vector<Autolab::Problem> problems;
+    client.get_problems(problems, course_name, asmt_name);
 
-    if (problems.Size() == 0) {
+    if (problems.size() == 0) {
       Logger::fatal << "This assessment has no problems." << Logger::endl;
       return 0;
     }
 
-    option_problem = problems.GetArray()[0].GetObject()["name"].GetString();
+    option_problem = problems[0].name;
   }
   Logger::debug << "Using problem name: " << option_problem << Logger::endl;
 
-  rapidjson::Document feedback;
-  ac.get_feedback(feedback, course_name, asmt_name, version, option_problem);
-  check_error_and_exit(feedback);
+  std::string feedback;
+  client.get_feedback(feedback, course_name, asmt_name, version, option_problem);
 
-  if (!feedback.HasMember("feedback")) {
-    Logger::fatal << "Unexpected response. Expected 'feedback' key." << Logger::endl;
-    return 0;
-  }
-
-  Logger::info << feedback["feedback"].GetString() << Logger::endl;
+  Logger::info << feedback << Logger::endl;
   return 0;  
 }
 
-/* must manually init ac */
+/* must manually init client */
 int user_setup(cmdargs &cmd) {
   if (cmd.has_option("-h", "--help")) {
     print_setup_help();
@@ -618,26 +584,27 @@ int user_setup(cmdargs &cmd) {
 
   bool option_force = cmd.has_option("-f", "--force");
 
-  bool user_exists = init_autolab_client(ac);
+  bool user_exists = init_autolab_client();
 
   if (user_exists && !option_force) {
     // perform a check if not a forced setup
     bool token_valid = true;
-    rapidjson::Document user_info;
+    Autolab::User user_info;
     try {
-      ac.get_user_info(user_info);
+      client.get_user_info(user_info);
     } catch (Autolab::InvalidTokenException &e) {
       token_valid = false;
     }
-    if (token_valid && user_info.HasMember("first_name")) {
-      Logger::info << "User '" << user_info["first_name"].GetString() << "' is currently set up on this client." << Logger::endl <<
-        "To force reset of user info, use the '-f' option." << Logger::endl;
+    if (token_valid) {
+      Logger::info << "User '" << user_info.first_name
+        << "' is currently set up on this client." << Logger::endl
+        << "To force reset of user info, use the '-f' option." << Logger::endl;
       return 0;
     }
   }
 
   // user non-existant, or existing user's credentials no longer work, or forced
-  int result = perform_device_flow(ac);
+  int result = perform_device_flow(client);
   if (result == 0) {
     Logger::info << Logger::endl << "User setup complete." << Logger::endl;
     return 0;
@@ -666,42 +633,55 @@ int main(int argc, char *argv[]) {
   
   // determine what command it is
   std::string command(argv[1]);
-  if ("setup" == command) {
-    return user_setup(cmd);
-  } else {
-    Logger::fatal.set_prefix("Cannot start autolab client");
 
-    if (!init_autolab_client(ac)) {
-      Logger::fatal << "No user set up on this client yet." << Logger::endl
-        << Logger::endl
-        << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
-      return 0;
-    }
-    try {
-      if ("download" == command) {
-        return download_asmt(cmd);
-      } else if ("submit" == command) {
-        return submit_asmt(cmd);
-      } else if ("courses" == command) {
-        return show_courses(cmd);
-      } else if ("assessments" == command ||
-                 "asmts" == command) {
-        return show_assessments(cmd);
-      } else if ("problems" == command) {
-        return show_problems(cmd);
-      } else if ("scores" == command) {
-        return show_scores(cmd);
-      } else if ("feedback" == command) {
-        return show_feedback(cmd);
-      } else {
-        Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+  try {
+
+    if ("setup" == command) {
+      return user_setup(cmd);
+    } else {
+      Logger::fatal.set_prefix("Cannot start autolab client");
+
+      if (!init_autolab_client()) {
+        Logger::fatal << "No user set up on this client yet." << Logger::endl
+          << Logger::endl
+          << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
+        return 0;
       }
-    } catch (Autolab::InvalidTokenException &e) {
-      Logger::fatal << "Authorization invalid or expired." << Logger::endl
-        << Logger::endl
-        << "Please re-authorize this client by running 'autolab-setup'" << Logger::endl;
-      return 0;
+      try {
+        if ("download" == command) {
+          return download_asmt(cmd);
+        } else if ("submit" == command) {
+          return submit_asmt(cmd);
+        } else if ("courses" == command) {
+          return show_courses(cmd);
+        } else if ("assessments" == command ||
+                   "asmts" == command) {
+          return show_assessments(cmd);
+        } else if ("problems" == command) {
+          return show_problems(cmd);
+        } else if ("scores" == command) {
+          return show_scores(cmd);
+        } else if ("feedback" == command) {
+          return show_feedback(cmd);
+        } else {
+          Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+        }
+      } catch (Autolab::InvalidTokenException &e) {
+        Logger::fatal << "Authorization invalid or expired." << Logger::endl
+          << Logger::endl
+          << "Please re-authorize this client by running 'autolab-setup'" << Logger::endl;
+        return 0;
+      }
     }
+    
+  } catch (Autolab::ErrorResponseException &e) {
+    Logger::fatal << e.what() << Logger::endl;
+    return 0;
+  } catch (Autolab::InvalidResponseException &e) {
+    Logger::fatal << Logger::endl
+      << "Received invalid response from API server: " << Logger::endl
+      << e.what() << Logger::endl;
+    return 0;
   }
 
   return 0;

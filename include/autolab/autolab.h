@@ -112,6 +112,10 @@ public:
   }
 };
 
+// Indicates the server could not fulfill the request for some reason.
+// This exception's msg will contain the error message returned from the API
+// server. It is intended to be shown directly to the user so they could decide
+// how to proceed. The application is not expected to parse and understand it.
 class ErrorResponseException: public std::exception {
 private:
   std::string msg;

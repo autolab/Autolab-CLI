@@ -17,15 +17,6 @@ void err_assert(bool value, const char *msg) {
   }
 }
 
-/* if response is an error response, print error and exit */
-void check_error_and_exit(rapidjson::Document &response) {
-  if (response.IsObject() &&
-      response.HasMember("error")) {
-    Logger::fatal << response["error"].GetString() << Logger::endl;
-    exit(0);
-  }
-}
-
 /* Logger-related */
 
 namespace Logger {
