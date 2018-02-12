@@ -12,6 +12,7 @@
 #include "file_utils.h"
 
 #include "autolab/autolab.h"
+#include "autolab/client.h"
 #include "autolab/raw_client.h"
 #include "logger.h"
 
@@ -19,11 +20,13 @@ typedef Autolab::RawClient AutolabClient;
 
 /* globals */
 AutolabClient ac = AutolabClient(client_id, client_secret, redirect_uri, store_tokens);
+Autolab::Client client(client_id, client_secret, redirect_uri, store_tokens);
 
 bool init_autolab_client(AutolabClient &ac) {
   std::string at, rt;
   if (!load_tokens(at, rt)) return false;
   ac.set_tokens(at, rt);
+  client.set_tokens(at, rt);
   return true;
 }
 
@@ -361,21 +364,12 @@ int show_courses(cmdargs &cmd) {
   // set up logger
   Logger::fatal.set_prefix("Cannot get courses");
 
-  rapidjson::Document courses;
-  ac.get_courses(courses);
-  check_error_and_exit(courses);
+  std::vector<Autolab::Course> courses;
+  client.get_courses(courses);
 
-  Logger::debug << "Found " << courses.Size() << " current courses." << Logger::endl;
+  Logger::debug << "Found " << courses.size() << " current courses." << Logger::endl;
 
-  std::vector<namepair> course_list;
-  for (auto &c : courses.GetArray()) {
-    std::string course_name = c.GetObject()["name"].GetString();
-    std::string course_display_name = c.GetObject()["display_name"].GetString();
-    course_list.emplace_back(course_name, course_display_name);
-  }
-  std::sort(course_list.begin(), course_list.end(), namepair_comparator);
-
-  for (auto &c : course_list) {
+  for (auto &c : courses) {
     Logger::info << c.name << " (" << c.display_name << ")" << Logger::endl;
   }
 
