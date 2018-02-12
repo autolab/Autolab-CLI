@@ -126,11 +126,13 @@ public:
 };
 
 namespace Utility {
-
+// string conversions
 std::time_t string_to_time(std::string str);
 AuthorizationLevel string_to_authorization_level(std::string str);
 AttachmentFormat string_to_attachment_format(std::string str_format);
 
+// comparators
+bool compare_courses_by_name(Course &a, Course &b);
 }
 
 }

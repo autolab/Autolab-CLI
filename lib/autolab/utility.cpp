@@ -13,7 +13,7 @@ namespace Autolab {
   
 namespace Utility {
 
-// generic utility methods
+// string conversion methods
 // get time zone offset in hours (e.g. -4 means we're at UTC-04:00)
 double get_timezone_offset() {
   std::time_t raw_time_utc;
@@ -80,6 +80,12 @@ AttachmentFormat string_to_attachment_format(std::string str_format) {
     format = AttachmentFormat::file;
   }
   return format;
+}
+
+// comparators
+bool compare_courses_by_name(Course &a, Course &b) {
+  if (a.name == b.name) return a.display_name < b.display_name;
+  return a.name < b.name;
 }
 
 }
