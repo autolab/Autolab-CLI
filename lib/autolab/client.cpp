@@ -1,6 +1,7 @@
 #include "autolab/client.h"
 
 #include <limits>
+#include <map>
 
 #include <rapidjson/document.h>
 
@@ -170,19 +171,20 @@ void Client::get_submissions(std::vector<Submission> &subs,
     sub.version    = get_int_force(s_doc, "version");
     sub.created_at = Utility::string_to_time(get_string_force(s_doc, "created_at"));
     sub.filename   = get_string(s_doc, "filename");
-    std::vector<Score> scores;
+    std::map<std::string, double> &scores = sub.scores;
 
     rapidjson::Value &scores_doc = s_doc["scores"];
-    require_is_array(scores_doc);
-    for (auto &sc_doc : scores_doc.GetArray()) {
-      Score score;
-      score.problem_name = get_string_force(sc_doc, "problem_name");
-      if (sc_doc["score"].IsDouble()) {
-        score.score = get_double_force(sc_doc, "score");
+    require_is_object(scores_doc);
+    // iterate through members of the object
+    for (auto &m : scores_doc.GetObject()) {
+      std::string problem_name = m.name.GetString();
+      double score;
+      if (m.value.IsDouble()) {
+        score = m.value.GetDouble();
       } else {
-        score.score = std::numeric_limits<double>::quiet_NaN(); // unreleased
+        score = std::nan(""); // unreleased
       }
-      scores.push_back(score);
+      scores[problem_name] = score;
     }
 
     subs.push_back(sub);

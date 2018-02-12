@@ -3,6 +3,7 @@
 
 #include <ctime>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -60,16 +61,12 @@ struct Problem {
   bool optional;
 };
 
-struct Score {
-  std::string problem_name;
-  double score; /* NaN means unreleased */
-};
-
 struct Submission {
   int version;
   std::time_t created_at;
   std::string filename;
-  std::vector<Score> scores;
+  // maps problem name to the score (a NaN score means it's unreleased).
+  std::map<std::string, double> scores;
 };
 
 struct User {
