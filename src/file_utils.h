@@ -11,9 +11,12 @@ bool dir_find(const char *dirname, const char *targetname, bool target_is_dir = 
 bool recur_find(char *result, const char *dirstart, const char *targetname, 
                   bool target_is_dir = false, int levels = DEFAULT_RECUR_LEVEL);
 
-bool create_dir(const char *dirname);
-bool read_file(const char *filename, char *result, size_t max_length);
-bool write_file(const char *filename, const char *data);
+// filesystem manipulation methods
+// always succeeds on return. If an action fails, error is printed to stderr
+// and the program is exited immediately.
+void create_dir(const char *dirname);
+void read_file(const char *filename, char *result, size_t max_length);
+void write_file(const char *filename, const char *data);
 
 const char *get_home_dir();
 const char *get_curr_dir();

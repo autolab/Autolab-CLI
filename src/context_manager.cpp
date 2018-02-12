@@ -43,8 +43,7 @@ bool check_and_create_token_directory() {
   bool exists = dir_find(homedir, cred_dirname.c_str(), true);
   if (exists) return true;
 
-  bool success = create_dir(get_cred_dir_full_path().c_str());
-  err_assert(success);
+  create_dir(get_cred_dir_full_path().c_str());
   return false;
 }
 
@@ -57,10 +56,9 @@ bool token_cache_file_exists() {
 void store_tokens(std::string at, std::string rt) {
   check_and_create_token_directory();
 
-  int res = write_file(get_token_cache_file_full_path().c_str(),
-                       token_pair_to_string(at, rt).c_str());
+  write_file(get_token_cache_file_full_path().c_str(),
+             token_pair_to_string(at, rt).c_str());
   Logger::debug << "[FileUtils] tokens stored" << Logger::endl;
-  err_assert(res);
 }
 
 // returns true if got token, false if failed to get token.
@@ -70,9 +68,8 @@ bool load_tokens(std::string &at, std::string &rt) {
   if (!token_cache_file_exists()) return false;
 
   char raw_result[TOKEN_CACHE_FILE_MAXSIZE];
-  int res = read_file(get_token_cache_file_full_path().c_str(),
-                      raw_result, TOKEN_CACHE_FILE_MAXSIZE);
-  err_assert(res);
+  read_file(get_token_cache_file_full_path().c_str(),
+            raw_result, TOKEN_CACHE_FILE_MAXSIZE);
 
   std::string result(raw_result);
   std::string::size_type split_pos_1 = result.find('\n');
@@ -84,7 +81,6 @@ bool load_tokens(std::string &at, std::string &rt) {
   Logger::debug << "[FileUtils] tokens loaded" << Logger::endl;
   return true;
 }
-
 
 
 /************* asmt *************/
@@ -102,8 +98,7 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name) {
   if (!found) return false;
 
   std::string filename(buffer);
-  int res = read_file(filename.c_str(), buffer, MAX_DIR_LENGTH);
-  err_assert(res);
+  read_file(filename.c_str(), buffer, MAX_DIR_LENGTH);
 
   std::string result(buffer);
   std::string::size_type split_pos_1 = result.find('\n');
@@ -121,7 +116,6 @@ void write_asmt_file(std::string dir_name, std::string course_name, std::string 
   std::string full_path(dir_name);
   full_path.append("/");
   full_path.append(asmt_filename);
-  int res = write_file(full_path.c_str(),
-                       format_asmt_file(course_name, asmt_name).c_str());
-  err_assert(res);
+  write_file(full_path.c_str(),
+             format_asmt_file(course_name, asmt_name).c_str());
 }

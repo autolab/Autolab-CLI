@@ -9,10 +9,18 @@
 #include <sys/stat.h> // mkdir, stat
 #include <unistd.h>   // close, write
 
+#include "logger.h"
+
 const char *home_directory = NULL;
 char curr_directory[MAX_DIR_LENGTH];
 
-/* checks if file exists. Does not allow directories */
+// internal error reporting helper
+void exit_with_errno() {
+  Logger::fatal << strerror(errno) << Logger::endl;
+  exit(-1);
+}
+
+// checks if file exists. Does not allow directories.
 bool file_exists(const char *path_to_file) {
   struct stat buffer;   
   if(stat (path_to_file, &buffer) != 0) return false;
@@ -58,6 +66,8 @@ bool one_level_up(char *currdir) {
   return true;
 }
 
+// recursively looks for file with name targetname. Starts from dirstart and
+// searches upwards in the filesystem. Returns whether the file was found.
 bool recur_find(char *result, const char *dirstart, const char *targetname, 
                   bool target_is_dir, int levels) {
   char currdir[MAX_DIR_LENGTH];
@@ -86,23 +96,22 @@ bool recur_find(char *result, const char *dirstart, const char *targetname,
 }
 
 // create a directory with only owner read/write/execute permissions
-bool create_dir(const char *dirname) {
+void create_dir(const char *dirname) {
   int res = mkdir(dirname, S_IRWXU);
-  if (res < 0 && errno != EEXIST) return false;
-  return true;
+  if (res < 0 && errno != EEXIST) exit_with_errno();
 }
 
 // open a file for reading only. Reads at most max_length chars into result.
-bool read_file(const char *filename, char *result, size_t max_length) {
+void read_file(const char *filename, char *result, size_t max_length) {
   int fd = open(filename, O_RDONLY | O_CREAT, S_IRWXU);
-  if (fd < 0) return false;
+  if (fd < 0) exit_with_errno();
 
   ssize_t amount = 0;
   size_t total_read = 0;
   while (amount = TEMP_FAILURE_RETRY(read(fd, result + total_read, max_length))) {
     if (amount < 0) {
       close(fd);
-      return false;
+      exit_with_errno();
     }
     // amount is positive
     total_read += (size_t)amount;
@@ -111,14 +120,13 @@ bool read_file(const char *filename, char *result, size_t max_length) {
   result[total_read] = '\0';
 
   close(fd);
-  return true;
 }
 
 // open a file for writing only, and sets permissions to only
 // owner read/write/execute
-bool write_file(const char *filename, const char *data) {
+void write_file(const char *filename, const char *data) {
   int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
-  if (fd < 0) return false;
+  if (fd < 0) exit_with_errno();
 
   size_t remaining = strlen(data);
   size_t total_written = 0;
@@ -126,7 +134,7 @@ bool write_file(const char *filename, const char *data) {
     ssize_t amount = TEMP_FAILURE_RETRY(write(fd, data + total_written, remaining));
     if (amount < 0) {
       close(fd);
-      return false;
+      exit_with_errno();
     }
     // amount is non-negative
     remaining -= (size_t)amount;
@@ -134,7 +142,6 @@ bool write_file(const char *filename, const char *data) {
   }
 
   close(fd);
-  return true;
 }
 
 const char *get_home_dir() {

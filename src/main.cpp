@@ -251,8 +251,7 @@ int download_asmt(cmdargs &cmd) {
   new_dir.append("/" + asmt_name);
   Logger::info << "Creating directory " << new_dir << Logger::endl;
 
-  bool created = create_dir(new_dir.c_str());
-  err_assert(created);
+  create_dir(new_dir.c_str());
 
   // download files into directory
   Autolab::Attachment handout, writeup;
@@ -674,13 +673,16 @@ int main(int argc, char *argv[]) {
       }
     }
     
-  } catch (Autolab::ErrorResponseException &e) {
+  } catch (Autolab::HttpException &e) {
     Logger::fatal << e.what() << Logger::endl;
-    return 0;
+    return -1;
   } catch (Autolab::InvalidResponseException &e) {
     Logger::fatal << Logger::endl
       << "Received invalid response from API server: " << Logger::endl
       << e.what() << Logger::endl;
+    return 0;
+  } catch (Autolab::ErrorResponseException &e) {
+    Logger::fatal << e.what() << Logger::endl;
     return 0;
   }
 

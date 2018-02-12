@@ -6,9 +6,6 @@
 
 #include "build_config.h"
 
-void err_assert(bool value);
-void err_assert(bool value, const char *msg);
-
 namespace Logger {
 
   class line_ending_symbol {};

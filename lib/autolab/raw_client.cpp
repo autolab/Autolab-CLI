@@ -7,6 +7,7 @@
 #include <thread> // sleep_for
 
 #include "autolab/autolab.h"
+#include "json_helpers.h"
 #include "logger.h"
 
 namespace Autolab {
@@ -130,7 +131,9 @@ long RawClient::raw_request(RawClient::request_state *rstate,
   struct curl_httppost *lastptr = nullptr;
 
   curl = curl_easy_init();
-  err_assert(curl, "Error init-ing easy interface");
+  if (!curl) {
+    throw HttpException("Error initializing libcurl easy interface");
+  }
 
   std::string full_path(base_uri);
   full_path.append(path);
@@ -167,7 +170,9 @@ long RawClient::raw_request(RawClient::request_state *rstate,
   curl_easy_setopt(curl, CURLOPT_HEADERDATA, rstate);
 
   res = curl_easy_perform(curl);
-  err_assert(res == CURLE_OK, curl_easy_strerror(res));
+  if (res != CURLE_OK) {
+    throw HttpException(curl_easy_strerror(res));
+  }
 
   long response_code;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
@@ -276,12 +281,9 @@ void RawClient::device_flow_init(std::string &user_code, std::string &verificati
   rapidjson::Document response;
   make_request(response, device_flow_init_path, params, GET, false);
 
-  err_assert(response.HasMember("device_code") && response.HasMember("user_code"),
-    "Expected keys not found in response during device_flow_init");
-
-  device_flow_device_code = response["device_code"].GetString();
-  user_code = response["user_code"].GetString();
-  verification_uri = response["verification_uri"].GetString();
+  device_flow_device_code = get_string_force(response, "device_code");
+  user_code = get_string_force(response, "user_code");
+  verification_uri = get_string(response, "verification_uri");
 }
 
 void RawClient::clear_device_flow_strings() {

@@ -81,11 +81,11 @@ struct User {
 /* exceptions */
 
 // Indicates an error that occurred in HTTP operations.
-class HTTPException: public std::exception {
+class HttpException: public std::exception {
 private:
   std::string msg;
 public:
-  explicit HTTPException(std::string m) : msg(m) {}
+  explicit HttpException(std::string m) : msg(m) {}
   virtual const char* what() const throw() {
       return msg.c_str();
   }

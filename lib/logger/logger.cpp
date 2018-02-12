@@ -1,21 +1,6 @@
 #include "logger.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
-void err_assert(bool value) {
-  if (!value) {
-    perror("fatal");
-    exit(0);
-  }
-}
-
-void err_assert(bool value, const char *msg) {
-  if (!value) {
-    printf("fatal: %s\n", msg);
-    exit(0);
-  }
-}
+#include <iostream>
 
 /* Logger-related */
 
