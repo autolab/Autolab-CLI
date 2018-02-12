@@ -30,9 +30,9 @@ public:
   void get_assessment_details(DetailedAssessment &dasmt, std::string course_name, std::string asmt_name);
   void get_problems(std::vector<Problem> &probs, std::string course_name, std::string asmt_name);
   void get_submissions(std::vector<Submission> &subs, std::string course_name, std::string asmt_name);
-  
+  void get_feedback(std::string &feedback, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
+
   /* action-related */
-  std::string get_feedback(std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
   void download_handout(Attachment &handout, std::string download_dir, std::string course_name, std::string asmt_name);
   void download_writeup(Attachment &writeup, std::string download_dir, std::string course_name, std::string asmt_name);
   // returns the new submission version number on success

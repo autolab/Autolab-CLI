@@ -191,14 +191,14 @@ void Client::get_submissions(std::vector<Submission> &subs,
   }
 }
 
-std::string Client::get_feedback(std::string course_name, std::string asmt_name,
-    int sub_version, std::string problem_name) {
+void Client::get_feedback(std::string &feedback, std::string course_name,
+    std::string asmt_name, int sub_version, std::string problem_name) {
   rapidjson::Document feedback_doc;
   raw_client.get_feedback(feedback_doc, course_name, asmt_name, sub_version, problem_name);
   check_for_error_response(feedback_doc);
 
   require_is_object(feedback_doc);
-  return get_string_force(feedback_doc, "feedback");
+  feedback = get_string_force(feedback_doc, "feedback");
 }
 
 void Client::download_handout(Attachment &handout, std::string download_dir,
