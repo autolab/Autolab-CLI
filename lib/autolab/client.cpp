@@ -1,7 +1,9 @@
 #include "autolab/client.h"
 
-#include <limits>
+#include <cmath>
+
 #include <map>
+#include <vector>
 
 #include <rapidjson/document.h>
 
@@ -152,7 +154,7 @@ void Client::get_problems(std::vector<Problem> &probs, std::string course_name,
     Problem prob;
     prob.name        = get_string_force(p_doc, "name");
     prob.description = get_string(p_doc, "description");
-    prob.max_score   = get_double_force(p_doc, "max_score");
+    prob.max_score   = get_double(p_doc, "max_score");
     prob.optional    = get_bool_force(p_doc, "optional");
 
     probs.push_back(prob);
