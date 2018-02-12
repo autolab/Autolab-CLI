@@ -13,7 +13,7 @@ namespace Logger {
 
   template<>
   fatal_logger &fatal_logger::operator<<(line_ending_symbol end) {
-    std::cout << std::endl;
+    std::cerr << std::endl;
     return *this;
   }
 

@@ -19,9 +19,9 @@ namespace Logger {
     fatal_logger &operator<<(T val) {
       if (!prefix_used) {
         prefix_used = true;
-        std::cout << "fatal: " << prefix << std::endl;
+        std::cerr << "fatal: " << prefix << std::endl;
       }
-      std::cout << val;
+      std::cerr << val;
       return *this;
     }
   private:
