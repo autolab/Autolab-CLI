@@ -51,97 +51,6 @@ void print_version() {
   Logger::info << "autolab-cli version " << VERSION_MAJOR << "." << VERSION_MINOR << Logger::endl;
 }
 
-void print_download_help() {
-  Logger::info << "usage: autolab download <course_name>:<assessment_name> [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << Logger::endl
-    << "Create a directory for working on the specified assessment. The writeup and the" << Logger::endl
-    << "handout are downloaded into the directory if they are files. The assessment" << Logger::endl
-    << "directory is also setup with a local config so that running" << Logger::endl
-    << "'autolab submit <filename>' works without the need to specify the names of the" << Logger::endl
-    << "course and assessment." << Logger::endl;
-}
-
-void print_submit_help() {
-  Logger::info << "usage: autolab submit [<course_name>:<assessment_name>] <filename> [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << "  -f,--force  Force use the specified course:assessment pair, overriding the" << Logger::endl
-    << "              local config" << Logger::endl
-    << Logger::endl
-    << "Submit a file to an assessment. The course and assessment names are not needed" << Logger::endl
-    << "if the current directory or its parent directory (up to " << DEFAULT_RECUR_LEVEL << " levels) includes" << Logger::endl
-    << "an assessment config file. The operation fails if the specified names and the" << Logger::endl
-    << "config file do not match, unless the '-f' option is used, in which case the" << Logger::endl
-    << "assessment config file is ignored." << Logger::endl;
-}
-
-void print_courses_help() {
-  Logger::info << "usage: autolab courses [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << Logger::endl
-    << "List all current courses of the user." << Logger::endl;
-}
-
-void print_assessments_help() {
-  Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << Logger::endl
-    << "List all available assessments of a course." << Logger::endl;
-}
-
-void print_problems_help() {
-  Logger::info << "usage: autolab problems [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << Logger::endl
-    << "List all problems of an assessment. Course and assessment names are optional if" << Logger::endl
-    << "inside an autolab assessment directory." << Logger::endl;
-}
-
-void print_scores_help() {
-  Logger::info << "usage: autolab scores [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << "  -a,--all    Show scores from all submission. Default shows only the latest" << Logger::endl
-    << Logger::endl
-    << "Show all scores the user got for an assessment. Course and assessment names are" << Logger::endl
-    << "optional if inside an autolab assessment directory." << Logger::endl;
-}
-
-void print_feedback_help() {
-  Logger::info << "usage: autolab feedback [<course_name>:<assessment_name>] [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -v,--version <version_num>    Get feedback for this particular version" << Logger::endl
-    << "  -p,--problem <problem_name>   Get feedback for this problem" << Logger::endl
-    << "  -h,--help                     Show this help message" << Logger::endl
-    << Logger::endl
-    << "Gets feedback for a problem of an assessment. If version number is not given, " << Logger::endl
-    << "the latest version will be used. If problem_name is not given, the first" << Logger::endl
-    << "problem will be used. Course and assessment names are optional if inside" << Logger::endl
-    << "an autolab assessment directory." << Logger::endl;
-}
-
-void print_setup_help() {
-  Logger::info << "usage: autolab assessments <course_name> [OPTIONS]" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help   Show this help message" << Logger::endl
-    << "  -f,--force  Force user setup, removing the current user" << Logger::endl
-    << Logger::endl
-    << "Initiate user setup for the current user." << Logger::endl;
-}
-
 void print_not_in_asmt_dir_error() {
   Logger::fatal << "Not inside an autolab assessment directory: .autolab-asmt not found" << Logger::endl
     << Logger::endl
@@ -220,10 +129,14 @@ void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name
 /* download assessment into a new directory
  */
 int download_asmt(cmdargs &cmd) {
-  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
-    print_download_help();
-    return 0;
-  }
+  cmd.setup_help("autolab download",
+      "Create a directory for working on the specified assessment. The writeup "
+      "and the handout are downloaded into the directory if they are files. "
+      "The assessment directory is also setup with a local config so that "
+      "running 'autolab submit <filename>' works without the need to specify "
+      "the names of the course and assessment.");
+  cmd.new_arg("course_name:assessment_name", true);
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot download assessment");
@@ -292,12 +205,17 @@ int download_asmt(cmdargs &cmd) {
  *   2. autolab submit <course>:<asmt> <filename>  (from anywhere)
  */
 int submit_asmt(cmdargs &cmd) {
-  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
-    print_submit_help();
-    return 0;
-  }
-
-  bool option_force = cmd.has_option("-f", "--force");
+  cmd.setup_help("autolab submit",
+      "Submit a file to an assessment. The course and assessment names are not "
+      "needed if the current directory or its ancestor directories includes an "
+      "assessment config file. The operation fails if the specified names and "
+      "the config file do not match, unless the '-f' option is used, in which "
+      "case the assessment config file is ignored.");
+  cmd.new_arg("course_name:assessment_name", false);
+  cmd.new_arg("filename", true);
+  bool option_force = cmd.new_flag_option("-f","--force", "Force use the "
+    "specified course:assessment pair, overriding the local config");
+  cmd.setup_done();
 
   std::string course_name, asmt_name, filename;
 
@@ -343,10 +261,9 @@ int submit_asmt(cmdargs &cmd) {
 }
 
 int show_courses(cmdargs &cmd) {
-  if (cmd.has_option("-h", "--help")) {
-    print_courses_help();
-    return 0;
-  }
+  cmd.setup_help("autolab courses",
+      "List all current courses of the user.");
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get courses");
@@ -364,10 +281,10 @@ int show_courses(cmdargs &cmd) {
 }
 
 int show_assessments(cmdargs &cmd) {
-  if (cmd.nargs() < 3 || cmd.has_option("-h", "--help")) {
-    print_assessments_help();
-    return 0;
-  }
+  cmd.setup_help("autolab assessments",
+      "List all available assessments of a course.");
+  cmd.new_arg("course_name", true);
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get assessments");
@@ -388,10 +305,11 @@ int show_assessments(cmdargs &cmd) {
 }
 
 int show_problems(cmdargs &cmd) {
-  if (cmd.has_option("-h", "--help")) {
-    print_problems_help();
-    return 0;
-  }
+  cmd.setup_help("autolab problems",
+      "List all problems of an assessment. Course and assessment names are "
+      "optional if inside an autolab assessment directory.");
+  cmd.new_arg("course_name:assessment_name", false);
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get problems");
@@ -427,15 +345,16 @@ int show_problems(cmdargs &cmd) {
 int show_scores(cmdargs &cmd) {
   static const int col1_length = 9;
 
-  if (cmd.has_option("-h", "--help")) {
-    print_scores_help();
-    return 0;
-  }
+  cmd.setup_help("autolab scores",
+      "Show all scores the user got for an assessment. Course and assessment "
+      "names are optional if inside an autolab assessment directory.");
+  cmd.new_arg("course_name:assessment_name", false);
+  bool option_all = cmd.new_flag_option("-a", "--all",
+      "Show scores from all submission. Default shows only the latest");
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get scores");
-
-  bool option_all = cmd.has_option("-a", "--all");
 
   std::string course_name, asmt_name;
   // user-specified names take precedence
@@ -512,17 +431,20 @@ int show_scores(cmdargs &cmd) {
 }
 
 int show_feedback(cmdargs &cmd) {
-  if (cmd.has_option("-h", "--help")) {
-    print_feedback_help();
-    return 0;
-  }
+  cmd.setup_help("autolab feedback",
+      "Gets feedback for a problem of an assessment. If version number is not "
+      "given, the latest version will be used. If problem_name is not given, "
+      "the first problem will be used. Course and assessment names are "
+      "optional if inside an autolab assessment directory.");
+  cmd.new_arg("course_name:assessment_name", false);
+  std::string option_problem = cmd.new_option("-p", "--problem",
+      "Get feedback for this problem");
+  std::string option_version = cmd.new_option("-v", "--version",
+      "Get feedback for this particular version");
+  cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get feedback");
-
-  bool option_all = cmd.has_option("-a", "--all");
-  std::string option_problem = cmd.get_option("-p", "--problem");
-  std::string option_version = cmd.get_option("-v", "--version");
 
   std::string course_name, asmt_name;
   // user-specified names take precedence
@@ -576,12 +498,11 @@ int show_feedback(cmdargs &cmd) {
 
 /* must manually init client */
 int user_setup(cmdargs &cmd) {
-  if (cmd.has_option("-h", "--help")) {
-    print_setup_help();
-    return 0;
-  }
-
-  bool option_force = cmd.has_option("-f", "--force");
+  cmd.setup_help("autolab setup",
+      "Initiate user setup for the current user.");
+  bool option_force = cmd.new_flag_option("-f", "--force",
+      "Force user setup, removing the current user");
+  cmd.setup_done();
 
   bool user_exists = init_autolab_client();
 
