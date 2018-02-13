@@ -6,10 +6,25 @@
 #include <string>
 #include <vector>
 
-#include "logger.h"
-
 const int output_line_width = 80;
 const std::string whitespace_chars = " \t\n";
+
+int count_words(std::string src) {
+  std::string input = left_trim(right_trim(src));
+
+  int num_words = 0;
+  bool in_word = false;
+  for (char &c : input) {
+    if (in_word && c == ' ') {
+      in_word = false;
+    } else if (!in_word && c != ' ') {
+      in_word = true;
+      num_words++;
+    }
+  }
+
+  return num_words;
+}
 
 std::string double_to_string(double num, int precision) {
   std::ostringstream num_str;
@@ -48,28 +63,13 @@ std::string center_text(int width, std::string text) {
   return output;
 }
 
-int count_words(std::string src) {
-  std::string input = left_trim(right_trim(src));
-
-  int num_words = 0;
-  bool in_word = false;
-  for (char &c : input) {
-    if (in_word && c == ' ') {
-      in_word = false;
-    } else if (!in_word && c != ' ') {
-      in_word = true;
-      num_words++;
-    }
-  }
-
-  return num_words;
-}
-
 // print text wrapped and with left indent. First line is not indented
-void print_wrapped(int indent, std::string text) {
+std::string wrap_text_with_indent(int indent, std::string text) {
+  std::ostringstream out;
+
   if (indent >= output_line_width) {
     // this should not happen
-    Logger::info << text << Logger::endl;
+    return text;
   }
 
   int len_per_line = output_line_width - indent;
@@ -87,10 +87,12 @@ void print_wrapped(int indent, std::string text) {
       curr_str = curr_str.substr(0, char_end);
     }
     // print
-    Logger::info << curr_str << Logger::endl;
+    out << curr_str << "\n";
     if (start >= text.length()) break;
-    Logger::info << std::setw(indent) << "";
+    out << std::setw(indent) << "";
   }
+
+  return out.str();
 }
 
 // print a table

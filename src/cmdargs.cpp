@@ -93,7 +93,7 @@ void cmdargs::print_help() {
     usage << " ";
   }
   if (has_options) usage << "[OPTIONS]";
-  print_wrapped(7 /* length of "usage: " */, usage.str());
+  Logger::info << wrap_text_with_indent(7 /* length of "usage: " */, usage.str());
 
   if (has_options) {
     Logger::info << Logger::endl << "options:" << Logger::endl;
@@ -109,8 +109,8 @@ void cmdargs::print_help() {
     longest_key += 2; // add 2 spaces
 
     for (auto it = opt_help.begin(); it != opt_help.end(); it++) {
-      Logger::info << "  " << std::setw(longest_key) << std::left << it->first;
-      print_wrapped(2 + longest_key, it->second);
+      Logger::info << "  " << std::setw(longest_key) << std::left << it->first
+        << wrap_text_with_indent(2 + longest_key, it->second);
     }
 
     if (has_help_text) {
@@ -119,7 +119,7 @@ void cmdargs::print_help() {
   }
 
   if (has_help_text) {
-    print_wrapped(0, help_text);
+    Logger::info << wrap_text_with_indent(0, help_text);
   }
 }
 
