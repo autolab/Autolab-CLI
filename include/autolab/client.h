@@ -23,8 +23,8 @@ private:
 
 public:
   /* setup-related */
-  Client(std::string client_id, std::string client_secret, std::string redirect_uri,
-         void (*new_token_callback)(std::string, std::string));
+  Client(std::string domain, std::string client_id, std::string client_secret,
+         std::string redirect_uri, void (*new_token_callback)(std::string, std::string));
   void set_tokens(std::string access_token, std::string refresh_token);
 
   /* oauth-related */

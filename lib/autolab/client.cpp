@@ -13,10 +13,10 @@
 
 namespace Autolab {
 
-Client::Client(std::string client_id, std::string client_secret, 
-               std::string redirect_uri,
+Client::Client(std::string domain, std::string client_id,
+               std::string client_secret, std::string redirect_uri,
                void (*new_token_callback)(std::string, std::string))
-  : raw_client(client_id, client_secret, redirect_uri, new_token_callback) {}
+  : raw_client(domain, client_id, client_secret, redirect_uri, new_token_callback) {}
 
 void Client::set_tokens(std::string access_token, std::string refresh_token) {
   raw_client.set_tokens(access_token, refresh_token);

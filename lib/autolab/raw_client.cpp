@@ -14,8 +14,6 @@ namespace Autolab {
 
 const std::chrono::seconds device_flow_authorize_wait_duration(5);
 
-const std::string base_uri = "http://localhost:3000";
-
 const std::string oauth_token_path = "/oauth/token";
 const std::string device_flow_init_path = "/oauth/device_flow_init";
 const std::string device_flow_authorize_path = "/oauth/device_flow_authorize";
@@ -23,10 +21,10 @@ const std::string device_flow_authorize_path = "/oauth/device_flow_authorize";
 /* initialization */
 int RawClient::curl_ready = false;
 
-RawClient::RawClient(const std::string &id, const std::string &st, 
-  const std::string &ru, void (*tk_cb)(std::string, std::string)) :
-  new_tokens_callback(tk_cb), api_version(1),
-  client_id(id), client_secret(st), redirect_uri(ru)
+RawClient::RawClient(const std::string &domain, const std::string &id,
+  const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string))
+  : base_uri(domain), new_tokens_callback(tk_cb), api_version(1),
+    client_id(id), client_secret(st), redirect_uri(ru)
 {
   RawClient::init_curl();
 }

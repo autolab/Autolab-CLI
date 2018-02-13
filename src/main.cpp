@@ -20,7 +20,7 @@
 #include "pretty_print.h"
 
 /* globals */
-Autolab::Client client(client_id, client_secret, redirect_uri, store_tokens);
+Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
 
 bool init_autolab_client() {
   std::string at, rt;

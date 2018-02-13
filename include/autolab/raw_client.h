@@ -22,7 +22,9 @@ namespace Autolab {
 
 class RawClient {
 public:
-  RawClient(const std::string &id, const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string));
+  RawClient(const std::string &domain, const std::string &id, 
+    const std::string &st, const std::string &ru, 
+    void (*tk_cb)(std::string, std::string));
 
   // setters and getters
   void set_tokens(std::string at, std::string rt);
@@ -81,6 +83,9 @@ public:
   void get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
 
 private:
+  // domain of the autolab service
+  std::string base_uri;
+
   // initializes curl interface. Must be called before anything else.
   static int curl_ready;
   static int init_curl();
