@@ -1,4 +1,5 @@
 #include <cmath>
+#include <ctime>
 
 #include <algorithm>
 #include <iomanip>
@@ -34,6 +35,7 @@ void print_help() {
     << "commands:" << Logger::endl
     << "  courses             List all courses" << Logger::endl
     << "  assessments/asmts   List all assessments of a course" << Logger::endl
+    << "  status              Show status of the local assessment" << Logger::endl
     << "  problems            List all problems in an assessment" << Logger::endl
     << "  download            Download files needed for an assessment" << Logger::endl
     << "  submit              Submit a file to an assessment" << Logger::endl
@@ -126,6 +128,47 @@ void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name
 
 /* commands */
 
+int show_status(cmdargs &cmd) {
+  cmd.setup_help("autolab status",
+      "Show the context of the current directory. If inside an assessment "
+      "directory, the details of the assessment will be shown.");
+  cmd.setup_done();
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot show status");
+
+  std::string course_name, asmt_name;
+  bool in_asmt_dir = read_asmt_file(course_name, asmt_name);
+  if (!in_asmt_dir) {
+    Logger::info << "Not currently in any assessment directory" << Logger::endl
+      << Logger::endl
+      << "Failed to find an assessment config file in the current directory or any" << Logger::endl
+      << "of its parent directories (up to " << DEFAULT_RECUR_LEVEL << " levels)." << Logger::endl;
+    return 0;
+  }
+
+  Logger::info << "Assessment Config: " << course_name << ":" << asmt_name
+    << Logger::endl << Logger::endl;
+
+  // get details
+  Autolab::DetailedAssessment dasmt;
+  client.get_assessment_details(dasmt, course_name, asmt_name);
+
+  Logger::info << dasmt.asmt.display_name << Logger::endl
+    << "Due: " << std::ctime(&dasmt.asmt.due_at) // ctime ends string with '\n'
+    << "Max submissions: ";
+
+  if (dasmt.max_submissions < 0) {
+    Logger::info << "Infinite" << Logger::endl;
+  } else {
+    Logger::info << dasmt.max_submissions << Logger::endl;
+  }
+     
+  Logger::info << "Max grace days: " << dasmt.max_grace_days << Logger::endl;
+
+  return 0;
+}
+
 /* download assessment into a new directory
  */
 int download_asmt(cmdargs &cmd) {
@@ -196,6 +239,9 @@ int download_asmt(cmdargs &cmd) {
 
   // write assessment file
   write_asmt_file(new_dir, course_name, asmt_name);
+
+  // additional info
+  Logger::info << Logger::endl << "Due: " << std::ctime(&dasmt.asmt.due_at);
 
   return 0;
 }
@@ -568,7 +614,9 @@ int main(int argc, char *argv[]) {
         return 0;
       }
       try {
-        if ("download" == command) {
+        if ("status" == command) {
+          return show_status(cmd);
+        } else if ("download" == command) {
           return download_asmt(cmd);
         } else if ("submit" == command) {
           return submit_asmt(cmd);
