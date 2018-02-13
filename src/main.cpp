@@ -17,6 +17,7 @@
 #include "cmdargs.h"
 #include "context_manager.h"
 #include "file_utils.h"
+#include "pretty_print.h"
 
 /* globals */
 Autolab::Client client(client_id, client_secret, redirect_uri, store_tokens);
@@ -389,8 +390,6 @@ int show_problems(cmdargs &cmd) {
 }
 
 int show_scores(cmdargs &cmd) {
-  static const int col1_length = 9;
-
   cmd.setup_help("autolab scores",
       "Show all scores the user got for an assessment. Course and assessment "
       "names are optional if inside an autolab assessment directory.");
@@ -420,27 +419,18 @@ int show_scores(cmdargs &cmd) {
     << "(Only submissions made via this client can be shown)" << Logger::endl
     << Logger::endl;
 
-  // print table header
-  std::vector<std::pair<std::string, int>> prob_list;
-  Logger::info << "| version | ";
+  std::vector<std::vector<std::string>> sub_table;
+  // prepare table header
+  std::vector<std::string> header;
+  header.push_back("version");
   for (auto &p : problems) {
-    std::ostringstream column;
-    column << p.name;
+    std::string column(p.name);
     if (!std::isnan(p.max_score)) {
-      column << " (" << p.max_score << ")";
+      column += " (" + double_to_string(p.max_score, 1) + ")";
     }
-    column << " | ";
-    Logger::info << column.str();
-    prob_list.push_back({p.name, column.str().length() - 1});
+    header.push_back(column);
   }
-  Logger::info << Logger::endl;
-
-  // print horizontal line
-  Logger::info << "+" << std::string(col1_length, '-') << "+";
-  for (auto &p : prob_list) {
-    Logger::info << std::string(p.second, '-') << "+";
-  }
-  Logger::info << Logger::endl;
+  sub_table.push_back(header);
 
   // get submissions
   std::vector<Autolab::Submission> subs;
@@ -448,29 +438,31 @@ int show_scores(cmdargs &cmd) {
 
   Logger::debug << "Found " << subs.size() << " submissions." << Logger::endl;
 
-  // print actual table
+  // prepare table body
   if (subs.size() == 0) {
-    Logger::info << "[none]" << Logger::endl;
+    Logger::info << format_table(sub_table)
+      << "[none]" << Logger::endl;
   } else {
     int nprint = option_all ? subs.size() : 1;
     for (int i = 0; i < nprint; i++) {
+      std::vector<std::string> row;
       Autolab::Submission &s = subs[i];
-      Logger::info << "|" << std::setw(col1_length) << s.version << "|";
+      row.push_back(std::to_string(s.version));
 
       auto &scores_map = s.scores;
-      for (auto &p : prob_list) {
-        Logger::info << std::setw(p.second);
-        auto score = scores_map.find(p.first); // find by problem name
+      for (auto &p : problems) {
+        auto score = scores_map.find(p.name); // find by problem name
         if (score != scores_map.end() && !isnan(score->second)) {
-          Logger::info << score->second;
+          row.push_back(double_to_string(score->second, 1));
         } else {
-          Logger::info << "--";
+          row.push_back("--");
         }
-        Logger::info << "|";
       }
       
-      Logger::info << Logger::endl;
+      sub_table.push_back(row);
     }
+
+    Logger::info << format_table(sub_table);
   }
 
   return 0;
