@@ -116,7 +116,7 @@ void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_
 void Client::get_assessment_details(DetailedAssessment &dasmt,
     std::string course_name, std::string asmt_name) {
   rapidjson::Document dasmt_doc;
-  raw_client.get_assessments(dasmt_doc, course_name);
+  raw_client.get_assessment_details(dasmt_doc, course_name, asmt_name);
   check_for_error_response(dasmt_doc);
 
   require_is_object(dasmt_doc);
