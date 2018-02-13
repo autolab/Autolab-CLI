@@ -25,8 +25,8 @@ int RawClient::curl_ready = false;
 
 RawClient::RawClient(const std::string &id, const std::string &st, 
   const std::string &ru, void (*tk_cb)(std::string, std::string)) :
-  client_id(id), client_secret(st), redirect_uri(ru), api_version(1),
-  new_tokens_callback(tk_cb)
+  new_tokens_callback(tk_cb), api_version(1),
+  client_id(id), client_secret(st), redirect_uri(ru)
 {
   RawClient::init_curl();
 }

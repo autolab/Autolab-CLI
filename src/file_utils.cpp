@@ -38,7 +38,7 @@ bool dir_find(const char *dirname, const char *targetname, bool target_is_dir) {
   }
 
   struct dirent *entry;
-  while (entry = readdir(dir)) {
+  while ((entry = readdir(dir))) {
     if ((entry->d_type == target_type) &&
         (strcmp(entry->d_name, targetname) == 0)) {
       found = true;

@@ -49,9 +49,10 @@ public:
     long response_code;
 
     request_state() :
-      is_download(false), file_upload(false) {}
+      file_upload(false), is_download(false) {}
     request_state(std::string dir, std::string name_hint) :
-      download_dir(dir), suggested_filename(name_hint), is_download(false), file_upload(false) {}
+      file_upload(false), is_download(false), suggested_filename(name_hint), 
+      download_dir(dir) {}
 
     void reset() {
       is_download = false;

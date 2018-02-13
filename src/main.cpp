@@ -452,7 +452,7 @@ int show_scores(cmdargs &cmd) {
       auto &scores_map = s.scores;
       for (auto &p : problems) {
         auto score = scores_map.find(p.name); // find by problem name
-        if (score != scores_map.end() && !isnan(score->second)) {
+        if (score != scores_map.end() && !std::isnan(score->second)) {
           row.push_back(double_to_string(score->second, 1));
         } else {
           row.push_back("--");

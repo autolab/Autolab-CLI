@@ -94,21 +94,29 @@ std::string get_string(rapidjson::Value &obj, std::string key, std::string fallb
 
 bool get_bool_force(rapidjson::Value &obj, std::string key) {
   bool result;
-  if (get_bool_internal(obj, key, result)) return result;
-  throw_unexpected_null_error(key, "bool");
+  if (!get_bool_internal(obj, key, result)) {
+    throw_unexpected_null_error(key, "bool");
+  }
+  return result;
 }
 double get_double_force(rapidjson::Value &obj, std::string key) {
   double result;
-  if (get_double_internal(obj, key, result)) return result;
-  throw_unexpected_null_error(key, "double");
+  if (!get_double_internal(obj, key, result)) {
+    throw_unexpected_null_error(key, "double");
+  }
+  return result;
 }
 int get_int_force(rapidjson::Value &obj, std::string key) {
   int result;
-  if (get_int_internal(obj, key, result)) return result;
-  throw_unexpected_null_error(key, "int");
+  if (!get_int_internal(obj, key, result)) {
+    throw_unexpected_null_error(key, "int");
+  }
+  return result;
 }
 std::string get_string_force(rapidjson::Value &obj, std::string key) {
   std::string result;
-  if (get_string_internal(obj, key, result)) return result;
-  throw_unexpected_null_error(key, "string");
+  if (!get_string_internal(obj, key, result)) {
+    throw_unexpected_null_error(key, "string");
+  }
+  return result;
 }

@@ -12,19 +12,19 @@ namespace Logger {
   debug_logger debug;
 
   template<>
-  fatal_logger &fatal_logger::operator<<(line_ending_symbol end) {
+  fatal_logger &fatal_logger::operator<<(line_ending_symbol) {
     std::cerr << std::endl;
     return *this;
   }
 
   template<>
-  info_logger &info_logger::operator<<(line_ending_symbol end) {
+  info_logger &info_logger::operator<<(line_ending_symbol) {
     std::cout << std::endl;
     return *this;
   }
 
   template<>
-  debug_logger &debug_logger::operator<<(line_ending_symbol end) {
+  debug_logger &debug_logger::operator<<(line_ending_symbol) {
   #ifdef PRINT_DEBUG
     std::cout << std::endl;
   #endif

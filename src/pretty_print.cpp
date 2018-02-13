@@ -1,12 +1,14 @@
 #include "pretty_print.h"
 
+#include <cstddef> // size_t
+
 #include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-const int output_line_width = 80;
+const std::size_t output_line_width = 80;
 const std::string whitespace_chars = " \t\n";
 
 int count_words(std::string src) {
@@ -50,7 +52,7 @@ std::string right_trim(std::string src) {
   return src;
 }
 
-std::string center_text(int width, std::string text) {
+std::string center_text(std::size_t width, std::string text) {
   if (text.length() >= width) return text;
 
   int left = (width - text.length()) / 2;
@@ -64,7 +66,7 @@ std::string center_text(int width, std::string text) {
 }
 
 // print text wrapped and with left indent. First line is not indented
-std::string wrap_text_with_indent(int indent, std::string text) {
+std::string wrap_text_with_indent(std::size_t indent, std::string text) {
   std::ostringstream out;
 
   if (indent >= output_line_width) {
@@ -73,7 +75,7 @@ std::string wrap_text_with_indent(int indent, std::string text) {
   }
 
   int len_per_line = output_line_width - indent;
-  int start = 0;
+  std::size_t start = 0;
   while (start < text.length()) {
     std::string curr_str = text.substr(start, len_per_line);
     start += len_per_line;
@@ -103,7 +105,7 @@ std::string format_table(std::vector<std::vector<std::string>> data) {
   num_cols = data[0].size();
 
   // find out width of each column
-  std::vector<int> col_widths;
+  std::vector<std::size_t> col_widths;
   col_widths.resize(num_cols, 0);
   for (auto &row : data) {
     for (int i = 0; i < num_cols; i++) {
