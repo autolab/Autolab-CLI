@@ -1,3 +1,23 @@
+/*
+ * Includes classes and methods that can be used to write output.
+ *
+ * Three output strategies are included:
+ *   - Logger::info
+ *       Used for general output to stdout. All info intended for the user
+ *       should go through it.
+ *   - Logger::fatal
+ *       Used for reporting fatal errors to stderr. An optional prefix can be
+ *       set so that the first time this logger is written to, the prefix is
+ *       printed. The convention is to exit the program after writing to it.
+ *   - Logger::debug
+ *       Used for outputting debug info to stdout. If PRINT_DEBUG is not
+ *       defined, any output written to this logger will be discarded. Should be
+ *       used sparingly for reporting important information that may be useful
+ *       while debugging.
+ *
+ * A Logger::endl is provided to write std::out to the output.
+ */
+
 #ifndef AUTOLAB_LOGGER_H_
 #define AUTOLAB_LOGGER_H_
 

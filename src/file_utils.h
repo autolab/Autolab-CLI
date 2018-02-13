@@ -1,3 +1,11 @@
+/*
+ * Functions to help interface with the filesystem.
+ *
+ * Purely C-based, and is very platform-dependent.
+ * Once C++17 filesystems becomes standardized, these functions should be
+ * rewritten using the new standard.
+ */
+
 #ifndef AUTOLAB_FILE_UTILS_H_
 #define AUTOLAB_FILE_UTILS_H_
 

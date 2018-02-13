@@ -1,3 +1,12 @@
+/*
+ * The raw client interface.
+ *
+ * The RawClient class abstracts away HTTP operations, but still allows the
+ * users of the library to view the returned json themselves. This client should
+ * be used when the user wishes to skip the response verification and packaging
+ * step of the easy client.
+ */
+
 #ifndef LIBAUTOLAB_RAW_CLIENT_H_
 #define LIBAUTOLAB_RAW_CLIENT_H_
 

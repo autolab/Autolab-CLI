@@ -1,3 +1,7 @@
+/*
+ * Functions for getting data from json values.
+ */
+
 #ifndef LIBAUTOLAB_JSON_HELPERS_H_
 #define LIBAUTOLAB_JSON_HELPERS_H_
 

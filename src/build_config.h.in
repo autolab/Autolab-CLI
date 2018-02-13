@@ -1,3 +1,8 @@
+/*
+ * Includes the build configs that will be automatically filled out by cmake
+ * during builds.
+ */
+
 #ifndef AUTOLAB_BUILD_CONFIG_H_
 #define AUTOLAB_BUILD_CONFIG_H_
 

@@ -1,3 +1,7 @@
+/*
+ * Functions that help with formatting strings.
+ */
+
 #ifndef AUTOLAB_PRETTY_PRINT_H_
 #define AUTOLAB_PRETTY_PRINT_H_
 

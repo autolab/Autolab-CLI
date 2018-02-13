@@ -1,3 +1,10 @@
+/*
+ * Functions that manage the command line interface.
+ *
+ * Can be used to parse and lookup command line arguments, as well as generate
+ * help text dynamically.
+ */
+
 #ifndef AUTOLAB_CMDARGS_H_
 #define AUTOLAB_CMDARGS_H_
 

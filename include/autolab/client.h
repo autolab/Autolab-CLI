@@ -1,3 +1,11 @@
+/*
+ * The (easy) client interface.
+ *
+ * The Client class abstracts away HTTP operations and json parsing into
+ * functions that return native types. Recommended for most use cases of the
+ * autolab client library. (Uses RawClient internally).
+ */
+
 #ifndef LIBAUTOLAB_CLIENT_H_
 #define LIBAUTOLAB_CLIENT_H_
 

@@ -1,3 +1,8 @@
+/*
+ * Includes the basic types used by the autolab library, as well as several
+ * utility methods.
+ */
+
 #ifndef LIBAUTOLAB_AUTOLAB_H_
 #define LIBAUTOLAB_AUTOLAB_H_
 

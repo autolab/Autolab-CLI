@@ -1,3 +1,10 @@
+/*
+ * Functions that help with understanding the context of the program.
+ *
+ * Includes functions that help manipulate the tokens cache file and the
+ * asmt config files.
+ */
+
 #ifndef AUTOLAB_CONTEXT_MANAGER_H_
 #define AUTOLAB_CONTEXT_MANAGER_H_
 
