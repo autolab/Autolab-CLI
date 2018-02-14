@@ -320,14 +320,14 @@ int show_courses(cmdargs &cmd) {
 
   std::vector<Autolab::Course> courses;
   client.get_courses(courses);
+  LogDebug("Found " << courses.size() << " current courses." << Logger::endl);
 
   std::string course_name_config, asmt_name_config;
   read_asmt_file(course_name_config, asmt_name_config);
-
-  LogDebug("Found " << courses.size() << " current courses." << Logger::endl);
+  std::string course_name_config_lower = to_lowercase(course_name_config);
 
   for (auto &c : courses) {
-    bool is_curr_asmt = (c.name == course_name_config);
+    bool is_curr_asmt = (course_name_config_lower == to_lowercase(c.name));
     if (is_curr_asmt) {
       Logger::info << "* " << Logger::GREEN;
     } else {
@@ -361,10 +361,12 @@ int show_assessments(cmdargs &cmd) {
 
   std::string course_name_config, asmt_name_config;
   read_asmt_file(course_name_config, asmt_name_config);
+  bool is_curr_course = case_insensitive_str_equal(course_name, course_name_config);
+  std::string asmt_name_config_lower = to_lowercase(asmt_name_config);
 
   std::sort(asmts.begin(), asmts.end(), Autolab::Utility::compare_assessments_by_name);
   for (auto &a : asmts) {
-    bool is_curr_asmt = (a.name == asmt_name_config);
+    bool is_curr_asmt = is_curr_course && (asmt_name_config_lower == to_lowercase(a.name));
     if (is_curr_asmt) {
       Logger::info << "* " << Logger::GREEN;
     } else {
