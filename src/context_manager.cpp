@@ -1,7 +1,9 @@
 #include "context_manager.h"
 
+#include "app_credentials.h"
 #include "file_utils.h"
 #include "logger.h"
+#include "pseudocrypto.h"
 
 #define TOKEN_CACHE_FILE_MAXSIZE 256
 
@@ -9,7 +11,20 @@ const std::string token_cache_filename = ".arcache";
 const std::string cred_dirname = ".autolab";
 
 std::string token_pair_to_string(std::string at, std::string rt) {
-  return at + "\n" + rt;
+  std::string pre_crypt = at + "\n" + rt;
+  return encrypt_string(pre_crypt, crypto_key, crypto_iv);
+}
+
+bool token_pair_from_string(std::string raw_src, std::string &at, std::string &rt) {
+  std::string src = decrypt_string(raw_src, crypto_key, crypto_iv);
+
+  std::string::size_type split_pos_1 = src.find('\n');
+  if (split_pos_1 == std::string::npos) return false;
+  std::string::size_type split_pos_2 = src.find('\n', split_pos_1+1);
+
+  at.assign(src.substr(0, split_pos_1));
+  rt.assign(src.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
+  return true;
 }
 
 /* private helpers */
@@ -72,13 +87,9 @@ bool load_tokens(std::string &at, std::string &rt) {
             raw_result, TOKEN_CACHE_FILE_MAXSIZE);
 
   std::string result(raw_result);
-  std::string::size_type split_pos_1 = result.find('\n');
-  if (split_pos_1 == std::string::npos) return false;
-  std::string::size_type split_pos_2 = result.find('\n', split_pos_1+1);
-
-  at.assign(result.substr(0, split_pos_1));
-  rt.assign(result.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
-  LogDebug("[FileUtils] tokens loaded" << Logger::endl);
+  if (!token_pair_from_string(result, at, rt)) return false;
+  
+  LogDebug("[ContextManager] tokens loaded" << Logger::endl);
   return true;
 }
 
