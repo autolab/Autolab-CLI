@@ -2,6 +2,7 @@
 
 #include <cstddef> // size_t
 
+#include <algorithm>
 #include <iomanip>
 #include <ostream>
 #include <sstream>
@@ -28,10 +29,20 @@ int count_words(std::string src) {
   return num_words;
 }
 
+bool case_insensitive_str_equal(std::string a, std::string b) {
+  return to_lowercase(a) == to_lowercase(b);
+}
+
 std::string double_to_string(double num, int precision) {
   std::ostringstream num_str;
   num_str << std::fixed << std::setprecision(precision) << num;
   return num_str.str();
+}
+
+std::string to_lowercase(std::string src) {
+  std::string lower(src);
+  std::transform(src.begin(), src.end(), lower.begin(), ::tolower);
+  return lower;
 }
 
 // trim whitespace on the left
