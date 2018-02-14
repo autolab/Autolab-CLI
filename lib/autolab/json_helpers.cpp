@@ -72,42 +72,42 @@ bool get_string_internal(rapidjson::Value &obj, std::string key, std::string &re
 }
 
 bool get_bool(rapidjson::Value &obj, std::string key, bool fallback) {
-  bool result;
+  bool result = fallback;
   if (get_bool_internal(obj, key, result)) return result;
   return fallback;
 }
 double get_double(rapidjson::Value &obj, std::string key, double fallback) {
-  double result;
+  double result = fallback;
   if (get_double_internal(obj, key, result)) return result;
   return fallback;
 }
 int get_int(rapidjson::Value &obj, std::string key, int fallback) {
-  int result;
+  int result = fallback;
   if (get_int_internal(obj, key, result)) return result;
   return fallback;
 }
 std::string get_string(rapidjson::Value &obj, std::string key, std::string fallback) {
-  std::string result;
+  std::string result = fallback;
   if (get_string_internal(obj, key, result)) return result;
   return fallback;
 }
 
 bool get_bool_force(rapidjson::Value &obj, std::string key) {
-  bool result;
+  bool result = true;
   if (!get_bool_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "bool");
   }
   return result;
 }
 double get_double_force(rapidjson::Value &obj, std::string key) {
-  double result;
+  double result = 0;
   if (!get_double_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "double");
   }
   return result;
 }
 int get_int_force(rapidjson::Value &obj, std::string key) {
-  int result;
+  int result = 0;
   if (!get_int_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "int");
   }

@@ -27,7 +27,7 @@ double get_timezone_offset() {
 }
 
 std::time_t string_to_time(std::string str_time) {
-  std::tm tms = {};
+  std::tm tms;
   int source_timezone_offset = 0;
 
   int res = std::sscanf(str_time.c_str(), "%4d-%2d-%2dT%2d:%2d:%2d.%*3c%3d",
