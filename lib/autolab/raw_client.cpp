@@ -63,22 +63,22 @@ size_t header_callback(char *data, size_t size, size_t nmemb,
 
     if (header_str.find("Content-Disposition:") != std::string::npos) {
       rstate->is_download = true;
-      Logger::debug << header_str << Logger::endl;
+      LogDebug(header_str << Logger::endl);
       // look for filename
       name_start = header_str.find("filename=");
       if (name_start != std::string::npos) {
         name_start += 10; // skip 'filename=' and the following quote
         name_end = header_str.find('"', name_start);
-        Logger::debug << "  name_start: " << name_start << ", name_end: " << name_end << Logger::endl;
+        LogDebug("  name_start: " << name_start << ", name_end: " << name_end << Logger::endl);
         if (name_end != std::string::npos) {
           rstate->suggested_filename = header_str.substr(name_start, name_end - name_start);
-          Logger::debug << "  suggested filename: " << rstate->suggested_filename << Logger::endl;
+          LogDebug("  suggested filename: " << rstate->suggested_filename << Logger::endl);
         }
       }
       // open ofstream for writing output
       std::string full_filename = rstate->download_dir + "/" + rstate->suggested_filename;
       rstate->file_output.open(full_filename.c_str(), std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
-      Logger::debug << "Opened file " << full_filename << Logger::endl;
+      LogDebug("Opened file " << full_filename << Logger::endl);
     }
   }
 
@@ -138,7 +138,8 @@ long RawClient::raw_request(RawClient::request_state *rstate,
 
   std::string param_str = construct_params(curl, params);
 
-  Logger::debug << "Requesting " << path << " with params " << param_str << Logger::endl << Logger::endl;
+  LogDebug("Requesting " << path << " with params " << param_str << Logger::endl
+    << Logger::endl);
 
   if (method == GET) { // GET
     full_path.append("?" + param_str);
@@ -220,7 +221,7 @@ long RawClient::raw_request_optional_refresh(
     rc = raw_request(rstate, path, params, method);
     if (rc == 200 || !document_has_error(rstate, oauth_auth_failed_response)) {
       // all good now
-      Logger::debug << "Successfully refreshed token" << Logger::endl;
+      LogDebug("Successfully refreshed token" << Logger::endl);
       return rc;
     }
   }
@@ -258,11 +259,11 @@ long RawClient::make_request(rapidjson::Document &response,
 
   long rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
 
-  Logger::debug << "Completed make request" << Logger::endl;
+  LogDebug("Completed make request" << Logger::endl);
 
   rstate.close_file_output();
   if (!rstate.is_download) {
-    Logger::debug << rstate.string_output << Logger::endl;
+    LogDebug(rstate.string_output << Logger::endl);
     response.Parse(rstate.string_output.c_str());
   }
 

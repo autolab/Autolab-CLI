@@ -9,7 +9,10 @@
  *       Used for reporting fatal errors to stderr. An optional prefix can be
  *       set so that the first time this logger is written to, the prefix is
  *       printed. The convention is to exit the program after writing to it.
- *   - Logger::debug
+ *   - LogDebug
+ *       WARNING: Do not call Logger::debug directly. Always use the provided
+ *       LogDebug macro. This will remove any debugging output in the release
+ *       builds.
  *       Used for outputting debug info to stdout. If PRINT_DEBUG is not
  *       defined, any output written to this logger will be discarded. Should be
  *       used sparingly for reporting important information that may be useful
@@ -25,6 +28,12 @@
 #include <string>
 
 #include "build_config.h"
+
+#ifdef PRINT_DEBUG
+#define LogDebug(m) Logger::debug << m
+#else
+#define LogDebug(m)
+#endif /* PRINT_DEBUG */
 
 namespace Logger {
 

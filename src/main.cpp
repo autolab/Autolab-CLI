@@ -318,7 +318,7 @@ int show_courses(cmdargs &cmd) {
   std::vector<Autolab::Course> courses;
   client.get_courses(courses);
 
-  Logger::debug << "Found " << courses.size() << " current courses." << Logger::endl;
+  LogDebug("Found " << courses.size() << " current courses." << Logger::endl);
 
   for (auto &c : courses) {
     Logger::info << c.name << " (" << c.display_name << ")" << Logger::endl;
@@ -341,7 +341,7 @@ int show_assessments(cmdargs &cmd) {
   std::vector<Autolab::Assessment> asmts;
   client.get_assessments(asmts, course_name);
 
-  Logger::debug << "Found " << asmts.size() << " assessments." << Logger::endl;
+  LogDebug("Found " << asmts.size() << " assessments." << Logger::endl);
 
   std::sort(asmts.begin(), asmts.end(), Autolab::Utility::compare_assessments_by_name);
   for (auto &a : asmts) {
@@ -375,7 +375,7 @@ int show_problems(cmdargs &cmd) {
   std::vector<Autolab::Problem> problems;
   client.get_problems(problems, course_name, asmt_name);
 
-  Logger::debug << "Found " << problems.size() << " problems." << Logger::endl;
+  LogDebug("Found " << problems.size() << " problems." << Logger::endl);
 
   for (auto &p : problems) {
     Logger::info << p.name;
@@ -436,7 +436,7 @@ int show_scores(cmdargs &cmd) {
   std::vector<Autolab::Submission> subs;
   client.get_submissions(subs, course_name, asmt_name);
 
-  Logger::debug << "Found " << subs.size() << " submissions." << Logger::endl;
+  LogDebug("Found " << subs.size() << " submissions." << Logger::endl);
 
   // prepare table body
   if (subs.size() == 0) {
@@ -525,7 +525,7 @@ int show_feedback(cmdargs &cmd) {
 
     option_problem = problems[0].name;
   }
-  Logger::debug << "Using problem name: " << option_problem << Logger::endl;
+  LogDebug("Using problem name: " << option_problem << Logger::endl);
 
   std::string feedback;
   client.get_feedback(feedback, course_name, asmt_name, version, option_problem);

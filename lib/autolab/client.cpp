@@ -52,7 +52,7 @@ void check_for_error_response(rapidjson::Value &response) {
   if (response.IsObject() &&
       response.HasMember("error")) {
     std::string error_msg = get_string(response, "error");
-    Logger::debug << "API returned error: " << error_msg << Logger::endl;
+    LogDebug("API returned error: " << error_msg << Logger::endl);
     throw ErrorResponseException(error_msg);
   }
 }

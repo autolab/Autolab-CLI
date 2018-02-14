@@ -158,6 +158,7 @@ const char *get_home_dir() {
 const char *get_curr_dir() {
   if (*curr_directory != '\0') return curr_directory;
 
-  getcwd(curr_directory, MAX_DIR_LENGTH);
+  char *res = getcwd(curr_directory, MAX_DIR_LENGTH);
+  if (!res) exit_with_errno();
   return curr_directory;
 }
