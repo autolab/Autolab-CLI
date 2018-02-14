@@ -65,21 +65,24 @@ int perform_device_flow(Autolab::Client &client) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
   std::string user_code, verification_uri;
   client.device_flow_init(user_code, verification_uri);
-  Logger::info << "Please visit " << verification_uri << " and enter the code: " << user_code << Logger::endl;
+  Logger::info << "Please visit "
+    << Logger::CYAN << verification_uri << Logger::NONE << " and enter the code: "
+    << Logger::CYAN << user_code << Logger::NONE << Logger::endl;
   Logger::info << Logger::endl << "Waiting for user authorization ..." << Logger::endl;
 
   int res = client.device_flow_authorize(300); // wait for 5 minutes max
   switch (res) {
     case 1:
-      Logger::info << "User denied authorization." << Logger::endl;
+      Logger::info << Logger::RED << "User denied authorization." << Logger::NONE << Logger::endl;
       return 1;
     case -2:
-      Logger::info << "Timed out while waiting for user action. Please try again." << Logger::endl;
+      Logger::info << Logger::RED << "Timed out while waiting for user action. Please try again."
+        << Logger::NONE << Logger::endl;
       return 1;
   }
 
   // res == 0
-  Logger::info << "Received authorization!" << Logger::endl;
+  Logger::info << Logger::GREEN << "Received authorization!" << Logger::NONE << Logger::endl;
 
   return 0;
 }
@@ -302,7 +305,7 @@ int submit_asmt(cmdargs &cmd) {
   // conflicts resolved, use course_name and asmt_name from now on
   int version = client.submit_assessment(course_name, asmt_name, filename);
 
-  Logger::info << "Successfully submitted to Autolab (version " << version << ")" << Logger::endl;
+  Logger::info << Logger::GREEN << "Successfully submitted to Autolab (version " << version << ")" << Logger::NONE << Logger::endl;
   
   return 0;
 }
@@ -318,10 +321,24 @@ int show_courses(cmdargs &cmd) {
   std::vector<Autolab::Course> courses;
   client.get_courses(courses);
 
+  std::string course_name_config, asmt_name_config;
+  read_asmt_file(course_name_config, asmt_name_config);
+
   LogDebug("Found " << courses.size() << " current courses." << Logger::endl);
 
   for (auto &c : courses) {
+    bool is_curr_asmt = (c.name == course_name_config);
+    if (is_curr_asmt) {
+      Logger::info << "* " << Logger::GREEN;
+    } else {
+      Logger::info << "  ";
+    }
+
     Logger::info << c.name << " (" << c.display_name << ")" << Logger::endl;
+
+    if (is_curr_asmt) {
+      Logger::info << Logger::NONE;
+    }
   }
 
   return 0;
@@ -340,12 +357,25 @@ int show_assessments(cmdargs &cmd) {
 
   std::vector<Autolab::Assessment> asmts;
   client.get_assessments(asmts, course_name);
-
   LogDebug("Found " << asmts.size() << " assessments." << Logger::endl);
+
+  std::string course_name_config, asmt_name_config;
+  read_asmt_file(course_name_config, asmt_name_config);
 
   std::sort(asmts.begin(), asmts.end(), Autolab::Utility::compare_assessments_by_name);
   for (auto &a : asmts) {
+    bool is_curr_asmt = (a.name == asmt_name_config);
+    if (is_curr_asmt) {
+      Logger::info << "* " << Logger::GREEN;
+    } else {
+      Logger::info << "  ";
+    }
+
     Logger::info << a.name << " (" << a.display_name << ")" << Logger::endl;
+
+    if (is_curr_asmt) {
+      Logger::info << Logger::NONE;
+    }
   }
 
   return 0;
