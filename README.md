@@ -6,6 +6,7 @@ A command line client and C++ library that uses the Autolab REST API.
 
 This C++ project has the following dependencies:
 
+- [openssl](https://www.openssl.org/): For crypto operations
 - [libcurl](https://curl.haxx.se/libcurl/): For HTTP operations
 - [rapidjson](https://github.com/Tencent/rapidjson): For JSON processing
 
