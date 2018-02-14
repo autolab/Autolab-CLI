@@ -4,7 +4,7 @@
  * Three output strategies are included:
  *   - Logger::info
  *       Used for general output to stdout. All info intended for the user
- *       should go through it.
+ *       should go through it. This logger also supports colors.
  *   - Logger::fatal
  *       Used for reporting fatal errors to stderr. An optional prefix can be
  *       set so that the first time this logger is written to, the prefix is
@@ -37,7 +37,11 @@
 
 namespace Logger {
 
-  class line_ending_symbol {};
+  struct line_ending_symbol {};
+
+  struct color_symbol {
+    int code;
+  };
   
   struct fatal_logger {
     fatal_logger() : prefix_used(false) {}
@@ -78,6 +82,15 @@ namespace Logger {
   extern fatal_logger fatal;
   extern info_logger info;
   extern debug_logger debug;
+
+  // colors
+  extern color_symbol NONE;
+  extern color_symbol RED;
+  extern color_symbol GREEN;
+  extern color_symbol YELLOW;
+  extern color_symbol BLUE;
+  extern color_symbol MAGENTA;
+  extern color_symbol CYAN;
   
   // define specializations of operator<< for line_ending_symbols
   template<>
@@ -85,6 +98,8 @@ namespace Logger {
 
   template<>
   info_logger &info_logger::operator<<(line_ending_symbol end);
+  template<>
+  info_logger &info_logger::operator<<(color_symbol color);
 
   template<>
   debug_logger &debug_logger::operator<<(line_ending_symbol end);
