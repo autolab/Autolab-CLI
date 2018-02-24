@@ -62,9 +62,7 @@ std::time_t string_to_time(std::string str_time) {
 
 AuthorizationLevel string_to_authorization_level(std::string str_auth) {
   AuthorizationLevel auth = AuthorizationLevel::student;
-  if (str_auth == "administrator") {
-    auth = AuthorizationLevel::administrator;
-  } else if (str_auth == "instructor") {
+  if (str_auth == "instructor") {
     auth = AuthorizationLevel::instructor;
   } else if (str_auth == "course_assistant") {
     auth = AuthorizationLevel::course_assistant;

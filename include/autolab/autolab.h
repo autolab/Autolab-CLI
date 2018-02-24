@@ -17,8 +17,7 @@ namespace Autolab {
 /* resources */
 enum AuthorizationLevel {student,
                          course_assistant,
-                         instructor,
-                         administrator};
+                         instructor};
 
 enum AttachmentFormat {none, url, file};
 
