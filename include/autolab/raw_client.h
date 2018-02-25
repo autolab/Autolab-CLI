@@ -93,10 +93,9 @@ private:
   // tokens-related
   void (*new_tokens_callback)(std::string, std::string);
 
-  enum HttpMethod {GET, POST};
+  enum HttpMethod {GET, POST, PUT, DELETE};
 
   // represents the parameters used in a HTTP request.
-  // can be used for both GET and POST requests
   struct request_param {
     std::string key;
     std::string value;

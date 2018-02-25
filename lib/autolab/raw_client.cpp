@@ -151,11 +151,8 @@ long RawClient::raw_request(RawClient::request_state *rstate,
 
   LogDebug("Requesting " << full_path << " with params " << param_str << Logger::endl
     << Logger::endl);
-
-  if (method == GET) { // GET
-    full_path.append("?" + param_str);
-    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-  } else {             // POST
+  
+  if (method == POST) {
     if (rstate->file_upload) {
       // setup form
       curl_formadd(&formpost,
@@ -169,6 +166,16 @@ long RawClient::raw_request(RawClient::request_state *rstate,
       full_path.append("?" + param_str);
     } else {
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, param_str.c_str());
+    }
+  } else {
+    full_path.append("?" + param_str);
+    if (method == PUT) {
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+    } else if (method == DELETE) {
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    } else {
+      // assume GET
+      curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
   }
 
