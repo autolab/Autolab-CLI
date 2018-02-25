@@ -18,6 +18,8 @@
 #include <curl/curl.h>
 #include <rapidjson/document.h>
 
+#include "autolab/autolab.h"
+
 namespace Autolab {
 
 class RawClient {
@@ -84,7 +86,7 @@ public:
   void get_submissions(rapidjson::Document &result, std::string course_name, std::string asmt_name);
   void get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
   void get_enrollments(rapidjson::Document &result, std::string course_name);
-  void update_enrollment(rapidjson::Document &result, std::string course_name, std::string email, Params &in_params);
+  void crud_enrollment(rapidjson::Document &result, std::string course_name, std::string email, Params &in_params, CrudAction action);
 
 private:
   // domain of the autolab service
@@ -98,6 +100,7 @@ private:
   void (*new_tokens_callback)(std::string, std::string);
 
   enum HttpMethod {GET, POST, PUT, DELETE};
+  HttpMethod crud_to_http(CrudAction action);
 
   // represents the parameters used in a HTTP request.
   struct request_param {

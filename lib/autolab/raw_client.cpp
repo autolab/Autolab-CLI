@@ -453,6 +453,21 @@ void RawClient::update_access_token_in_params(RawClient::param_list &params) {
   }
 }
 
+RawClient::HttpMethod RawClient::crud_to_http(CrudAction action) {
+  HttpMethod method = HttpMethod::GET;
+  switch (action) {
+    case CrudAction::Create:
+      method = HttpMethod::POST;
+    case CrudAction::Read:
+      method = HttpMethod::GET;
+    case CrudAction::Update:
+      method = HttpMethod::PUT;
+    case CrudAction::Delete:
+      method = HttpMethod::DELETE;
+  }
+  return method;
+}
+
 void RawClient::get_user_info(rapidjson::Document &result) {
   RawClient::path_segments path;
   init_regular_path(path);
@@ -609,7 +624,7 @@ void RawClient::get_enrollments(rapidjson::Document &result, std::string course_
   make_request(result, path, params);
 }
 
-void RawClient::update_enrollment(rapidjson::Document &result, std::string course_name, std::string email, Params &in_params) {
+void RawClient::crud_enrollment(rapidjson::Document &result, std::string course_name, std::string email, RawClient::Params &in_params, CrudAction action) {
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -623,7 +638,9 @@ void RawClient::update_enrollment(rapidjson::Document &result, std::string cours
     params.emplace_back(kv.first, kv.second);
   }
 
-  make_request(result, path, params, PUT);
+  HttpMethod method = crud_to_http(action);
+
+  make_request(result, path, params, method);
 }
 
 } /* namespace Autolab */

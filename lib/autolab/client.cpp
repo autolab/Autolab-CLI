@@ -78,6 +78,17 @@ void assessment_from_json(Assessment &asmt, rapidjson::Value &asmt_json) {
   asmt.grading_deadline = Utility::string_to_time(get_string(asmt_json, "grading_deadline"));
 }
 
+void enrollment_from_json(Enrollment &enrollment, rapidjson::Value &enrollment_json) {
+  enrollment.lecture = get_string(enrollment_json, "lecture");
+  enrollment.section = get_string(enrollment_json, "section");
+  enrollment.grade_policy = get_string(enrollment_json, "grade_policy");
+  enrollment.nickname = get_string(enrollment_json, "nickname");
+  enrollment.dropped = get_bool(enrollment_json, "dropped", false);
+  enrollment.auth_level = Utility::string_to_authorization_level(
+      get_string_force(enrollment_json, "auth_level"));
+  user_from_json(enrollment.user, enrollment_json);
+}
+
 /* resource-related */
 void Client::get_user_info(User &user) {
   rapidjson::Document user_info_doc;
@@ -214,43 +225,39 @@ void Client::get_enrollments(std::vector<Enrollment> &enrollments, std::string c
   require_is_array(enrolls_doc);
   for (auto &e_doc : enrolls_doc.GetArray()) {
     Enrollment enrollment;
-    enrollment.lecture = get_string(e_doc, "lecture");
-    enrollment.section = get_string(e_doc, "section");
-    enrollment.grade_policy = get_string(e_doc, "grade_policy");
-    enrollment.nickname = get_string(e_doc, "nickname");
-    enrollment.dropped = get_bool(e_doc, "dropped", false);
-    enrollment.auth_level = Utility::string_to_authorization_level(
-        get_string_force(e_doc, "auth_level"));
-    user_from_json(enrollment.user, e_doc);
+    enrollment_from_json(enrollment, e_doc);
 
     enrollments.push_back(enrollment);
   }
 }
 
-void Client::update_enrollment(Enrollment &result, std::string course_name,
-    std::string email, EnrollmentOption &input) {
+void Client::crud_enrollment(Enrollment &result, std::string course_name,
+    std::string email, EnrollmentOption &input, CrudAction action) {
   RawClient::Params in_params;
-  if (!input.lecture.NONE)
-    in_params.push_back(std::make_pair("lecture", input.lecture.SOME));
-  if (!input.section.NONE)
-    in_params.push_back(std::make_pair("section", input.section.SOME));
-  if (!input.grade_policy.NONE)
-    in_params.push_back(std::make_pair("grade_policy", input.grade_policy.SOME));
-  if (!input.nickname.NONE)
-    in_params.push_back(std::make_pair("nickname", input.nickname.SOME));
-  if (!input.dropped.NONE)
-    in_params.push_back(std::make_pair("dropped",
-        Utility::bool_to_string(input.dropped.SOME)));
-  if (!input.auth_level.NONE)
-    in_params.push_back(std::make_pair("auth_level",
-        Utility::authorization_level_to_string(input.auth_level.SOME)));
+
+  if (action == Create || action == Update) {
+    if (!input.lecture.NONE)
+      in_params.push_back(std::make_pair("lecture", input.lecture.SOME));
+    if (!input.section.NONE)
+      in_params.push_back(std::make_pair("section", input.section.SOME));
+    if (!input.grade_policy.NONE)
+      in_params.push_back(std::make_pair("grade_policy", input.grade_policy.SOME));
+    if (!input.nickname.NONE)
+      in_params.push_back(std::make_pair("nickname", input.nickname.SOME));
+    if (!input.dropped.NONE)
+      in_params.push_back(std::make_pair("dropped",
+          Utility::bool_to_string(input.dropped.SOME)));
+    if (!input.auth_level.NONE)
+      in_params.push_back(std::make_pair("auth_level",
+          Utility::authorization_level_to_string(input.auth_level.SOME)));
+  }
 
   rapidjson::Document enroll_doc;
-  raw_client.update_enrollment(enroll_doc, course_name, email, in_params);
+  raw_client.crud_enrollment(enroll_doc, course_name, email, in_params, action);
   check_for_error_response(enroll_doc);
 
   require_is_object(enroll_doc);
-  (void)result;
+  enrollment_from_json(result, enroll_doc);
 }
 
 

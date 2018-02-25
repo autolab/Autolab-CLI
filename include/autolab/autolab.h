@@ -28,6 +28,9 @@ public:
   }
 };
 
+// CRUD actions on resources: Create, Read, Update, Delete
+enum CrudAction {Create, Read, Update, Delete};
+
 /* resources */
 enum AuthorizationLevel {student,
                          course_assistant,
