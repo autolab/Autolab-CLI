@@ -634,13 +634,14 @@ void RawClient::crud_enrollment(rapidjson::Document &result, std::string course_
   path.emplace_back("courses");
   path.emplace_back(course_name);
   path.emplace_back("course_user_data");
-  path.emplace_back(email);
+  if (action != Create) path.emplace_back(email);
 
   RawClient::param_list params;
   init_regular_params(params);
   for (auto &kv : in_params) {
     params.emplace_back(kv.first, kv.second);
   }
+  if (action == Create) params.emplace_back("email", email);
 
   HttpMethod method = crud_to_http(action);
 
