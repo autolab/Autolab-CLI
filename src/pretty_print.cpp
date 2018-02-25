@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "logger.h"
+
 const std::size_t output_line_width = 80;
 const std::string whitespace_chars = " \t\n";
 
@@ -33,10 +35,20 @@ bool case_insensitive_str_equal(std::string a, std::string b) {
   return to_lowercase(a) == to_lowercase(b);
 }
 
+bool nonempty(std::string src) {
+  return src.length() != 0;
+}
+
 std::string double_to_string(double num, int precision) {
   std::ostringstream num_str;
   num_str << std::fixed << std::setprecision(precision) << num;
   return num_str.str();
+}
+
+std::string bool_to_string(bool test) {
+  if (test) return "true";
+
+  return "false";
 }
 
 std::string to_lowercase(std::string src) {

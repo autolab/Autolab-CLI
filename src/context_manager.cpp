@@ -73,7 +73,7 @@ void store_tokens(std::string at, std::string rt) {
 
   write_file(get_token_cache_file_full_path().c_str(),
              token_pair_to_string(at, rt).c_str());
-  LogDebug("[FileUtils] tokens stored" << Logger::endl);
+  LogDebug("[ContextManager] tokens stored" << Logger::endl);
 }
 
 // returns true if got token, false if failed to get token.

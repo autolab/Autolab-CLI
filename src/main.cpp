@@ -33,7 +33,7 @@ bool init_autolab_client() {
 void print_help() {
   Logger::info << "usage: autolab [OPTIONS] <command> [command-args] [command-opts]" << Logger::endl
     << Logger::endl
-    << "commands:" << Logger::endl
+    << "general commands:" << Logger::endl
     << "  courses             List all courses" << Logger::endl
     << "  assessments/asmts   List all assessments of a course" << Logger::endl
     << "  status              Show status of the local assessment" << Logger::endl
@@ -42,6 +42,9 @@ void print_help() {
     << "  submit              Submit a file to an assessment" << Logger::endl
     << "  scores              Show scores got on an assessment" << Logger::endl
     << "  setup               Setup the user of the client" << Logger::endl
+    << Logger::endl
+    << "instructor commands:" << Logger::endl
+    << "  enroll              Manage users affiliated with a course" << Logger::endl
     << Logger::endl
     << "options:" << Logger::endl
     << "  -h,--help      Show this help message" << Logger::endl
@@ -344,6 +347,126 @@ int show_courses(cmdargs &cmd) {
   return 0;
 }
 
+// list and CRUD enrollments
+int manage_enrolls(cmdargs &cmd) {
+  cmd.setup_help("autolab enroll",
+      "actions:\n"
+      "  new   Create a new enrollment for a course\n"
+      "  edit  Modify an existing enrollment for a course\n"
+      "  drop  Drop a student from a course\n"
+      "\n"
+      "List, create, and update users affiliated with a course, including "
+      "students, course assistants, and instructors.");
+  cmd.new_arg("action", false);
+  cmd.new_arg("course_name", true);
+  std::string option_user = cmd.new_option("-u","--user","Email of the user");
+  std::string option_lecture = cmd.new_option("-l","--lecture","Lecture to assign to");
+  std::string option_section = cmd.new_option("-s","--section","Section to assign to");
+  std::string option_grade_policy = cmd.new_option("-p","--grade-policy","Student's grading policy");
+  std::string option_nickname = cmd.new_option("-n","--nickname","User's nickname");
+  bool option_set_dropped = cmd.new_flag_option("--set-dropped","","Set user to dropped");
+  std::string option_auth_level = cmd.new_option("-t","--type","User's authorization level."
+      " One of 'student', 'course_assistant', or 'instructor'");
+  bool option_verbose = cmd.new_flag_option("-v","--verbose","Show the resulting "
+      "enrollment data after new, edit, or delete");
+  cmd.setup_done();
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot get enrollments");
+
+  std::vector<Autolab::Enrollment> enrollments;
+  if (cmd.nargs() == 4) {
+    std::string action(cmd.args[2]);
+    std::string course_name(cmd.args[3]);
+    // member actions on enrollments require the email
+    if (option_user == "") {
+      Logger::fatal << "Must specify email of user with '-u'" << Logger::endl;
+      return -1;
+    }
+
+    // prepare input data
+    Autolab::EnrollmentOption enroll;
+    if (action == "new" || action == "edit") {
+      if (nonempty(option_lecture))
+        enroll.lecture = option_lecture;
+      if (nonempty(option_section))
+        enroll.section = option_section;
+      if (nonempty(option_grade_policy))
+        enroll.grade_policy = option_grade_policy;
+      if (nonempty(option_nickname))
+        enroll.nickname = option_nickname;
+      if (nonempty(option_auth_level)) {
+        if (option_auth_level != "student" &&
+            option_auth_level != "course_assistant" &&
+            option_auth_level != "instructor") {
+          Logger::fatal << "Unrecognized authorization level: '" << option_auth_level
+              << "'. Must be one of 'student', 'course_assistant', or 'instructor'"
+              << Logger::endl;
+          return -1;
+        }
+        enroll.auth_level =
+            Autolab::Utility::string_to_authorization_level(option_auth_level);
+      }
+      enroll.dropped = option_set_dropped;
+    }
+
+    // parse CRUD action
+    Autolab::CrudAction crud_action = Autolab::CrudAction::Create;
+    if (action == "new") {
+      crud_action = Autolab::CrudAction::Create;
+    } else if (action == "edit") {
+      crud_action = Autolab::CrudAction::Update;
+    } else if (action == "drop") {
+      crud_action = Autolab::CrudAction::Delete;
+    } else {
+      Logger::fatal << "Invalid action: " << action << Logger::endl
+        << "Must be one of 'new', 'edit', or 'delete'" << Logger::endl;
+      return -1;
+    }
+
+    Autolab::Enrollment result;
+    client.crud_enrollment(result, course_name, option_user, enroll, crud_action);
+    enrollments.push_back(result);
+  } else {
+    std::string course_name(cmd.args[2]);
+    // list all enrollments
+    client.get_enrollments(enrollments, course_name);
+    LogDebug("Found " << enrollments.size() << " enrollments." << Logger::endl);
+    // always show output for the list action
+    option_verbose = true;
+  }
+
+  if (option_verbose) {
+    // draw table
+    std::vector<std::vector<std::string>> enrolls_table;
+    // prepare table header
+    std::vector<std::string> header;
+    header.push_back("name");
+    header.push_back("email");
+    header.push_back("lecture");
+    header.push_back("section");
+    header.push_back("dropped?");
+    header.push_back("type");
+    enrolls_table.push_back(header);
+
+    // prepare table body
+    for (auto &e : enrollments) {
+      std::vector<std::string> row;
+      row.push_back(e.user.first_name + " " + e.user.last_name);
+      row.push_back(e.user.email);
+      row.push_back(e.lecture);
+      row.push_back(e.section);
+      row.push_back(bool_to_string(e.dropped));
+      row.push_back(Autolab::Utility::authorization_level_to_string(e.auth_level));
+      enrolls_table.push_back(row);
+    }
+
+    Logger::info << format_table(enrolls_table);
+  }
+
+  return 0;
+}
+
 int show_assessments(cmdargs &cmd) {
   cmd.setup_help("autolab assessments",
       "List all available assessments of a course.");
@@ -574,22 +697,24 @@ int user_setup(cmdargs &cmd) {
       "Force user setup, removing the current user");
   cmd.setup_done();
 
-  bool user_exists = init_autolab_client();
+  if (!option_force) {
+    bool user_exists = init_autolab_client();
 
-  if (user_exists && !option_force) {
-    // perform a check if not a forced setup
-    bool token_valid = true;
-    Autolab::User user_info;
-    try {
-      client.get_user_info(user_info);
-    } catch (Autolab::InvalidTokenException &e) {
-      token_valid = false;
-    }
-    if (token_valid) {
-      Logger::info << "User '" << user_info.first_name
-        << "' is currently set up on this client." << Logger::endl
-        << "To force reset of user info, use the '-f' option." << Logger::endl;
-      return 0;
+    if (user_exists) {
+      // perform a check if not a forced setup
+      bool token_valid = true;
+      Autolab::User user_info;
+      try {
+        client.get_user_info(user_info);
+      } catch (Autolab::InvalidTokenException &e) {
+        token_valid = false;
+      }
+      if (token_valid) {
+        Logger::info << "User '" << user_info.first_name
+          << "' is currently set up on this client." << Logger::endl
+          << "To force reset of user info, use the '-f' option." << Logger::endl;
+        return 0;
+      }
     }
   }
 
@@ -655,6 +780,8 @@ int main(int argc, char *argv[]) {
           return show_scores(cmd);
         } else if ("feedback" == command) {
           return show_feedback(cmd);
+        } else if ("enroll" == command) {
+          return manage_enrolls(cmd);
         } else {
           Logger::fatal << "Unrecognized command: " << command << Logger::endl;
         }

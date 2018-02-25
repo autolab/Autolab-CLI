@@ -13,9 +13,11 @@
 // utility
 int count_words(std::string src);
 bool case_insensitive_str_equal(std::string a, std::string b);
+bool nonempty(std::string src);
 
 // conversions
 std::string double_to_string(double num, int precision);
+std::string bool_to_string(bool test);
 
 // simple string processing
 std::string to_lowercase(std::string src);
