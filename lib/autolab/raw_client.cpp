@@ -458,12 +458,16 @@ RawClient::HttpMethod RawClient::crud_to_http(CrudAction action) {
   switch (action) {
     case CrudAction::Create:
       method = HttpMethod::POST;
+      break;
     case CrudAction::Read:
       method = HttpMethod::GET;
+      break;
     case CrudAction::Update:
       method = HttpMethod::PUT;
+      break;
     case CrudAction::Delete:
       method = HttpMethod::DELETE;
+      break;
   }
   return method;
 }
