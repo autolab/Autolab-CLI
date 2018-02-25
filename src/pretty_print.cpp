@@ -85,19 +85,26 @@ std::string wrap_text_with_indent(std::size_t indent, std::string text) {
     return text;
   }
 
-  int len_per_line = output_line_width - indent;
+  std::size_t len_per_line = output_line_width - indent;
   std::size_t start = 0;
   while (start < text.length()) {
     std::string curr_str = text.substr(start, len_per_line);
     start += len_per_line;
-    // left trim spaces
-    curr_str = left_trim(curr_str);
-    // leave out incomplete words on the right side
-    if (start < text.length() &&
-          curr_str.back() != ' ' && text[start] != ' ') {
-      std::size_t char_end = curr_str.find_last_of(' ');
-      start -= (curr_str.length() - char_end - 1);
-      curr_str = curr_str.substr(0, char_end);
+    // mind existing line breaks
+    std::size_t curr_line_break = curr_str.find_last_of('\n');
+    if (std::string::npos != curr_line_break) {
+      curr_str.resize(curr_line_break);
+      start = start - (len_per_line - curr_line_break - 1);
+    } else {
+      // left trim spaces
+      curr_str = left_trim(curr_str);
+      // leave out incomplete words on the right side
+      if (start < text.length() &&
+            curr_str.back() != ' ' && text[start] != ' ') {
+        std::size_t char_end = curr_str.find_last_of(' ');
+        start -= (curr_str.length() - char_end - 1);
+        curr_str = curr_str.substr(0, char_end);
+      }
     }
     // print
     out << curr_str << "\n";
