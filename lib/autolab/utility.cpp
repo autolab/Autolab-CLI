@@ -37,6 +37,7 @@ std::time_t string_to_time(std::string str_time) {
 
   if (res != 7 /* number of parsed args */) {
     LogDebug("string_to_time parse fail!" << Logger::endl);
+    return 0;
   }
 
   // adjust tm struct according to spec
@@ -55,7 +56,7 @@ std::time_t string_to_time(std::string str_time) {
   src_time -= std::chrono::hours(net_timezone_offset);
   std::time_t local_time = std::chrono::system_clock::to_time_t(src_time);
 
-  LogDebug("Parsed time: " << std::ctime(&local_time) << Logger::endl);
+  LogDebug("Parsed time: " << std::ctime(&local_time));
 
   return local_time;
 }
