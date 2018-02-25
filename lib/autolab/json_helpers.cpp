@@ -32,14 +32,10 @@ void require_key_exists(rapidjson::Value &obj, std::string key) {
     "Expected key " + key + " not found in json object.");
 }
 
-rapidjson::Value &get_candidate(rapidjson::Value &obj, std::string key) {
-  require_key_exists(obj, key);
-  return obj[key.c_str()];
-}
-
 // Methods for getting basic types from objects: Bool, Double, Int, String
 bool get_bool_internal(rapidjson::Value &obj, std::string key, bool &result) {
-  rapidjson::Value &candidate = get_candidate(obj, key);
+  if (!obj.HasMember(key.c_str())) return false;
+  rapidjson::Value &candidate = obj[key.c_str()];
   if (candidate.IsBool()) {
     result = candidate.GetBool();
     return true;
@@ -47,7 +43,8 @@ bool get_bool_internal(rapidjson::Value &obj, std::string key, bool &result) {
   return false;
 }
 bool get_double_internal(rapidjson::Value &obj, std::string key, double &result) {
-  rapidjson::Value &candidate = get_candidate(obj, key);
+  if (!obj.HasMember(key.c_str())) return false;
+  rapidjson::Value &candidate = obj[key.c_str()];
   if (candidate.IsDouble()) {
     result = candidate.GetDouble();
     return true;
@@ -55,7 +52,8 @@ bool get_double_internal(rapidjson::Value &obj, std::string key, double &result)
   return false;
 }
 bool get_int_internal(rapidjson::Value &obj, std::string key, int &result) {
-  rapidjson::Value &candidate = get_candidate(obj, key);
+  if (!obj.HasMember(key.c_str())) return false;
+  rapidjson::Value &candidate = obj[key.c_str()];
   if (candidate.IsInt()) {
     result = candidate.GetInt();
     return true;
@@ -63,7 +61,8 @@ bool get_int_internal(rapidjson::Value &obj, std::string key, int &result) {
   return false;
 }
 bool get_string_internal(rapidjson::Value &obj, std::string key, std::string &result) {
-  rapidjson::Value &candidate = get_candidate(obj, key);
+  if (!obj.HasMember(key.c_str())) return false;
+  rapidjson::Value &candidate = obj[key.c_str()];
   if (candidate.IsString()) {
     result = candidate.GetString();
     return true;
@@ -94,6 +93,7 @@ std::string get_string(rapidjson::Value &obj, std::string key, std::string fallb
 
 bool get_bool_force(rapidjson::Value &obj, std::string key) {
   bool result = true;
+  require_key_exists(obj, key);
   if (!get_bool_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "bool");
   }
@@ -101,6 +101,7 @@ bool get_bool_force(rapidjson::Value &obj, std::string key) {
 }
 double get_double_force(rapidjson::Value &obj, std::string key) {
   double result = 0;
+  require_key_exists(obj, key);
   if (!get_double_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "double");
   }
@@ -108,6 +109,7 @@ double get_double_force(rapidjson::Value &obj, std::string key) {
 }
 int get_int_force(rapidjson::Value &obj, std::string key) {
   int result = 0;
+  require_key_exists(obj, key);
   if (!get_int_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "int");
   }
@@ -115,6 +117,7 @@ int get_int_force(rapidjson::Value &obj, std::string key) {
 }
 std::string get_string_force(rapidjson::Value &obj, std::string key) {
   std::string result;
+  require_key_exists(obj, key);
   if (!get_string_internal(obj, key, result)) {
     throw_unexpected_null_error(key, "string");
   }
