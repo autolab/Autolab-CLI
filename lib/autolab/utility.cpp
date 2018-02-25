@@ -70,6 +70,15 @@ AuthorizationLevel string_to_authorization_level(std::string str_auth) {
   return auth;
 }
 
+std::string authorization_level_to_string(AuthorizationLevel auth_level) {
+  if (auth_level == AuthorizationLevel::course_assistant)
+    return "course_assistant";
+  if (auth_level == AuthorizationLevel::instructor)
+    return "instructor";
+
+  return "student";
+}
+
 AttachmentFormat string_to_attachment_format(std::string str_format) {
   AttachmentFormat format = AttachmentFormat::none;
   if (str_format == "url") {
@@ -78,6 +87,11 @@ AttachmentFormat string_to_attachment_format(std::string str_format) {
     format = AttachmentFormat::file;
   }
   return format;
+}
+
+std::string bool_to_string(bool test) {
+  if (test) return "true";
+  return "false";
 }
 
 // comparators
@@ -91,6 +105,6 @@ bool compare_assessments_by_name(const Assessment &a, const Assessment &b) {
   return a.name < b.name;
 }
 
-}
-  
-}
+} /* namespace Utility */
+
+} /* namespace Autolab */

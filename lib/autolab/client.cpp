@@ -57,6 +57,27 @@ void check_for_error_response(rapidjson::Value &response) {
   }
 }
 
+/* packagers */
+void user_from_json(User &user, rapidjson::Value &user_json) {
+  user.first_name = get_string_force(user_json, "first_name");
+  user.last_name  = get_string_force(user_json, "last_name");
+  user.email      = get_string_force(user_json, "email");
+  user.school     = get_string(user_json, "school");
+  user.major      = get_string(user_json, "major");
+  user.year       = get_string(user_json, "year");
+}
+
+void assessment_from_json(Assessment &asmt, rapidjson::Value &asmt_json) {
+  asmt.name          = get_string_force(asmt_json, "name");
+  asmt.display_name  = get_string(asmt_json, "display_name");
+  asmt.category_name = get_string(asmt_json, "category_name");
+
+  asmt.start_at = Utility::string_to_time(get_string_force(asmt_json, "start_at"));
+  asmt.due_at   = Utility::string_to_time(get_string_force(asmt_json, "due_at"));
+  asmt.end_at   = Utility::string_to_time(get_string_force(asmt_json, "end_at"));
+  asmt.grading_deadline = Utility::string_to_time(get_string(asmt_json, "grading_deadline"));
+}
+
 /* resource-related */
 void Client::get_user_info(User &user) {
   rapidjson::Document user_info_doc;
@@ -65,12 +86,7 @@ void Client::get_user_info(User &user) {
 
   require_is_object(user_info_doc);
 
-  user.first_name = get_string_force(user_info_doc, "first_name");
-  user.last_name  = get_string_force(user_info_doc, "last_name");
-  user.email      = get_string_force(user_info_doc, "email");
-  user.school     = get_string(user_info_doc, "school");
-  user.major      = get_string(user_info_doc, "major");
-  user.year       = get_string(user_info_doc, "year");
+  user_from_json(user, user_info_doc);
 }
 
 void Client::get_courses(std::vector<Course> &courses) {
@@ -101,14 +117,8 @@ void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_
   require_is_array(asmts_doc);
   for (auto &a_doc : asmts_doc.GetArray()) {
     Assessment asmt;
-    asmt.name          = get_string_force(a_doc, "name");
-    asmt.display_name  = get_string(a_doc, "display_name");
-    asmt.category_name = get_string(a_doc, "category_name");
-    asmt.start_at      = Utility::string_to_time(get_string_force(a_doc, "start_at"));
-    asmt.due_at        = Utility::string_to_time(get_string_force(a_doc, "due_at"));
-    asmt.end_at        = Utility::string_to_time(get_string_force(a_doc, "end_at"));
-    asmt.grading_deadline = Utility::string_to_time(get_string(a_doc, "grading_deadline"));
-    
+    assessment_from_json(asmt, a_doc);
+
     asmts.push_back(asmt);
   }
 }
@@ -121,14 +131,7 @@ void Client::get_assessment_details(DetailedAssessment &dasmt,
 
   require_is_object(dasmt_doc);
 
-  Assessment &asmt = dasmt.asmt;
-  asmt.name             = get_string_force(dasmt_doc, "name");
-  asmt.display_name     = get_string(dasmt_doc, "display_name");
-  asmt.category_name    = get_string(dasmt_doc, "category_name");
-  asmt.start_at         = Utility::string_to_time(get_string_force(dasmt_doc, "start_at"));
-  asmt.due_at           = Utility::string_to_time(get_string_force(dasmt_doc, "due_at"));
-  asmt.end_at           = Utility::string_to_time(get_string_force(dasmt_doc, "end_at"));
-  asmt.grading_deadline = Utility::string_to_time(get_string(dasmt_doc, "grading_deadline"));
+  assessment_from_json(dasmt.asmt, dasmt_doc);
   
   dasmt.description     = get_string(dasmt_doc, "description");
   dasmt.max_grace_days  = get_int_force(dasmt_doc, "max_grace_days");
@@ -202,6 +205,54 @@ void Client::get_feedback(std::string &feedback, std::string course_name,
   require_is_object(feedback_doc);
   feedback = get_string_force(feedback_doc, "feedback");
 }
+
+void Client::get_enrollments(std::vector<Enrollment> &enrollments, std::string course_name) {
+  rapidjson::Document enrolls_doc;
+  raw_client.get_enrollments(enrolls_doc, course_name);
+  check_for_error_response(enrolls_doc);
+
+  require_is_array(enrolls_doc);
+  for (auto &e_doc : enrolls_doc.GetArray()) {
+    Enrollment enrollment;
+    enrollment.lecture = get_string(e_doc, "lecture");
+    enrollment.section = get_string(e_doc, "section");
+    enrollment.grade_policy = get_string(e_doc, "grade_policy");
+    enrollment.nickname = get_string(e_doc, "nickname");
+    enrollment.dropped = get_bool(e_doc, "dropped", false);
+    enrollment.auth_level = Utility::string_to_authorization_level(
+        get_string_force(e_doc, "auth_level"));
+    user_from_json(enrollment.user, e_doc);
+
+    enrollments.push_back(enrollment);
+  }
+}
+
+void Client::update_enrollment(Enrollment &result, std::string course_name,
+    std::string email, EnrollmentOption &input) {
+  RawClient::Params in_params;
+  if (!input.lecture.NONE)
+    in_params.push_back(std::make_pair("lecture", input.lecture.SOME));
+  if (!input.section.NONE)
+    in_params.push_back(std::make_pair("section", input.section.SOME));
+  if (!input.grade_policy.NONE)
+    in_params.push_back(std::make_pair("grade_policy", input.grade_policy.SOME));
+  if (!input.nickname.NONE)
+    in_params.push_back(std::make_pair("nickname", input.nickname.SOME));
+  if (!input.dropped.NONE)
+    in_params.push_back(std::make_pair("dropped",
+        Utility::bool_to_string(input.dropped.SOME)));
+  if (!input.auth_level.NONE)
+    in_params.push_back(std::make_pair("auth_level",
+        Utility::authorization_level_to_string(input.auth_level.SOME)));
+
+  rapidjson::Document enroll_doc;
+  raw_client.update_enrollment(enroll_doc, course_name, email, in_params);
+  check_for_error_response(enroll_doc);
+
+  require_is_object(enroll_doc);
+  (void)result;
+}
+
 
 void Client::download_handout(Attachment &handout, std::string download_dir,
     std::string course_name, std::string asmt_name) {

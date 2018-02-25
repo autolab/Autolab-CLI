@@ -40,6 +40,9 @@ public:
   void get_submissions(std::vector<Submission> &subs, std::string course_name, std::string asmt_name);
   void get_feedback(std::string &feedback, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
 
+  void get_enrollments(std::vector<Enrollment> &enrollments, std::string course_name);
+  void update_enrollment(Enrollment &result, std::string course_name, std::string email, EnrollmentOption &input);
+
   /* action-related */
   void download_handout(Attachment &handout, std::string download_dir, std::string course_name, std::string asmt_name);
   void download_writeup(Attachment &writeup, std::string download_dir, std::string course_name, std::string asmt_name);

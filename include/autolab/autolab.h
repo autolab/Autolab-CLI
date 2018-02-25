@@ -14,6 +14,20 @@
 
 namespace Autolab {
 
+/* data helper */
+template <typename T>
+class Option {
+public:
+  T SOME;
+  bool NONE;
+  Option<T>() : NONE(true) {}
+  Option<T>(T data) : NONE(false), SOME(data) {}
+  void operator=(T data) {
+    NONE = false;
+    SOME = data;
+  }
+};
+
 /* resources */
 enum AuthorizationLevel {student,
                          course_assistant,
@@ -82,6 +96,26 @@ struct User {
   std::string year;
 };
 
+struct Enrollment {
+  User user;
+  std::string lecture;
+  std::string section;
+  std::string grade_policy;
+  std::string nickname;
+  bool dropped;
+  AuthorizationLevel auth_level;
+};
+
+struct EnrollmentOption {
+  Option<User> user;
+  Option<std::string> lecture;
+  Option<std::string> section;
+  Option<std::string> grade_policy;
+  Option<std::string> nickname;
+  Option<bool> dropped;
+  Option<AuthorizationLevel> auth_level;
+};
+
 /* exceptions */
 
 // Indicates an error that occurred in HTTP operations.
@@ -134,7 +168,9 @@ namespace Utility {
 // string conversions
 std::time_t string_to_time(std::string str);
 AuthorizationLevel string_to_authorization_level(std::string str);
+std::string authorization_level_to_string(AuthorizationLevel auth_level);
 AttachmentFormat string_to_attachment_format(std::string str_format);
+std::string bool_to_string(bool test);
 
 // comparators
 bool compare_courses_by_name(const Course &a, const Course &b);

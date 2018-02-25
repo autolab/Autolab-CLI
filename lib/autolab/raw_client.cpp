@@ -596,4 +596,34 @@ void RawClient::get_feedback(rapidjson::Document &result, std::string course_nam
   make_request(result, path, params);
 }
 
+void RawClient::get_enrollments(rapidjson::Document &result, std::string course_name) {
+  RawClient::path_segments path;
+  init_regular_path(path);
+  path.emplace_back("courses");
+  path.emplace_back(course_name);
+  path.emplace_back("course_user_data");
+
+  RawClient::param_list params;
+  init_regular_params(params);
+
+  make_request(result, path, params);
+}
+
+void RawClient::update_enrollment(rapidjson::Document &result, std::string course_name, std::string email, Params &in_params) {
+  RawClient::path_segments path;
+  init_regular_path(path);
+  path.emplace_back("courses");
+  path.emplace_back(course_name);
+  path.emplace_back("course_user_data");
+  path.emplace_back(email);
+
+  RawClient::param_list params;
+  init_regular_params(params);
+  for (auto &kv : in_params) {
+    params.emplace_back(kv.first, kv.second);
+  }
+
+  make_request(result, path, params, PUT);
+}
+
 } /* namespace Autolab */
