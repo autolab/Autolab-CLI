@@ -107,6 +107,16 @@ private:
   };
   typedef std::vector<request_param> param_list;
 
+  struct request_path_segment {
+    std::string value;
+    char *escaped_value;
+    request_path_segment(std::string v) :
+      value(v), escaped_value(nullptr) {}
+  };
+  typedef std::vector<request_path_segment> path_segments;
+
+  std::string construct_path(CURL *curl, std::string base, RawClient::path_segments &path);
+  void free_path(RawClient::path_segments &path);
   std::string construct_params(CURL *curl, param_list &params);
   void free_params(param_list &params);
 
@@ -122,9 +132,9 @@ private:
   std::string device_flow_user_code;
 
   // perform HTTP request and return result, default method is GET.
-  long raw_request(request_state *rstate, const std::string &path, param_list &params, HttpMethod method);
-  long raw_request_optional_refresh(request_state *rstate, const std::string &path, param_list &params, HttpMethod method, bool refresh);
-  long make_request(rapidjson::Document &response, const std::string &path, param_list &params, HttpMethod method, bool refresh, 
+  long raw_request(request_state *rstate, path_segments &path, param_list &params, HttpMethod method);
+  long raw_request_optional_refresh(request_state *rstate, path_segments &path, param_list &params, HttpMethod method, bool refresh);
+  long make_request(rapidjson::Document &response, path_segments &path, param_list &params, HttpMethod method, bool refresh, 
     const std::string &download_dir, const std::string &suggested_filename, const std::string &upload_filename);
 
   void clear_device_flow_strings();
@@ -134,8 +144,11 @@ private:
   bool perform_token_refresh();
 
   bool document_has_error(request_state *rstate, const std::string &error_msg);
-  void init_regular_path(std::string &path);
+  void init_regular_path(path_segments &path);
   void init_regular_params(param_list &params);
+  void init_oauth_token_path(path_segments &path);
+  void init_device_flow_init_path(path_segments &path);
+  void init_device_flow_authorize_path(path_segments &path);
   void update_access_token_in_params(param_list &params);
 };
 
