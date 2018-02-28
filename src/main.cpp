@@ -230,7 +230,7 @@ int download_asmt(cmdargs &cmd) {
       "Create a directory for working on the specified assessment. The writeup "
       "and the handout are downloaded into the directory if they are files. "
       "The assessment directory is also setup with a local config so that "
-      "running 'autolab submit <filename>' works without the need to specify "
+      "running certain commands inside it works without the need to specify "
       "the names of the course and assessment.");
   cmd.new_arg("course_name:assessment_name", true);
   cmd.setup_done();
@@ -307,7 +307,7 @@ int download_asmt(cmdargs &cmd) {
 int submit_asmt(cmdargs &cmd) {
   cmd.setup_help("autolab submit",
       "Submit a file to an assessment. The course and assessment names are not "
-      "needed if the current directory or its ancestor directories includes an "
+      "needed if the current directory or its ancestor directories include an "
       "assessment config file. The operation fails if the specified names and "
       "the config file do not match, unless the '-f' option is used, in which "
       "case the assessment config file is ignored.");

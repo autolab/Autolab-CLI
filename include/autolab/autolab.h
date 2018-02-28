@@ -59,6 +59,7 @@ struct Assessment {
   std::time_t start_at;
   std::time_t due_at;
   std::time_t end_at;
+  // available only if user is an instructor of the course
   std::time_t grading_deadline;
 };
 
