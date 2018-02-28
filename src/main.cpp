@@ -133,6 +133,51 @@ void check_names_with_asmt_file(std::string &course_name, std::string &asmt_name
   // if !found_asmt_file && user_specified_names, we don't need to do anything
 }
 
+/* table creators */
+
+// create a submissions scores table, returns the number of data rows (not
+// incl. the header row).
+int create_scores_table(
+    std::vector<std::vector<std::string>> &table,
+    std::vector<Autolab::Problem> &problems,
+    std::vector<Autolab::Submission> &subs,
+    std::size_t max_num_subs) {
+
+  // prepare table header
+  std::vector<std::string> header;
+  header.push_back("version");
+  for (auto &p : problems) {
+    std::string column(p.name);
+    if (!std::isnan(p.max_score)) {
+      column += " (" + double_to_string(p.max_score, 1) + ")";
+    }
+    header.push_back(column);
+  }
+  table.push_back(header);
+
+  // prepare table body
+  int nprint = std::min(subs.size(), max_num_subs);
+  for (int i = 0; i < nprint; i++) {
+    std::vector<std::string> row;
+    Autolab::Submission &s = subs[i];
+    row.push_back(std::to_string(s.version));
+
+    auto &scores_map = s.scores;
+    for (auto &p : problems) {
+      auto score = scores_map.find(p.name); // find by problem name
+      if (score != scores_map.end() && !std::isnan(score->second)) {
+        row.push_back(double_to_string(score->second, 1));
+      } else {
+        row.push_back("--");
+      }
+    }
+    
+    table.push_back(row);
+  }
+
+  return nprint;
+}
+
 /* commands */
 
 int show_status(cmdargs &cmd) {
@@ -570,54 +615,22 @@ int show_scores(cmdargs &cmd) {
   std::vector<Autolab::Problem> problems;
   client.get_problems(problems, course_name, asmt_name);
 
+  // get submissions
+  std::vector<Autolab::Submission> subs;
+  client.get_submissions(subs, course_name, asmt_name);
+  LogDebug("Found " << subs.size() << " submissions." << Logger::endl);
+
   Logger::info << "Scores for " << course_name << ":" << asmt_name << Logger::endl
     << "(Only submissions made via this client can be shown)" << Logger::endl
     << Logger::endl;
 
   std::vector<std::vector<std::string>> sub_table;
-  // prepare table header
-  std::vector<std::string> header;
-  header.push_back("version");
-  for (auto &p : problems) {
-    std::string column(p.name);
-    if (!std::isnan(p.max_score)) {
-      column += " (" + double_to_string(p.max_score, 1) + ")";
-    }
-    header.push_back(column);
-  }
-  sub_table.push_back(header);
+  int max_num_rows = option_all ? subs.size() : 1;
+  int num_rows = create_scores_table(sub_table, problems, subs, max_num_rows);
 
-  // get submissions
-  std::vector<Autolab::Submission> subs;
-  client.get_submissions(subs, course_name, asmt_name);
-
-  LogDebug("Found " << subs.size() << " submissions." << Logger::endl);
-
-  // prepare table body
-  if (subs.size() == 0) {
-    Logger::info << format_table(sub_table)
-      << "[none]" << Logger::endl;
-  } else {
-    int nprint = option_all ? subs.size() : 1;
-    for (int i = 0; i < nprint; i++) {
-      std::vector<std::string> row;
-      Autolab::Submission &s = subs[i];
-      row.push_back(std::to_string(s.version));
-
-      auto &scores_map = s.scores;
-      for (auto &p : problems) {
-        auto score = scores_map.find(p.name); // find by problem name
-        if (score != scores_map.end() && !std::isnan(score->second)) {
-          row.push_back(double_to_string(score->second, 1));
-        } else {
-          row.push_back("--");
-        }
-      }
-      
-      sub_table.push_back(row);
-    }
-
-    Logger::info << format_table(sub_table);
+  Logger::info << format_table(sub_table);
+  if (num_rows == 0) {
+    Logger::info << "[empty]" << Logger::endl;
   }
 
   return 0;
