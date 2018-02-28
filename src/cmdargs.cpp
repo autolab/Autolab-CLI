@@ -1,5 +1,7 @@
 #include "cmdargs.h"
 
+#include <cstdlib> // exit
+
 #include <iomanip>
 #include <map>
 #include <ostream>
@@ -10,6 +12,20 @@
 
 #include "logger.h"
 #include "pretty_print.h"
+
+// error output
+void error_pos_after_opt(std::string error_arg) {
+  Logger::fatal << "Invalid command line argument '" << error_arg << "'." << Logger::endl
+      << "Note that all options must come after all positional arguments (e.g. commands)."
+      << Logger::endl << "For detailed usage, run with '-h'." << Logger::endl;
+  exit(-1);
+}
+
+void error_opt_missing_arg(std::string opt_name) {
+  Logger::fatal << "Required parameter for '" << opt_name << "' missing." << Logger::endl
+      << "For detailed usage, run with '-h'." << Logger::endl;
+  exit(-1);
+}
 
 // helpers
 std::string combine_opt_names(std::string name, std::string alt_name,
@@ -26,17 +42,18 @@ std::string combine_opt_names(std::string name, std::string alt_name,
 
 // interface
 bool cmdargs::has_option(std::string name, std::string alt_name) {
-  for (auto &opt : opts) {
-    if (name == opt.first || alt_name == opt.first) return true;
-  }
-  return false;
+  std::string arg;
+  return get_option(arg, name, alt_name);
 }
 
-std::string cmdargs::get_option(std::string name, std::string alt_name) {
+bool cmdargs::get_option(std::string &arg, std::string name, std::string alt_name) {
   for (auto &opt : opts) {
-    if (name == opt.first || alt_name == opt.first) return opt.second;
+    if (name == opt.first || alt_name == opt.first) {
+      arg =  opt.second;
+      return true;
+    }
   }
-  return std::string();
+  return false;
 }
 
 void cmdargs::setup_help(std::string name, std::string help) {
@@ -71,14 +88,24 @@ void cmdargs::new_arg(std::string name, bool is_required) {
 std::string cmdargs::new_option(std::string name, std::string alt_name,
     std::string arg_name, std::string description) {
   opt_help[combine_opt_names(name, alt_name, arg_name)] = description;
-  return get_option(name, alt_name);
+  std::string argument;
+  bool exists = get_option(argument, name, alt_name);
+  if (exists && argument == "") {
+    error_opt_missing_arg(name); // exits
+  }
+  return argument;
 }
 
 // set a new option that does not require an argument
 bool cmdargs::new_flag_option(std::string name, std::string alt_name,
     std::string description) {
   opt_help[combine_opt_names(name, alt_name)] = description;
-  return has_option(name, alt_name);
+  std::string argument;
+  bool exists = get_option(argument, name, alt_name);
+  if (exists && argument != "") {
+    error_pos_after_opt(argument); // exits
+  }
+  return exists;
 }
 
 void cmdargs::print_help() {
@@ -162,7 +189,7 @@ bool parse_cmdargs(cmdargs &cmd, int argc, char *argv[]) {
       }
     } else {
       // non-opt arg
-      if (args_done) return false;
+      if (args_done) error_pos_after_opt(curr); // exits
 
       cmd.args.emplace_back(curr);
     }

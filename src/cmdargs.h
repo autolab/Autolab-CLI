@@ -28,7 +28,7 @@ public:
   std::vector<opt_pair> opts; // parsed options
   
   bool has_option(std::string name, std::string alt_name = "");
-  std::string get_option(std::string name, std::string alt_name = "");
+  bool get_option(std::string &arg, std::string name, std::string alt_name = "");
 
   void setup_help(std::string name, std::string help);
   void setup_done();

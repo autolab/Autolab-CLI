@@ -811,8 +811,8 @@ int user_setup(cmdargs &cmd) {
 int main(int argc, char *argv[]) {
   cmdargs cmd;
   if (!parse_cmdargs(cmd, argc, argv)) {
-    Logger::fatal << "Invalid command line arguments. All options must come after" << Logger::endl
-      << "all positional arguments (e.g. commands). For detailed usage, run with '-h'." << Logger::endl;
+    Logger::fatal << "Invalid command line arguments." << Logger::endl
+      << "For detailed usage, run with '-h'." << Logger::endl;
     return 0;
   }
 
