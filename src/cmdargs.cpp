@@ -138,13 +138,22 @@ bool parse_cmdargs(cmdargs &cmd, int argc, char *argv[]) {
     if (curr[0] == '-') {
       args_done = true;
 
-      cmd.opts.emplace_back(curr, "");
-      // check if next arg is a value
-      if (i < argc - 1) {
-        next = argv[i+1];
-        if (next[0] != '-') {
-          cmd.opts.back().second = std::string(next);
-          i++;
+      if (curr[1] != '-' && curr[2] != '\0') {
+        // this is a combination of short options, separate them
+        for (char *this_opt = curr + 1; *this_opt != '\0'; this_opt++) {
+          cmd.opts.emplace_back(std::string("-") + *this_opt, "");
+        }
+      } else {
+        // this is a single short option or a single long option,
+        // try looking for an argument
+        cmd.opts.emplace_back(curr, "");
+        // check if next arg is a value
+        if (i < argc - 1) {
+          next = argv[i+1];
+          if (next[0] != '-') {
+            cmd.opts.back().second = std::string(next);
+            i++;
+          }
         }
       }
     } else {
