@@ -2,10 +2,12 @@
 #include <ctime>
 
 #include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread> // sleep_for
 #include <vector>
 
 #include "autolab/autolab.h"
@@ -313,6 +315,8 @@ int submit_asmt(cmdargs &cmd) {
   cmd.new_arg("filename", true);
   bool option_force = cmd.new_flag_option("-f","--force", "Force use the "
     "specified course:assessment pair, overriding the local config");
+  bool option_wait = cmd.new_flag_option("-w","--wait", "Wait until the "
+    "autograder is finished, then display the scores for this submission");
   cmd.setup_done();
 
   std::string course_name, asmt_name, filename;
@@ -355,6 +359,69 @@ int submit_asmt(cmdargs &cmd) {
 
   Logger::info << Logger::GREEN << "Successfully submitted to Autolab (version " << version << ")" << Logger::NONE << Logger::endl;
   
+  if (option_wait) {
+    Logger::info << Logger::endl
+      << "Waiting for scores to be ready ..." << Logger::endl;
+    // wait for at least some scores to be available.
+    // Don't wait for all scores because the autograder may not assign scores
+    // to all problems
+    bool scores_ready = false;
+    std::chrono::seconds timeout(300); // 5 minutes
+    std::chrono::seconds wait_per_trial(5);
+    auto t_now = std::chrono::steady_clock::now();
+    auto t_end = t_now + timeout;
+    int target_sub_idx = -1;
+    std::vector<Autolab::Submission> subs;
+    while (t_now < t_end && !scores_ready) {
+      subs.clear();
+      client.get_submissions(subs, course_name, asmt_name);
+
+      target_sub_idx = -1;
+      for (std::size_t i = 0; i < subs.size(); i++) {
+        if (subs[i].version == version) {
+          // this is our version
+          target_sub_idx = i;
+          break;
+        }
+      }
+      if (target_sub_idx < 0) {
+        Logger::fatal << "Failed to get scores for this current submission."
+          << Logger::endl;
+        return -1;
+      }
+
+      for (auto &score : subs[target_sub_idx].scores) {
+        if (!std::isnan(score.second)) {
+          scores_ready = true;
+          break;
+        }
+      }
+      if (scores_ready) break;
+
+      std::this_thread::sleep_for(wait_per_trial);
+      t_now = std::chrono::steady_clock::now();
+    }
+
+    if (scores_ready) {
+      // found scores
+      std::vector<Autolab::Submission> one_sub = { subs[target_sub_idx] };
+      // get problem names
+      std::vector<Autolab::Problem> problems;
+      client.get_problems(problems, course_name, asmt_name);
+      // draw the table
+      std::vector<std::vector<std::string>> sub_table;
+      create_scores_table(sub_table, problems, one_sub, 1);
+      Logger::info << format_table(sub_table);
+    } else {
+      // time out
+      Logger::info << "Timed out while waiting for scores to be ready."
+        << Logger::endl
+        << "You can still use 'autolab scores' to view your scores anytime."
+        << Logger::endl;
+      return 0;
+    }
+  }
+
   return 0;
 }
 
