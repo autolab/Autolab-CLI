@@ -12,10 +12,14 @@
 #include "pretty_print.h"
 
 // helpers
-std::string combine_opt_names(std::string name, std::string alt_name) {
+std::string combine_opt_names(std::string name, std::string alt_name,
+    std::string arg_name = "") {
   std::string combined = name;
   if (alt_name.length() > 0) {
     combined += "," + alt_name;
+  }
+  if (arg_name.length() > 0) {
+    combined += " <" + arg_name + ">";
   }
   return combined;
 }
@@ -65,8 +69,8 @@ void cmdargs::new_arg(std::string name, bool is_required) {
 
 // set a new option that requires an argument
 std::string cmdargs::new_option(std::string name, std::string alt_name,
-    std::string description) {
-  opt_help[combine_opt_names(name, alt_name)] = description;
+    std::string arg_name, std::string description) {
+  opt_help[combine_opt_names(name, alt_name, arg_name)] = description;
   return get_option(name, alt_name);
 }
 

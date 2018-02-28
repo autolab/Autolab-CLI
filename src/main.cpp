@@ -471,13 +471,13 @@ int manage_enrolls(cmdargs &cmd) {
       "students, course assistants, and instructors.");
   cmd.new_arg("action", false);
   cmd.new_arg("course_name", true);
-  std::string option_user = cmd.new_option("-u","--user","Email of the user");
-  std::string option_lecture = cmd.new_option("-l","--lecture","Lecture to assign to");
-  std::string option_section = cmd.new_option("-s","--section","Section to assign to");
-  std::string option_grade_policy = cmd.new_option("-p","--grade-policy","Student's grading policy");
-  std::string option_nickname = cmd.new_option("-n","--nickname","User's nickname");
+  std::string option_user = cmd.new_option("-u","--user","email","Email of the user");
+  std::string option_lecture = cmd.new_option("-l","--lecture","lecture","Lecture to assign to");
+  std::string option_section = cmd.new_option("-s","--section","section","Section to assign to");
+  std::string option_grade_policy = cmd.new_option("-p","--grade-policy","policy","Student's grading policy");
+  std::string option_nickname = cmd.new_option("-n","--nickname","name","User's nickname");
   bool option_set_dropped = cmd.new_flag_option("--set-dropped","","Set user to dropped");
-  std::string option_auth_level = cmd.new_option("-t","--type","User's authorization level."
+  std::string option_auth_level = cmd.new_option("-t","--type","type","User's authorization level."
       " One of 'student', 'course_assistant', or 'instructor'");
   bool option_verbose = cmd.new_flag_option("-v","--verbose","Show the resulting "
       "enrollment data after new, edit, or delete");
@@ -710,9 +710,9 @@ int show_feedback(cmdargs &cmd) {
       "the first problem will be used. Course and assessment names are "
       "optional if inside an autolab assessment directory.");
   cmd.new_arg("course_name:assessment_name", false);
-  std::string option_problem = cmd.new_option("-p", "--problem",
+  std::string option_problem = cmd.new_option("-p", "--problem","problem_name",
       "Get feedback for this problem");
-  std::string option_version = cmd.new_option("-v", "--version",
+  std::string option_version = cmd.new_option("-v", "--version","version_num",
       "Get feedback for this particular version");
   cmd.setup_done();
 

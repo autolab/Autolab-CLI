@@ -34,7 +34,7 @@ public:
   void setup_done();
   void new_arg(std::string name, bool is_required);
   std::string new_option(std::string name, std::string alt_name,
-    std::string description);
+    std::string arg_name, std::string description);
   bool new_flag_option(std::string name, std::string alt_name,
     std::string description);
 
