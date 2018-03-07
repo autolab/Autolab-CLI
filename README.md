@@ -10,7 +10,9 @@ This C++ project has the following dependencies:
 - [libcurl](https://curl.haxx.se/libcurl/): For HTTP operations
 - [rapidjson](https://github.com/Tencent/rapidjson): For JSON processing
 
-Please make sure the dependencies are installed prior to building.
+CMake is already setup to automatically handle acquiring and setting up rapidjson.
+
+Please make sure openssl and libcurl libraries are installed prior to building. They can usually be installed with the system's package manager on Linux.
 
 ### Getting Client Credentials
 
@@ -38,7 +40,7 @@ You can optionally run `make install` to install the built binaries (typically t
 
 There are two builds available: release and non-release. Release builds do not contain debug output (output that use Logger::debug).
 
-The default is non-release builds. To build a release version, when inside the 'build' directory, run `cmake -Dreleaese=ON ..` (note the periods at the end), then run `make`.
+The default is non-release builds. To build a release version, when inside the 'build' directory, run `cmake -Drelease=ON ..` (note the periods at the end), then run `make`.
 
 ## How to use
 
