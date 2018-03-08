@@ -125,7 +125,7 @@ void read_file(const char *filename, char *result, size_t max_length) {
 // open a file for writing only, and sets permissions to only
 // owner read/write/execute
 void write_file(const char *filename, const char *data) {
-  int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
+  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
   if (fd < 0) exit_with_errno();
 
   size_t remaining = strlen(data);
