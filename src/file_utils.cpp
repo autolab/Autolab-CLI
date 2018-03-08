@@ -33,13 +33,13 @@ bool dir_find(const char *dirname, const char *targetname, bool target_is_dir) {
 
   DIR *dir = opendir(dirname);
   if (!dir) {
-    // std::cout << "error opening directory" << std::endl;
     return false;
   }
 
   struct dirent *entry;
   while ((entry = readdir(dir))) {
-    if ((entry->d_type == target_type) &&
+    if ((entry->d_type == target_type ||
+         entry->d_type == DT_UNKNOWN) &&
         (strcmp(entry->d_name, targetname) == 0)) {
       found = true;
       break;
