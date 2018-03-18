@@ -36,17 +36,18 @@ void print_help() {
   Logger::info << "usage: autolab [OPTIONS] <command> [command-args] [command-opts]" << Logger::endl
     << Logger::endl
     << "general commands:" << Logger::endl
-    << "  courses             List all courses" << Logger::endl
-    << "  assessments/asmts   List all assessments of a course" << Logger::endl
-    << "  status              Show status of the local assessment" << Logger::endl
-    << "  problems            List all problems in an assessment" << Logger::endl
-    << "  download            Download files needed for an assessment" << Logger::endl
-    << "  submit              Submit a file to an assessment" << Logger::endl
-    << "  scores              Show scores got on an assessment" << Logger::endl
-    << "  setup               Setup the user of the client" << Logger::endl
+    << "  courses              List all courses" << Logger::endl
+    << "  assessments/asmts    List all assessments of a course" << Logger::endl
+    << "  status               Show status of the local assessment" << Logger::endl
+    << "  problems             List all problems in an assessment" << Logger::endl
+    << "  download             Download files needed for an assessment" << Logger::endl
+    << "  submit               Submit a file to an assessment" << Logger::endl
+    << "  scores/submissions   Show scores got on an assessment" << Logger::endl
+    << "  feedback             Show feedback got on a submission" << Logger::endl
+    << "  setup                Setup the user of the client" << Logger::endl
     << Logger::endl
     << "instructor commands:" << Logger::endl
-    << "  enroll              Manage users affiliated with a course" << Logger::endl
+    << "  enroll               Manage users affiliated with a course" << Logger::endl
     << Logger::endl
     << "options:" << Logger::endl
     << "  -h,--help      Show this help message" << Logger::endl
@@ -856,7 +857,8 @@ int main(int argc, char *argv[]) {
           return show_assessments(cmd);
         } else if ("problems" == command) {
           return show_problems(cmd);
-        } else if ("scores" == command) {
+        } else if ("scores" == command ||
+                   "submissions" == command) {
           return show_scores(cmd);
         } else if ("feedback" == command) {
           return show_feedback(cmd);
