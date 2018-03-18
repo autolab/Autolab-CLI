@@ -174,7 +174,7 @@ int create_scores_table(
         row.push_back("--");
       }
     }
-    
+
     table.push_back(row);
   }
 
@@ -218,7 +218,7 @@ int show_status(cmdargs &cmd) {
   } else {
     Logger::info << dasmt.max_submissions << Logger::endl;
   }
-     
+
   Logger::info << "Max grace days: " << dasmt.max_grace_days << Logger::endl;
 
   return 0;
@@ -243,7 +243,7 @@ int download_asmt(cmdargs &cmd) {
   std::string course_name, asmt_name;
   parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
 
-  Logger::info << "Querying assessment '" << asmt_name << "' of course '" << 
+  Logger::info << "Querying assessment '" << asmt_name << "' of course '" <<
     course_name << "' ..." << Logger::endl;
 
   // make sure assessment exists
@@ -359,7 +359,7 @@ int submit_asmt(cmdargs &cmd) {
   int version = client.submit_assessment(course_name, asmt_name, filename);
 
   Logger::info << Logger::GREEN << "Successfully submitted to Autolab (version " << version << ")" << Logger::NONE << Logger::endl;
-  
+
   if (option_wait) {
     Logger::info << Logger::endl
       << "Waiting for scores to be ready ..." << Logger::endl;
@@ -628,7 +628,7 @@ int show_problems(cmdargs &cmd) {
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get problems");
-  
+
   std::string course_name, asmt_name;
   // user-specified names take precedence
   if (cmd.nargs() >= 3) {
@@ -767,7 +767,7 @@ int show_feedback(cmdargs &cmd) {
   client.get_feedback(feedback, course_name, asmt_name, version, option_problem);
 
   Logger::info << feedback << Logger::endl;
-  return 0;  
+  return 0;
 }
 
 /* must manually init client */
@@ -799,6 +799,20 @@ int user_setup(cmdargs &cmd) {
     }
   }
 
+  // Request that user will always comply with academic integrity standards
+  Logger::info << Logger::endl << "I affirm that, by using this product, I have "
+   "complied and always will comply with my courses' academic integrity policies "
+   "as defined by the respective syllabi [Y/n]." << Logger::endl;
+
+  char response = getchar();
+
+  if(response != 'Y' && response != 'y') {
+    Logger::info << Logger::endl << "User setup failed -- user must agree to "
+    "comply with academic integrity policy." << Logger::endl;
+    return -1;
+  }
+  // Success, user has agreed to comply
+
   // user non-existant, or existing user's credentials no longer work, or forced
   int result = perform_device_flow(client);
   if (result == 0) {
@@ -826,7 +840,7 @@ int main(int argc, char *argv[]) {
     print_help();
     return 0;
   }
-  
+
   // determine what command it is
   std::string command(argv[1]);
 
@@ -874,7 +888,7 @@ int main(int argc, char *argv[]) {
         return 0;
       }
     }
-    
+
   } catch (Autolab::HttpException &e) {
     Logger::fatal << e.what() << Logger::endl;
     return -1;
