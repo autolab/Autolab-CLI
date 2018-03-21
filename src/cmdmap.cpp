@@ -35,3 +35,8 @@ int CommandMap::add_command(std::string cmd_name, std::string cmd_usage, int (* 
   // Why am I returning an int again?
   return 0;
 }
+
+CommandMap init_autolab_command_map() {
+  // TODO: Implement me!
+  return CommandMap();
+}

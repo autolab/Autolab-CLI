@@ -41,3 +41,9 @@ class CommandMap {
   int exec_command(cmdargs &cmd, std::string command);
   int add_command(std::string cmd_name, std::string cmd_usage, int (* helper_fn)(cmdargs cmd));
 };
+
+/*
+  Takes no arguments and spits out the standard command map that the Autolab
+  CLI uses for its operations.
+*/
+CommandMap init_autolab_command_map();
