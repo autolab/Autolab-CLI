@@ -25,28 +25,40 @@
 
 extern Autolab::Client client;
 
+CommandMap command_map;
+
 /* help texts */
 void print_help() {
   Logger::info << "usage: autolab [OPTIONS] <command> [command-args] [command-opts]" << Logger::endl
     << Logger::endl
-    << "general commands:" << Logger::endl
-    << "  courses             List all courses" << Logger::endl
-    << "  assessments/asmts   List all assessments of a course" << Logger::endl
-    << "  status              Show status of the local assessment" << Logger::endl
-    << "  problems            List all problems in an assessment" << Logger::endl
-    << "  download            Download files needed for an assessment" << Logger::endl
-    << "  submit              Submit a file to an assessment" << Logger::endl
-    << "  scores              Show scores got on an assessment" << Logger::endl
-    << "  setup               Setup the user of the client" << Logger::endl
-    << Logger::endl
-    << "instructor commands:" << Logger::endl
-    << "  enroll              Manage users affiliated with a course" << Logger::endl
-    << Logger::endl
-    << "options:" << Logger::endl
-    << "  -h,--help      Show this help message" << Logger::endl
-    << "  -v,--version   Show the version number of this build" << Logger::endl
-    << Logger::endl
-    << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
+    << "general commands:" << Logger::endl;
+
+  // First we print the general-use commands
+  for(unsigned int i = 0; i < command_map.commands.size(); i++) {
+    std::string curr_command = command_map.commands[i];
+    if(command_map.info_map[curr_command]->instructor_command == false) {
+      Logger::info << command_map.get_usage(curr_command) << Logger::endl;
+    }
+  }
+
+  // Then we print the instructor-enabled commands
+  Logger::info << Logger::endl
+    << "instructor commands:" << Logger::endl;
+
+  for(unsigned int i = 0; i < command_map.commands.size(); i++) {
+    std::string curr_command = command_map.commands[i];
+    if(command_map.info_map[curr_command]->instructor_command == true) {
+      Logger::info << command_map.get_usage(curr_command) << Logger::endl;
+    }
+  }
+
+  // Then we print general help
+  Logger::info << Logger::endl
+  << "options:" << Logger::endl
+  << "  -h,--help      Show this help message" << Logger::endl
+  << "  -v,--version   Show the version number of this build" << Logger::endl
+  << Logger::endl
+  << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
 }
 
 void print_version() {
@@ -93,6 +105,7 @@ int user_setup(cmdargs &cmd) {
 }
 
 int main(int argc, char *argv[]) {
+  command_map = init_autolab_command_map();
   cmdargs cmd;
   if (!parse_cmdargs(cmd, argc, argv)) {
     Logger::fatal << "Invalid command line arguments." << Logger::endl

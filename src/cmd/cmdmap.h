@@ -13,7 +13,7 @@
 typedef struct command_info {
   std::string usage;
   int (* helper_fn) (cmdargs &cmd);
-  bool intructor_command;
+  bool instructor_command;
 } command_info;
 
 /*
