@@ -16,6 +16,16 @@ std::string CommandMap::get_usage(std::string command) {
 }
 
 int CommandMap::exec_command(cmdargs &cmd, std::string command) {
+  // Check if the commands vector contains command
+  bool seen = false;
+  for(unsigned int i = 0; i < commands.size(); i++) {
+    if(command == commands[i])
+      seen = true;
+  }
+  if(!seen) {
+    throw Autolab::InvalidTokenException();
+  }
+
   int result;
   try {
     result =  info_map[command]->helper_fn(cmd);

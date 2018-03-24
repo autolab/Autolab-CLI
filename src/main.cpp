@@ -140,28 +140,7 @@ int main(int argc, char *argv[]) {
         return 0;
       }
       try {
-        if ("status" == command) {
-          return show_status(cmd);
-        } else if ("download" == command) {
-          return download_asmt(cmd);
-        } else if ("submit" == command) {
-          return submit_asmt(cmd);
-        } else if ("courses" == command) {
-          return show_courses(cmd);
-        } else if ("assessments" == command ||
-                   "asmts" == command) {
-          return show_assessments(cmd);
-        } else if ("problems" == command) {
-          return show_problems(cmd);
-        } else if ("scores" == command) {
-          return show_scores(cmd);
-        } else if ("feedback" == command) {
-          return show_feedback(cmd);
-        } else if ("enroll" == command) {
-          return manage_enrolls(cmd);
-        } else {
-          Logger::fatal << "Unrecognized command: " << command << Logger::endl;
-        }
+        command_map.exec_command(cmd, command);
       } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl
