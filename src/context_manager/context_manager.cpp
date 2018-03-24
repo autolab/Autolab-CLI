@@ -1,9 +1,9 @@
 #include "context_manager.h"
 
-#include "app_credentials.h"
-#include "file_utils.h"
+#include "../app_credentials.h"
+#include "../file/file_utils.h"
 #include "logger.h"
-#include "pseudocrypto.h"
+#include "../crypto/pseudocrypto.h"
 
 #define TOKEN_CACHE_FILE_MAXSIZE 256
 
@@ -88,7 +88,7 @@ bool load_tokens(std::string &at, std::string &rt) {
 
   std::string result(raw_result);
   if (!token_pair_from_string(result, at, rt)) return false;
-  
+
   LogDebug("[ContextManager] tokens loaded" << Logger::endl);
   return true;
 }

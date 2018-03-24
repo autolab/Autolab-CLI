@@ -16,12 +16,12 @@
 
 #include "app_credentials.h"
 #include "build_config.h"
-#include "cmdargs.h"
-#include "context_manager.h"
-#include "file_utils.h"
-#include "pretty_print.h"
-#include "cmdmap.h"
-#include "cmdimp.h"
+#include "cmd/cmdargs.h"
+#include "context_manager/context_manager.h"
+#include "file/file_utils.h"
+#include "pretty_print/pretty_print.h"
+#include "cmd/cmdmap.h"
+#include "cmd/cmdimp.h"
 
 extern Autolab::Client client;
 
