@@ -12,7 +12,7 @@
 */
 typedef struct command_info {
   std::string usage;
-  int (* helper_fn) (cmdargs cmd);
+  int (* helper_fn) (cmdargs &cmd);
 } command_info;
 
 /*
@@ -35,11 +35,10 @@ typedef struct command_info {
 class CommandMap {
   public:
   std::vector<std::string> commands;
-  std::map<std::string, command_info> info_map;
+  std::map<std::string, command_info *> info_map;
 
   std::string get_usage(std::string command);
   int exec_command(cmdargs &cmd, std::string command);
-  int add_command(std::string cmd_name, std::string cmd_usage, int (* helper_fn)(cmdargs cmd));
 };
 
 /*
