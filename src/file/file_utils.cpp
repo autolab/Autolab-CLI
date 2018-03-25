@@ -22,7 +22,7 @@ void exit_with_errno() {
 
 // checks if file exists. Does not allow directories.
 bool file_exists(const char *path_to_file) {
-  struct stat buffer;   
+  struct stat buffer;
   if(stat (path_to_file, &buffer) != 0) return false;
   return S_ISREG(buffer.st_mode);
 }
@@ -68,7 +68,7 @@ bool one_level_up(char *currdir) {
 
 // recursively looks for file with name targetname. Starts from dirstart and
 // searches upwards in the filesystem. Returns whether the file was found.
-bool recur_find(char *result, const char *dirstart, const char *targetname, 
+bool recur_find(char *result, const char *dirstart, const char *targetname,
                   bool target_is_dir, int levels) {
   char currdir[MAX_DIR_LENGTH];
 

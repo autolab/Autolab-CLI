@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "logger.h"
-#include "pretty_print.h"
+#include "../pretty_print/pretty_print.h"
 
 // error output
 void error_pos_after_opt(std::string error_arg) {
@@ -155,7 +155,7 @@ void cmdargs::print_help() {
 }
 
 /* parse command line args into a cmdargs struct.
- * 
+ *
  * positional args must all come before options, otherwise returns false
  */
 bool parse_cmdargs(cmdargs &cmd, int argc, char *argv[]) {
