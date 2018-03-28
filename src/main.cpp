@@ -94,6 +94,20 @@ int user_setup(cmdargs &cmd) {
     }
   }
 
+  // Request that user will always comply with academic integrity standards
+  Logger::info << Logger::endl << "I affirm that, by using this product, I have "
+   "complied and always will comply with my courses' academic integrity policies "
+   "as defined by the respective syllabi [Y/n]." << Logger::endl;
+
+  char response = getchar();
+
+  if(response != 'Y' && response != 'y') {
+    Logger::info << Logger::endl << "User setup failed -- user must agree to "
+    "comply with academic integrity policy." << Logger::endl;
+    return -1;
+  }
+  // Success, user has agreed to comply
+
   // user non-existant, or existing user's credentials no longer work, or forced
   int result = perform_device_flow(client);
   if (result == 0) {

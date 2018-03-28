@@ -23,8 +23,8 @@ bool recur_find(char *result, const char *dirstart, const char *targetname,
 // always succeeds on return. If an action fails, error is printed to stderr
 // and the program is exited immediately.
 void create_dir(const char *dirname);
-void read_file(const char *filename, char *result, size_t max_length);
-void write_file(const char *filename, const char *data);
+size_t read_file(const char *filename, char *result, size_t max_length);
+void write_file(const char *filename, const char *data, size_t length);
 
 const char *get_home_dir();
 const char *get_curr_dir();

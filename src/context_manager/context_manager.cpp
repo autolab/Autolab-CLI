@@ -15,8 +15,8 @@ std::string token_pair_to_string(std::string at, std::string rt) {
   return encrypt_string(pre_crypt, crypto_key, crypto_iv);
 }
 
-bool token_pair_from_string(std::string raw_src, std::string &at, std::string &rt) {
-  std::string src = decrypt_string(raw_src, crypto_key, crypto_iv);
+bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std::string &rt) {
+  std::string src = decrypt_string(raw_src, raw_len, crypto_key, crypto_iv);
 
   std::string::size_type split_pos_1 = src.find('\n');
   if (split_pos_1 == std::string::npos) return false;
@@ -70,9 +70,10 @@ bool token_cache_file_exists() {
 /* interface */
 void store_tokens(std::string at, std::string rt) {
   check_and_create_token_directory();
+  std::string token_pair = token_pair_to_string(at, rt);
 
   write_file(get_token_cache_file_full_path().c_str(),
-             token_pair_to_string(at, rt).c_str());
+             token_pair.c_str(), token_pair.length());
   LogDebug("[ContextManager] tokens stored" << Logger::endl);
 }
 
@@ -83,12 +84,11 @@ bool load_tokens(std::string &at, std::string &rt) {
   if (!token_cache_file_exists()) return false;
 
   char raw_result[TOKEN_CACHE_FILE_MAXSIZE];
-  read_file(get_token_cache_file_full_path().c_str(),
+  size_t num_read = read_file(get_token_cache_file_full_path().c_str(),
             raw_result, TOKEN_CACHE_FILE_MAXSIZE);
+  LogDebug("read size " << num_read << "\n");
 
-  std::string result(raw_result);
-  if (!token_pair_from_string(result, at, rt)) return false;
-
+  if (!token_pair_from_string(raw_result, num_read, at, rt)) return false;
   LogDebug("[ContextManager] tokens loaded" << Logger::endl);
   return true;
 }
@@ -109,9 +109,9 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name) {
   if (!found) return false;
 
   std::string filename(buffer);
-  read_file(filename.c_str(), buffer, MAX_DIR_LENGTH);
+  size_t num_read = read_file(filename.c_str(), buffer, MAX_DIR_LENGTH);
 
-  std::string result(buffer);
+  std::string result(buffer, num_read);
   std::string::size_type split_pos_1 = result.find('\n');
   if (split_pos_1 == std::string::npos) return false;
   std::string::size_type split_pos_2 = result.find('\n', split_pos_1+1);
@@ -127,6 +127,6 @@ void write_asmt_file(std::string dir_name, std::string course_name, std::string 
   std::string full_path(dir_name);
   full_path.append("/");
   full_path.append(asmt_filename);
-  write_file(full_path.c_str(),
-             format_asmt_file(course_name, asmt_name).c_str());
+  std::string formatted_asmt = format_asmt_file(course_name, asmt_name);
+  write_file(full_path.c_str(), formatted_asmt.c_str(), formatted_asmt.length());
 }

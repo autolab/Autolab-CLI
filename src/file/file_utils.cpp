@@ -101,8 +101,9 @@ void create_dir(const char *dirname) {
   if (res < 0 && errno != EEXIST) exit_with_errno();
 }
 
-// open a file for reading only. Reads at most max_length chars into result.
-void read_file(const char *filename, char *result, size_t max_length) {
+// open a file for reading only. Reads at most max_length bytes into result.
+// returns the number of bytes read.
+size_t read_file(const char *filename, char *result, size_t max_length) {
   int fd = open(filename, O_RDONLY | O_CREAT, S_IRWXU);
   if (fd < 0) exit_with_errno();
 
@@ -117,18 +118,18 @@ void read_file(const char *filename, char *result, size_t max_length) {
     total_read += (size_t)amount;
     max_length -= (size_t)amount;
   }
-  result[total_read] = '\0';
 
   close(fd);
+  return total_read;
 }
 
 // open a file for writing only, and sets permissions to only
 // owner read/write/execute
-void write_file(const char *filename, const char *data) {
+void write_file(const char *filename, const char *data, size_t length) {
   int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
   if (fd < 0) exit_with_errno();
 
-  size_t remaining = strlen(data);
+  size_t remaining = length;
   size_t total_written = 0;
   while (remaining > 0) {
     ssize_t amount = TEMP_FAILURE_RETRY(write(fd, data + total_written, remaining));

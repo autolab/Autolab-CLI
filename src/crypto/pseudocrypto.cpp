@@ -57,10 +57,11 @@ std::string encrypt_string(std::string srctext, unsigned char *key,
 
   EVP_CIPHER_CTX_free(ctx);
 
+  // using std::string with arbitrary bytes is technically allowed
   return std::string((char *)ciphertext, total_len);
 }
 
-std::string decrypt_string(std::string srctext, unsigned char *key,
+std::string decrypt_string(char *srctext, size_t srclength, unsigned char *key,
     unsigned char *iv) {
   check_key_and_iv_lengths(key, iv);
 
@@ -69,8 +70,8 @@ std::string decrypt_string(std::string srctext, unsigned char *key,
   int total_len = 0;
   int temp_len = 0;
 
-  unsigned char *ciphertext = (unsigned char *)srctext.c_str();
-  int input_len = srctext.length();
+  unsigned char *ciphertext = (unsigned char *)srctext;
+  int input_len = (int)srclength;
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
     exit_with_crypto_error();
