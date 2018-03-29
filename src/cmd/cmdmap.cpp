@@ -43,8 +43,7 @@ CommandMap init_autolab_command_map() {
                                              "courses", "assessments", "asmts",
                                              "problems", "scores", "feedback",
                                              "enroll"};
-
-  // There's gotta be a better way to do this
+                                             
   std::map<std::string, command_info *> info_map;
 
 
