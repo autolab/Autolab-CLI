@@ -23,7 +23,8 @@ int CommandMap::exec_command(cmdargs &cmd, std::string command) {
       seen = true;
   }
   if(!seen) {
-    throw Autolab::InvalidTokenException();
+    Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+    return -1;
   }
 
   int result;
