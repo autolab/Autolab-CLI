@@ -33,28 +33,23 @@ void print_help() {
     << Logger::endl
     << "general commands:" << Logger::endl;
 
-  command_info_map::iterator i = command_map.info_map.begin();
-
   // First we print the general-use commands
-  while (i != command_map.info_map.end()) {
-    std::string curr_command = i->first;
-    if(command_map.info_map[curr_command]->instructor_command == false) {
-      Logger::info << command_map.get_usage(curr_command) << Logger::endl;
+  for (auto const &i : command_map.info_map) {
+    command_info *ci = i.second;
+    if(ci->instructor_command == false) {
+      Logger::info << ci->usage << Logger::endl;
     }
-    i++;
   }
 
   // Then we print the instructor-enabled commands
   Logger::info << Logger::endl
     << "instructor commands:" << Logger::endl;
 
-  i = command_map.info_map.begin();
-  while (i != command_map.info_map.end()) {
-      std::string curr_command = i->first;
-    if(command_map.info_map[curr_command]->instructor_command == true) {
-      Logger::info << command_map.get_usage(curr_command) << Logger::endl;
+  for (auto const &i : command_map.info_map) {
+    command_info *ci = i.second;
+    if(ci->instructor_command == true) {
+      Logger::info << ci->usage << Logger::endl;
     }
-    i++;
   }
 
   // Then we print general help

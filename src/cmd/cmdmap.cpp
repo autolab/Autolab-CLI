@@ -2,53 +2,23 @@
 #include "logger.h"
 #include "cmdimp.h"
 
-std::string CommandMap::get_usage(std::string command) {
-  // Check if command exists?
-  std::string result;
-  try {
-    result = info_map[command]->usage;
-  }
-  catch(int e) {
-    Logger::info << "get_usage(" << command << ") throws error" << e;
-    result = "Error: usage not found";
-  }
-  return result;
-}
-
 int CommandMap::exec_command(cmdargs &cmd, std::string raw_command) {
-  // Check if the commands vector contains command
-  bool seen = false;
-
+  // Translate to default command name and check if it's valid
   std::string command = aliases[raw_command];
-
-  command_info_map::iterator i = info_map.begin();
-
-  // First we print the general-use commands
-  while (i != info_map.end()) {
-    std::string curr_command = i->first;
-    if(command == curr_command)
-      seen = true;
-    i++;
-  }
-  if(!seen) {
-    Logger::fatal << "Unrecognized command: " << command << Logger::endl;
+  command_info_map::iterator it = info_map.find(command);
+  if(it == info_map.end()) {
+    Logger::fatal << "Unrecognized command: " << raw_command << Logger::endl;
     return -1;
   }
 
-  int result;
-  try {
-    result =  info_map[command]->helper_fn(cmd);
-  }
-  catch(int e) {
-    Logger::info << "exec_command(" << command << ") throws error" << e;
-    result = -1;
-  }
-  return result;
+  // run the command and return its result
+  command_info *ci = it->second;
+  return ci->helper_fn(cmd);
 }
 
 CommandMap init_autolab_command_map() {
 
-  std::map<std::string, command_info *> info_map;
+  command_info_map info_map;
 
 
   // Setup status command_info
@@ -57,7 +27,7 @@ CommandMap init_autolab_command_map() {
   // function finishes execution. Problem is, we now need a function to free
   // all of these.
 
-  alias_map aliases;
+  command_alias_map aliases;
   aliases["status"] = "status";
   aliases["download"] = "download";
   aliases["submit"] = "submit";
