@@ -16,6 +16,9 @@ typedef struct command_info {
   bool instructor_command;
 } command_info;
 
+typedef std::map<std::string, command_info *> command_info_map;
+typedef std::map<std::string, std::string> alias_map;
+
 /*
   An object that will keep track of all valid commands and information
   associated with them.
@@ -35,8 +38,8 @@ typedef struct command_info {
 */
 class CommandMap {
   public:
-  std::vector<std::string> commands;
-  std::map<std::string, command_info *> info_map;
+  command_info_map info_map;
+  alias_map aliases;
 
   std::string get_usage(std::string command);
   int exec_command(cmdargs &cmd, std::string command);

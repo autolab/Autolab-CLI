@@ -15,12 +15,20 @@ std::string CommandMap::get_usage(std::string command) {
   return result;
 }
 
-int CommandMap::exec_command(cmdargs &cmd, std::string command) {
+int CommandMap::exec_command(cmdargs &cmd, std::string raw_command) {
   // Check if the commands vector contains command
   bool seen = false;
-  for(unsigned int i = 0; i < commands.size(); i++) {
-    if(command == commands[i])
+
+  std::string command = aliases[raw_command];
+
+  command_info_map::iterator i = info_map.begin();
+
+  // First we print the general-use commands
+  while (i != info_map.end()) {
+    std::string curr_command = i->first;
+    if(command == curr_command)
       seen = true;
+    i++;
   }
   if(!seen) {
     Logger::fatal << "Unrecognized command: " << command << Logger::endl;
@@ -40,11 +48,6 @@ int CommandMap::exec_command(cmdargs &cmd, std::string command) {
 
 CommandMap init_autolab_command_map() {
 
-  std::vector<std::string> valid_commands = {"status", "download", "submit",
-                                             "courses", "assessments", "asmts",
-                                             "problems", "scores", "feedback",
-                                             "enroll"};
-                                             
   std::map<std::string, command_info *> info_map;
 
 
@@ -53,6 +56,18 @@ CommandMap init_autolab_command_map() {
   // We need to malloc this so that the memory isn't cleaned up after this
   // function finishes execution. Problem is, we now need a function to free
   // all of these.
+
+  alias_map aliases;
+  aliases["status"] = "status";
+  aliases["download"] = "download";
+  aliases["submit"] = "submit";
+  aliases["courses"] = "courses";
+  aliases["assessments"] = "assessments";
+  aliases["asmts"] = "assessments";
+  aliases["problems"] = "problems";
+  aliases["scores"] = "scores";
+  aliases["feedback"] = "feedback";
+  aliases["enroll"] = "enroll";
 
   command_info *status_ci = new command_info;
   status_ci->usage = "status              Show status of the local assessment";
@@ -88,12 +103,6 @@ CommandMap init_autolab_command_map() {
   assessments_ci->instructor_command = false;
   info_map["assessments"] = assessments_ci;
 
-  // Setup asmts command_info
-
-  // Since the commands are aliased, they should have the same command info.
-  command_info *asmts_ci = assessments_ci;
-  info_map["asmts"] = asmts_ci;
-
   // Setup problems command_info
   command_info *problems_ci = new command_info;
   problems_ci->usage = "problems            List all problems in an assessment";
@@ -123,7 +132,7 @@ CommandMap init_autolab_command_map() {
   info_map["enroll"] = enroll_ci;
 
   CommandMap command_map = CommandMap();
-  command_map.commands = valid_commands;
+  command_map.aliases = aliases;
   command_map.info_map = info_map;
 
   return command_map;
