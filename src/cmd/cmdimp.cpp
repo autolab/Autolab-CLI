@@ -401,7 +401,23 @@ int submit_asmt(cmdargs &cmd) {
   return 0;
 }
 
+int show_courses_helper(cmdargs &cmd);
+
 int show_courses(cmdargs &cmd) {
+  FILE *fp = popen("ls -a /home/$(echo $USER)/.autolab", "r");
+  char buffer[256];
+  while(fgets(buffer, 256, fp) != NULL) {
+    printf("%s %d", buffer, !strcmp(buffer, "cache"));
+    if(!strcmp(buffer, "cache\n")) {
+      return system("cat /home/$(echo $USER)/.autolab/cache/courses.txt");
+    }
+  }
+
+  pclose(fp);
+  return show_courses_helper(cmd);
+}
+
+int show_courses_helper(cmdargs &cmd) {
   cmd.setup_help("autolab courses",
       "List all current courses of the user.");
   cmd.setup_done();
@@ -434,6 +450,7 @@ int show_courses(cmdargs &cmd) {
 
   return 0;
 }
+
 
 // list and CRUD enrollments
 int manage_enrolls(cmdargs &cmd) {
