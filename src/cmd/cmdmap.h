@@ -9,6 +9,7 @@
   Contains:
     - A string to print in the usage statement
     - A helper function to be called when the subcommand is specified
+    - A boolean that specifies if the command is intended for instructors only
 */
 typedef struct command_info {
   std::string usage;
@@ -16,7 +17,7 @@ typedef struct command_info {
   bool instructor_command;
 } command_info;
 
-typedef std::map<std::string, command_info *> command_info_map;
+typedef std::map<std::string, command_info> command_info_map;
 typedef std::map<std::string, std::string> command_alias_map;
 
 /*
@@ -24,17 +25,14 @@ typedef std::map<std::string, std::string> command_alias_map;
   associated with them.
 
   Variables:
-    - A vector of all valid commands
     - A dictionary of commands to command_info structs
+    - A dictionary of command aliases to the default command names
 
   Functions:
-    - get_usage: string -> string
-      - takes a command, and returns its usage string
     - exec_command: (string, cmdargs)s -> int
       - takes a subcommand and executes it
       - "executes it" by running the helper function specified in its
         respective command_info struct
-    - add_command: (string, string, F: cmdargs -> int) -> int
 */
 class CommandMap {
   public:

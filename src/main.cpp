@@ -35,9 +35,9 @@ void print_help() {
 
   // First we print the general-use commands
   for (auto const &i : command_map.info_map) {
-    command_info *ci = i.second;
-    if(ci->instructor_command == false) {
-      Logger::info << ci->usage << Logger::endl;
+    command_info ci = i.second;
+    if(ci.instructor_command == false) {
+      Logger::info << ci.usage << Logger::endl;
     }
   }
 
@@ -46,19 +46,19 @@ void print_help() {
     << "instructor commands:" << Logger::endl;
 
   for (auto const &i : command_map.info_map) {
-    command_info *ci = i.second;
-    if(ci->instructor_command == true) {
-      Logger::info << ci->usage << Logger::endl;
+    command_info ci = i.second;
+    if(ci.instructor_command == true) {
+      Logger::info << ci.usage << Logger::endl;
     }
   }
 
   // Then we print general help
   Logger::info << Logger::endl
-  << "options:" << Logger::endl
-  << "  -h,--help      Show this help message" << Logger::endl
-  << "  -v,--version   Show the version number of this build" << Logger::endl
-  << Logger::endl
-  << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
+    << "options:" << Logger::endl
+    << "  -h,--help      Show this help message" << Logger::endl
+    << "  -v,--version   Show the version number of this build" << Logger::endl
+    << Logger::endl
+    << "run 'autolab <command> -h' to view usage instructions for each command." << Logger::endl;
 }
 
 void print_version() {
@@ -96,8 +96,8 @@ int user_setup(cmdargs &cmd) {
 
   // Request that user will always comply with academic integrity standards
   Logger::info << Logger::endl << "I affirm that, by using this product, I have "
-   "complied and always will comply with my courses' academic integrity policies "
-   "as defined by the respective syllabi [Y/n]." << Logger::endl;
+    "complied and always will comply with my courses' academic integrity policies "
+    "as defined by the respective syllabi [Y/n]." << Logger::endl;
 
   char response = getchar();
 
@@ -120,6 +120,7 @@ int user_setup(cmdargs &cmd) {
 
 int main(int argc, char *argv[]) {
   command_map = init_autolab_command_map();
+
   cmdargs cmd;
   if (!parse_cmdargs(cmd, argc, argv)) {
     Logger::fatal << "Invalid command line arguments." << Logger::endl
@@ -141,7 +142,6 @@ int main(int argc, char *argv[]) {
   std::string command(argv[1]);
 
   try {
-
     if ("setup" == command) {
       return user_setup(cmd);
     } else {
@@ -153,6 +153,7 @@ int main(int argc, char *argv[]) {
           << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
         return 0;
       }
+
       try {
         command_map.exec_command(cmd, command);
       } catch (Autolab::InvalidTokenException &e) {
@@ -162,7 +163,6 @@ int main(int argc, char *argv[]) {
         return 0;
       }
     }
-
   } catch (Autolab::HttpException &e) {
     Logger::fatal << e.what() << Logger::endl;
     return -1;
