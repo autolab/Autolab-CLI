@@ -1,6 +1,7 @@
-
 #ifndef CMDIMP
 #define CMDIMP
+
+#include "autolab/client.h"
 
 bool init_autolab_client();
 int perform_device_flow(Autolab::Client &client);

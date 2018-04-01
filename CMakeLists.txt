@@ -4,7 +4,7 @@ project(autolab-cli)
 
 # The version number
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 5)
+set(VERSION_MINOR 6)
 
 # command line options
 option(release "build release version (no debug output)" OFF)

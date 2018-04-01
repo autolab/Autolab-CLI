@@ -1,42 +1,51 @@
 #include "cmdmap.h"
 #include "logger.h"
+#include "cmdimp.h"
 
-std::string CommandMap::get_usage(std::string command) {
-  // Check if command exists?
-  try {
-    return info_map[command].usage;
+int CommandMap::exec_command(cmdargs &cmd, std::string raw_command) {
+  // Translate to default command name and check if it's valid
+  std::string command = aliases[raw_command];
+  command_info_map::iterator it = info_map.find(command);
+  if(it == info_map.end()) {
+    Logger::fatal << "Unrecognized command: " << raw_command << Logger::endl;
+    return -1;
   }
-  catch(int e) {
-    Logger::info << "get_usage(" << command << ") throws error" << e;
-    exit(1);
-  }
-}
 
-int CommandMap::exec_command(cmdargs &cmd, std::string command) {
-  try {
-    return info_map[command].helper_fn(cmd);
-  }
-  catch(int e) {
-    Logger::info << "exec_command(" << command << ") throws error" << e;
-    exit(1);
-  }
-}
-
-int CommandMap::add_command(std::string cmd_name, std::string cmd_usage, int (* helper_fn)(cmdargs cmd)) {
-  // Add the command to the vector of commands
-  commands.push_back(cmd_name);
-
-  // Construct the command_info struct for this command
-  command_info cmd_info;
-  cmd_info.usage = cmd_usage;
-  cmd_info.helper_fn = helper_fn;
-  info_map[cmd_name] = cmd_info;
-
-  // Why am I returning an int again?
-  return 0;
+  // run the command and return its result
+  command_info ci = it->second;
+  return ci.helper_fn(cmd);
 }
 
 CommandMap init_autolab_command_map() {
-  // TODO: Implement me!
-  return CommandMap();
+  command_alias_map aliases;
+  aliases["status"] = "status";
+  aliases["download"] = "download";
+  aliases["submit"] = "submit";
+  aliases["courses"] = "courses";
+  aliases["assessments"] = "assessments";
+  aliases["asmts"] = "assessments";
+  aliases["problems"] = "problems";
+  aliases["scores"] = "scores";
+  aliases["feedback"] = "feedback";
+  aliases["enroll"] = "enroll";
+
+  command_info_map info_map {
+    // general commands
+    {"status",     {"status              Show status of the local assessment",     &show_status,      false}},
+    {"download",   {"download            Download files needed for an assessment", &download_asmt,    false}},
+    {"submit",     {"submit              Submit a file to an assessment",          &submit_asmt,      false}},
+    {"courses",    {"courses             List all courses",                        &show_courses,     false}},
+    {"assessments",{"assessments/asmts   List all assessments of a course",        &show_assessments, false}},
+    {"problems",   {"problems            List all problems in an assessment",      &show_problems,    false}},
+    {"scores",     {"scores              Show scores got on an assessment",        &show_scores,      false}},
+    {"feedback",   {"feedback            Show feedback on a submission",           &show_feedback,    false}},
+    // instructor commands
+    {"enroll",     {"enroll              Manage users affiliated with a course",   &manage_enrolls,   true}}
+  };
+
+  CommandMap command_map = CommandMap();
+  command_map.aliases = aliases;
+  command_map.info_map = info_map;
+
+  return command_map;
 }

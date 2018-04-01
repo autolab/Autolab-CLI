@@ -25,24 +25,35 @@
 
 extern Autolab::Client client;
 
+CommandMap command_map;
+
 /* help texts */
 void print_help() {
   Logger::info << "usage: autolab [OPTIONS] <command> [command-args] [command-opts]" << Logger::endl
     << Logger::endl
-    << "general commands:" << Logger::endl
-    << "  courses              List all courses" << Logger::endl
-    << "  assessments/asmts    List all assessments of a course" << Logger::endl
-    << "  status               Show status of the local assessment" << Logger::endl
-    << "  problems             List all problems in an assessment" << Logger::endl
-    << "  download             Download files needed for an assessment" << Logger::endl
-    << "  submit               Submit a file to an assessment" << Logger::endl
-    << "  scores/submissions   Show scores got on an assessment" << Logger::endl
-    << "  feedback             Show feedback got on a submission" << Logger::endl
-    << "  setup                Setup the user of the client" << Logger::endl
-    << Logger::endl
-    << "instructor commands:" << Logger::endl
-    << "  enroll               Manage users affiliated with a course" << Logger::endl
-    << Logger::endl
+    << "general commands:" << Logger::endl;
+
+  // First we print the general-use commands
+  for (auto const &i : command_map.info_map) {
+    command_info ci = i.second;
+    if(ci.instructor_command == false) {
+      Logger::info << ci.usage << Logger::endl;
+    }
+  }
+
+  // Then we print the instructor-enabled commands
+  Logger::info << Logger::endl
+    << "instructor commands:" << Logger::endl;
+
+  for (auto const &i : command_map.info_map) {
+    command_info ci = i.second;
+    if(ci.instructor_command == true) {
+      Logger::info << ci.usage << Logger::endl;
+    }
+  }
+
+  // Then we print general help
+  Logger::info << Logger::endl
     << "options:" << Logger::endl
     << "  -h,--help      Show this help message" << Logger::endl
     << "  -v,--version   Show the version number of this build" << Logger::endl
@@ -85,8 +96,8 @@ int user_setup(cmdargs &cmd) {
 
   // Request that user will always comply with academic integrity standards
   Logger::info << Logger::endl << "I affirm that, by using this product, I have "
-   "complied and always will comply with my courses' academic integrity policies "
-   "as defined by the respective syllabi [Y/n]." << Logger::endl;
+    "complied and always will comply with my courses' academic integrity policies "
+    "as defined by the respective syllabi [Y/n]." << Logger::endl;
 
   char response = getchar();
 
@@ -108,6 +119,8 @@ int user_setup(cmdargs &cmd) {
 }
 
 int main(int argc, char *argv[]) {
+  command_map = init_autolab_command_map();
+
   cmdargs cmd;
   if (!parse_cmdargs(cmd, argc, argv)) {
     Logger::fatal << "Invalid command line arguments." << Logger::endl
@@ -129,7 +142,6 @@ int main(int argc, char *argv[]) {
   std::string command(argv[1]);
 
   try {
-
     if ("setup" == command) {
       return user_setup(cmd);
     } else {
@@ -141,30 +153,9 @@ int main(int argc, char *argv[]) {
           << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
         return 0;
       }
+
       try {
-        if ("status" == command) {
-          return show_status(cmd);
-        } else if ("download" == command) {
-          return download_asmt(cmd);
-        } else if ("submit" == command) {
-          return submit_asmt(cmd);
-        } else if ("courses" == command) {
-          return show_courses(cmd);
-        } else if ("assessments" == command ||
-                   "asmts" == command) {
-          return show_assessments(cmd);
-        } else if ("problems" == command) {
-          return show_problems(cmd);
-        } else if ("scores" == command ||
-                   "submissions" == command) {
-          return show_scores(cmd);
-        } else if ("feedback" == command) {
-          return show_feedback(cmd);
-        } else if ("enroll" == command) {
-          return manage_enrolls(cmd);
-        } else {
-          Logger::fatal << "Unrecognized command: " << command << Logger::endl;
-        }
+        command_map.exec_command(cmd, command);
       } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl
@@ -172,7 +163,6 @@ int main(int argc, char *argv[]) {
         return 0;
       }
     }
-
   } catch (Autolab::HttpException &e) {
     Logger::fatal << e.what() << Logger::endl;
     return -1;
