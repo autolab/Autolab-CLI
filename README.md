@@ -24,6 +24,10 @@ Then, create file src/app_credentials.h by making a copy of src/app_credentials.
 
 ### Build Instructions
 
+We've written an install script that has been tested on Ubuntu 14.04. You can run it by executing `./install/install.sh`
+
+If you'd rather install manually, the install script just performs the following:
+
 This project uses CMake. To build:
 
 1. create 'build' directory under project root directory.
@@ -34,7 +38,7 @@ This will build two targets:
 1. An executable build/src/autolab
 2. A static library build/lib/autolab/libautolab.a
 
-You can optionally run `make install` to install the built binaries (typically to `/usr/local/bin/`).
+You can optionally run `sudo make install` to install the built binaries (typically to `/usr/local/bin/`).
 
 ### Build Options
 
