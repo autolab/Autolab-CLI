@@ -40,6 +40,15 @@ This will build two targets:
 
 You can optionally run `sudo make install` to install the built binaries (typically to `/usr/local/bin/`).
 
+## Autocompletion ( bash users only :( )
+
+After installing manually, users can cd out of build and execute the following commands:
+
+1. `sudo cp autocomplete/autolab /etc/bash_completion.d/`
+2. `. /etc/bash_completion.d/autolab`
+
+This will move our autocompletion script out of a local folder and into the bash autocompletion directory. To learn more about bash autocompletion, see https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
+
 ### Build Options
 
 There are two builds available: release and non-release. Release builds do not contain debug output (output that use Logger::debug).
