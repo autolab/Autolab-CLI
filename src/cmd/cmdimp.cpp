@@ -25,6 +25,7 @@
 #include "cmdmap.h"
 #include "cmdimp.h"
 #include "cmdargs.h"
+#include "../cache/cache.h"
 
 Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
 
@@ -404,6 +405,9 @@ int submit_asmt(cmdargs &cmd) {
 int show_courses_helper(cmdargs &cmd);
 
 int show_courses(cmdargs &cmd) {
+  bool b = cache_exists();
+
+  printf("%d\n\n\n", b);
   FILE *fp = popen("ls -a /home/$(echo $USER)/.autolab", "r");
   char buffer[256];
   while(fgets(buffer, 256, fp) != NULL) {
