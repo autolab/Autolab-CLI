@@ -24,11 +24,13 @@ Then, create file src/app_credentials.h by making a copy of src/app_credentials.
 
 ### Build Instructions
 
-We've written an install script that has been tested on Ubuntu 14.04. You can run it by executing `./install/install.sh`
+This project uses CMake. On Linux, it generates Makefiles for the project, which can then be used by the `make` command to perform regular incremental builds.
 
-If you'd rather install manually, the install script just performs the following:
+#### Quick Build & Install Script for Bash Users
 
-This project uses CMake. To build:
+We've written an install script that builds the entire project, installs the binary to your system, and installs the bash autocompletion script. You can run it by executing `./install/install.sh`. It needs sudo access in order to copy files to protected directories (details below)
+
+#### Manual Build and Install
 
 1. create 'build' directory under project root directory.
 2. cd into 'build', run `cmake ..`.
@@ -40,7 +42,7 @@ This will build two targets:
 
 You can optionally run `sudo make install` to install the built binaries (typically to `/usr/local/bin/`).
 
-## Autocompletion ( bash users only :( )
+##### Autocompletion ( bash users only :( )
 
 After installing manually, users can cd out of build and execute the following commands:
 
