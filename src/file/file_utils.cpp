@@ -27,6 +27,12 @@ bool file_exists(const char *path_to_file) {
   return S_ISREG(buffer.st_mode);
 }
 
+bool dir_exists(const char *path_to_dir) {
+  struct stat buffer;
+  if(stat (path_to_dir, &buffer) != 0) return false;
+  return S_ISDIR(buffer.st_mode);
+}
+
 bool dir_find(const char *dirname, const char *targetname, bool target_is_dir) {
   bool found = false;
   unsigned char target_type = target_is_dir ? DT_DIR : DT_REG;
