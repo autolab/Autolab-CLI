@@ -24,7 +24,13 @@ Then, create file src/app_credentials.h by making a copy of src/app_credentials.
 
 ### Build Instructions
 
-This project uses CMake. To build:
+This project uses CMake. On Linux, it generates Makefiles for the project, which can then be used by the `make` command to perform regular incremental builds.
+
+#### Quick Build & Install Script for Bash Users
+
+We've written an install script that builds the entire project, installs the binary to your system, and installs the bash autocompletion script. You can run it by executing `./install/install.sh`. It needs sudo access in order to copy files to protected directories (details below)
+
+#### Manual Build and Install
 
 1. create 'build' directory under project root directory.
 2. cd into 'build', run `cmake ..`.
@@ -34,7 +40,16 @@ This will build two targets:
 1. An executable build/src/autolab
 2. A static library build/lib/autolab/libautolab.a
 
-You can optionally run `make install` to install the built binaries (typically to `/usr/local/bin/`).
+You can optionally run `sudo make install` to install the built binaries (typically to `/usr/local/bin/`).
+
+##### Autocompletion ( bash users only :( )
+
+After installing manually, users can cd out of build and execute the following commands:
+
+1. `sudo cp autocomplete/autolab /etc/bash_completion.d/`
+2. `. /etc/bash_completion.d/autolab`
+
+This will move our autocompletion script out of a local folder and into the bash autocompletion directory. To learn more about bash autocompletion, see https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
 
 ### Build Options
 
