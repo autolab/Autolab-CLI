@@ -582,6 +582,28 @@ int manage_enrolls(cmdargs &cmd) {
 }
 
 int show_assessments(cmdargs &cmd) {
+  std::string course_name(cmd.args[2]);
+
+  if(!cmd.has_option("-i", "--ignore-cache")) {
+    // If the cache exists and the cache entry for "courses" exists
+    if(cache_exists() && cache_asmt_entry_exists(course_name)) {
+      // Then print the contents of the cache
+      print_asmt_cache_entry(course_name);
+      return 0;
+    }
+    else {
+      // Then update the cache, and print its contents
+      update_asmt_cache_entry(course_name);
+      print_asmt_cache_entry(course_name);
+      return 0;
+    }
+  }
+  else {
+    return show_assessments_helper(cmd);
+  }
+}
+
+int show_assessments_helper(cmdargs &cmd) {
   cmd.setup_help("autolab assessments",
       "List all available assessments of a course.");
   cmd.new_arg("course_name", true);
