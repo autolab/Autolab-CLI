@@ -12,6 +12,8 @@
 #include <thread> // sleep_for
 #include <vector>
 
+#include <fstream>
+
 #include "autolab/autolab.h"
 #include "autolab/client.h"
 #include "logger.h"
@@ -405,11 +407,23 @@ int submit_asmt(cmdargs &cmd) {
 int show_courses_helper(cmdargs &cmd);
 
 int show_courses(cmdargs &cmd) {
-  bool b = cache_exists();
-
-  printf("%d\n\n\n", b);
-
-  return show_courses_helper(cmd);
+  if(!cmd.has_option("-i", "--ignore-cache")) {
+    // If the cache exists and the cache entry for "courses" exists
+    if(cache_exists() && cache_course_entry_exists()) {
+      // Then print the contents of the cache
+      print_course_cache_entry();
+      return 0;
+    }
+    else {
+      // Then update the cache, and print its contents
+      update_course_cache_entry();
+      print_course_cache_entry();
+      return 0;
+    }
+  }
+  else {
+    return show_courses_helper(cmd);
+  }
 }
 
 int show_courses_helper(cmdargs &cmd) {
