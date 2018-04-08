@@ -65,4 +65,4 @@ Run 'autolab -h' to find out the commands available.
 
 ### Using the library
 
-Include the header files in include/autolab/, then link against libautolab.a.
+To use the autolab client library in your own C++ program, include the header files in include/autolab/, then link against libautolab.a. Make sure you are compiling with at least C++11.
