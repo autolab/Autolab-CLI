@@ -43,8 +43,6 @@ void print_course_cache_entry() {
     Logger::info  << "  " << curr_line << Logger::endl;
   }
 
-  Logger::info << Logger::endl;
-
   infile.close();
 }
 
@@ -83,8 +81,6 @@ void print_asmt_cache_entry(std::string course_id) {
   while (std::getline(infile, curr_line)) {
     Logger::info  << "  " << curr_line << Logger::endl;
   }
-
-  Logger::info << Logger::endl;
 
   infile.close();
 }

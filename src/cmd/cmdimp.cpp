@@ -582,6 +582,14 @@ int manage_enrolls(cmdargs &cmd) {
 }
 
 int show_assessments(cmdargs &cmd) {
+  cmd.setup_help("autolab assessments",
+      "List all available assessments of a course.");
+  cmd.new_arg("course_name", true);
+  cmd.setup_done();
+
+  // set up logger
+  Logger::fatal.set_prefix("Cannot get assessments");
+
   std::string course_name(cmd.args[2]);
 
   if(!cmd.has_option("-i", "--ignore-cache")) {
@@ -604,14 +612,6 @@ int show_assessments(cmdargs &cmd) {
 }
 
 int show_assessments_helper(cmdargs &cmd) {
-  cmd.setup_help("autolab assessments",
-      "List all available assessments of a course.");
-  cmd.new_arg("course_name", true);
-  cmd.setup_done();
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get assessments");
-
   std::string course_name(cmd.args[2]);
 
   std::vector<Autolab::Assessment> asmts;
