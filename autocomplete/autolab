@@ -21,7 +21,7 @@ get_opts() {
           # Current command is:
           # autolab submit
           # We need to recommend a course
-          autolab courses -q | cut -d' ' -f5
+          autolab courses -q -u | cut -d' ' -f5
           return 0
         elif [[ ${num_words} = 3 ]]; then
           # Current command is either:
@@ -41,13 +41,13 @@ get_opts() {
               # Case 1(b):
               # We need to recommend an assessment
               else
-                autolab asmts $(echo "${1}" | awk 'NF{print $NF}' | cut -d: -f1) -q | cut -d' ' -f5
+                autolab asmts $(echo "${1}" | awk 'NF{print $NF}' | cut -d: -f1) -q -u | cut -d' ' -f5
                 return 1
               fi
           # Case 2:
           # autolab submit <course_name>
           else
-              autolab courses -q | cut -d' ' -f5
+              autolab courses -q -u | cut -d' ' -f5
               return 1
           fi
         elif [[ ${num_words} = 4 ]]; then
@@ -84,7 +84,7 @@ get_opts() {
 
         # Let's not autocomplete [OPTIONS] for now
 
-        autolab courses -q | cut -d' ' -f5
+        autolab courses -q -u | cut -d' ' -f5
         return 0
     elif [[ $1 = *"scores "* ]] || [[ $1 = *"submissions "* ]] || [[ $1 = *"problems "* ]] || [[ $1 = *"feedback "* ]] || [[ $1 = *"download "* ]]; then
         # Special case for "scores" subcommand
@@ -99,7 +99,7 @@ get_opts() {
           # Current command is:
           # autolab <x>
           # We need to recommend a course
-          autolab courses -q | cut -d' ' -f5
+          autolab courses -q -u | cut -d' ' -f5
           return 0
         elif [[ ${num_words} = 3 ]] && ! [[ $1 = *" " ]]; then
           # Current command is either:
@@ -119,13 +119,13 @@ get_opts() {
               # Case 1(b):
               # We need to recommend an assessment
               else
-                autolab asmts $(echo "${1}" | awk 'NF{print $NF}' | cut -d: -f1) -q | cut -d' ' -f5
+                autolab asmts $(echo "${1}" | awk 'NF{print $NF}' | cut -d: -f1) -q -u | cut -d' ' -f5
                 return 1
               fi
           # Case 2:
           # autolab submit <course_name>
           else
-              autolab courses -q | cut -d' ' -f5 | awk '{print $1":"}'
+              autolab courses -q -u | cut -d' ' -f5 | awk '{print $1":"}'
               return 0
           fi
         else
@@ -154,7 +154,7 @@ get_opts() {
           # We need to recommend an action or a course
           if [[ $1 = *" " ]]; then
               # Recommend a course
-              autolab courses -q | cut -d' ' -f5
+              autolab courses -q -u | cut -d' ' -f5
               return 0
           else
               echo "new edit drop"
@@ -166,7 +166,7 @@ get_opts() {
           # Current command is:
           # autolab submit <action> <course_name>
           # We need to recommend a course
-          autolab courses -q | cut -d' ' -f5
+          autolab courses -q -u | cut -d' ' -f5
           return 0
         else
           echo ""

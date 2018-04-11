@@ -407,7 +407,10 @@ int submit_asmt(cmdargs &cmd) {
 int show_courses_helper(cmdargs &cmd);
 
 int show_courses(cmdargs &cmd) {
-  if(!cmd.has_option("-i", "--ignore-cache")) {
+  if(cmd.has_option("-i", "--ignore-cache")) {
+    return show_courses_helper(cmd);
+  }
+  else if(cmd.has_option("-u", "--use-cache")) {
     // If the cache exists and the cache entry for "courses" exists
     if(cache_exists() && cache_course_entry_exists()) {
       // Then print the contents of the cache
@@ -422,7 +425,10 @@ int show_courses(cmdargs &cmd) {
     }
   }
   else {
-    return show_courses_helper(cmd);
+    // Then update the cache, and print its contents
+    update_course_cache_entry();
+    print_course_cache_entry();
+    return 0;
   }
 }
 
@@ -592,10 +598,14 @@ int show_assessments(cmdargs &cmd) {
 
   std::string course_name(cmd.args[2]);
 
-  if(!cmd.has_option("-i", "--ignore-cache")) {
+  if(cmd.has_option("-i", "--ignore-cache")) {
+    return show_assessments_helper(cmd);
+  }
+  else if(cmd.has_option("-u", "--use-cache")) {
     // If the cache exists and the cache entry for "courses" exists
     if(cache_exists() && cache_asmt_entry_exists(course_name)) {
       // Then print the contents of the cache
+      //Logger::info << "Reading from cache!!!" << Logger::endl;
       print_asmt_cache_entry(course_name);
       return 0;
     }
@@ -607,7 +617,10 @@ int show_assessments(cmdargs &cmd) {
     }
   }
   else {
-    return show_assessments_helper(cmd);
+    // Then update the cache, and print its contents
+    update_asmt_cache_entry(course_name);
+    print_asmt_cache_entry(course_name);
+    return 0;
   }
 }
 
