@@ -56,6 +56,7 @@ void update_course_cache_entry() {
   int res1p = system("cp /dev/null $HOME/.autolab/cache/courses.txt");
   int res1 = system("autolab courses -q -i >> $HOME/.autolab/cache/courses.txt");
   // We've gotta use this variable, or else g++ complains. Yeah, it's dumb.
+  res1p++;
   if(res1) {
     exit(1);
   }
