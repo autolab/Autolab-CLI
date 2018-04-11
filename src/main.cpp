@@ -158,8 +158,11 @@ int main(int argc, char *argv[]) {
       try {
         command_map.exec_command(cmd, command);
         if(!cmd.has_option("-q", "--quiet")) {
-          Logger::info << Logger::endl << "Anything missing?" << Logger::endl
-            << "Try running 'autolab update-cache'" << Logger::endl;
+          // Yeah, we had something useful here
+          // Until we removed it
+          // Now we don't have time to refactor everything that uses '-q'
+          // So here it is, hopefully you'll need it for something
+          // TODO: Fix this :)
         }
       } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl

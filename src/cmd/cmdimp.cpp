@@ -605,7 +605,6 @@ int show_assessments(cmdargs &cmd) {
     // If the cache exists and the cache entry for "courses" exists
     if(cache_exists() && cache_asmt_entry_exists(course_name)) {
       // Then print the contents of the cache
-      //Logger::info << "Reading from cache!!!" << Logger::endl;
       print_asmt_cache_entry(course_name);
       return 0;
     }
