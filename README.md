@@ -10,12 +10,12 @@ This C++ project has the following dependencies:
 - [libcurl](https://curl.haxx.se/libcurl/): For HTTP operations
 - [rapidjson](https://github.com/Tencent/rapidjson): For JSON processing
 
-Ubuntu users can install all of these dependencies at once by running:
-`sudo apt-get install libssl-dev libcurl4-openssl-dev`
-
 CMake is already setup to automatically handle acquiring and setting up rapidjson.
 
 Please make sure openssl and libcurl libraries are installed prior to building. They can usually be installed with the system's package manager on Linux.
+
+For example, on Ubuntu, users can install these dependencies by running:  
+`sudo apt-get install libssl-dev libcurl4-openssl-dev`
 
 ### Getting Client Credentials
 
