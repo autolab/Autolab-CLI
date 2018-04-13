@@ -404,41 +404,19 @@ int submit_asmt(cmdargs &cmd) {
   return 0;
 }
 
-int show_courses_helper(cmdargs &cmd);
-
 int show_courses(cmdargs &cmd) {
-  if(cmd.has_option("-i", "--ignore-cache")) {
-    return show_courses_helper(cmd);
-  }
-  else if(cmd.has_option("-u", "--use-cache")) {
-    // If the cache exists and the cache entry for "courses" exists
-    if(cache_exists() && cache_course_entry_exists()) {
-      // Then print the contents of the cache
-      print_course_cache_entry();
-      return 0;
-    }
-    else {
-      // Then update the cache, and print its contents
-      update_course_cache_entry();
-      print_course_cache_entry();
-      return 0;
-    }
-  }
-  else {
-    // Then update the cache, and print its contents
-    update_course_cache_entry();
-    print_course_cache_entry();
-    return 0;
-  }
-}
-
-int show_courses_helper(cmdargs &cmd) {
   cmd.setup_help("autolab courses",
       "List all current courses of the user.");
   cmd.setup_done();
 
   // set up logger
   Logger::fatal.set_prefix("Cannot get courses");
+
+  // hidden option --use-cache
+  if (cmd.has_option("-u", "--use-cache")) {
+    print_course_cache_entry();
+    return 0;
+  }
 
   std::vector<Autolab::Course> courses;
   client.get_courses(courses);
@@ -463,9 +441,11 @@ int show_courses_helper(cmdargs &cmd) {
     }
   }
 
+  // save to cache as well
+  update_course_cache_entry(courses);
+
   return 0;
 }
-
 
 // list and CRUD enrollments
 int manage_enrolls(cmdargs &cmd) {
@@ -598,33 +578,11 @@ int show_assessments(cmdargs &cmd) {
 
   std::string course_name(cmd.args[2]);
 
-  if(cmd.has_option("-i", "--ignore-cache")) {
-    return show_assessments_helper(cmd);
-  }
-  else if(cmd.has_option("-u", "--use-cache")) {
-    // If the cache exists and the cache entry for "courses" exists
-    if(cache_exists() && cache_asmt_entry_exists(course_name)) {
-      // Then print the contents of the cache
-      print_asmt_cache_entry(course_name);
-      return 0;
-    }
-    else {
-      // Then update the cache, and print its contents
-      update_asmt_cache_entry(course_name);
-      print_asmt_cache_entry(course_name);
-      return 0;
-    }
-  }
-  else {
-    // Then update the cache, and print its contents
-    update_asmt_cache_entry(course_name);
+  // hidden option --use-cache
+  if (cmd.has_option("-u", "--use-cache")) {
     print_asmt_cache_entry(course_name);
     return 0;
   }
-}
-
-int show_assessments_helper(cmdargs &cmd) {
-  std::string course_name(cmd.args[2]);
 
   std::vector<Autolab::Assessment> asmts;
   client.get_assessments(asmts, course_name);
@@ -650,6 +608,9 @@ int show_assessments_helper(cmdargs &cmd) {
       Logger::info << Logger::NONE;
     }
   }
+
+  // save to cache as well
+  update_asmt_cache_entry(course_name, asmts);
 
   return 0;
 }

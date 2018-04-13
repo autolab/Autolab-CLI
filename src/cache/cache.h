@@ -1,22 +1,16 @@
-#ifndef CACHE
-#define CACHE
+#ifndef AUTOLAB_CACHE_H_
+#define AUTOLAB_CACHE_H_
 
 #include <string>
 
-bool cache_exists();
+#include "autolab/autolab.h"
 
-bool cache_file_exists();
-
-bool cache_course_entry_exists();
-
+/* courses cache file */
+void update_course_cache_entry(std::vector<Autolab::Course> &courses);
 void print_course_cache_entry();
 
-void update_course_cache_entry();
-
-bool cache_asmt_entry_exists(std::string course_id);
-
+/* asmts cache file */
+void update_asmt_cache_entry(std::string course_id, std::vector<Autolab::Assessment> &asmts);
 void print_asmt_cache_entry(std::string course_id);
 
-void update_asmt_cache_entry(std::string course_id);
-
-#endif
+#endif /* AUTOLAB_CACHE_H_ */

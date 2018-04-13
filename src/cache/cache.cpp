@@ -1,110 +1,107 @@
-#include "cache.h"
-#include "../file/file_utils.h"
 #include <stdio.h>
 #include <string.h>
 
 #include <fstream>
 #include <iostream>
+#include <ostream>
+#include <sstream>
 
 #include "logger.h"
 
-#include <stdlib.h>
+#include "cache.h"
+#include "../context_manager/context_manager.h"
+#include "../file/file_utils.h"
 
-bool cache_exists() {
-  char buf[256];
-  strcpy(buf, get_home_dir());
-  strcat(buf, "/.autolab/cache/");
+const std::string courses_cache_filename = "courses.txt";
+const std::string cache_dirname = "cache";
 
-  return dir_exists(buf);
+std::string get_cache_dir_full_path() {
+  std::string cache_dir_full_path = get_cred_dir_full_path();
+  cache_dir_full_path.append("/");
+  cache_dir_full_path.append(cache_dirname);
+  return cache_dir_full_path;
 }
 
-bool cache_file_exists();
+std::string get_courses_cache_file_full_path() {
+  std::string courses_cache_file_full_path = get_cache_dir_full_path();
+  courses_cache_file_full_path.append("/");
+  courses_cache_file_full_path.append(courses_cache_filename);
+  return courses_cache_file_full_path;
+}
 
-bool cache_course_entry_exists() {
-  char buf[256];
-  strcpy(buf, get_home_dir());
-  strcat(buf, "/.autolab/cache/courses.txt");
+std::string get_asmts_cache_file_full_path(std::string course_id) {
+  std::string asmts_cache_file_full_path = get_cache_dir_full_path();
+  asmts_cache_file_full_path.append("/");
+  asmts_cache_file_full_path.append(course_id);
+  asmts_cache_file_full_path.append(".txt");
+  return asmts_cache_file_full_path;
+}
 
-  return file_exists(buf);
+bool check_and_create_cache_directory() {
+  check_and_create_token_directory();
+  std::string cred_dir = get_cred_dir_full_path();
+
+  bool exists = dir_find(cred_dir.c_str(), cache_dirname.c_str(), true);
+  if (exists) return true;
+
+  create_dir(get_cache_dir_full_path().c_str());
+  return false;
+}
+
+void print_cache_entry(std::string filename) {
+  if (!file_exists(filename.c_str())) {
+    return; // no need to print anything in this case
+  }
+
+  std::ifstream cache_file;
+  cache_file.open(filename.c_str());
+
+  std::string curr_line;
+
+  // Read through the cache file line by line, cat to Logger::info
+  while (std::getline(cache_file, curr_line)) {
+    Logger::info << curr_line << Logger::endl;
+  }
+
+  cache_file.close();
+}
+
+/* courses cache file */
+void update_course_cache_entry(std::vector<Autolab::Course> &courses) {
+  check_and_create_cache_directory();
+
+  std::ostringstream out;
+  for (auto &c : courses) {
+    out << "  " << c.name << " (" << c.display_name << ")\n";
+  }
+  std::string cache_contents = out.str();
+
+  write_file(get_courses_cache_file_full_path().c_str(),
+             cache_contents.c_str(), cache_contents.length());
+
+  LogDebug("[Cache] courses cache saved" << Logger::endl);
 }
 
 void print_course_cache_entry() {
-  char buf[256];
-  strcpy(buf, get_home_dir());
-  strcat(buf, "/.autolab/cache/courses.txt");
-
-  std::ifstream infile;
-  infile.open(buf);
-
-  std::string curr_line;
-
-  // Read through the cache file line by line, cat to Logger::info
-  while (std::getline(infile, curr_line)) {
-    Logger::info  << "  " << curr_line << Logger::endl;
-  }
-
-  infile.close();
+  print_cache_entry(get_courses_cache_file_full_path());
 }
 
-void update_course_cache_entry() {
-  if(!cache_exists()) {
-    int res = system("mkdir $HOME/.autolab/cache/");
-    if(res) {
-      exit(1);
-    }
+/* asmts cache file */
+void update_asmt_cache_entry(std::string course_id, std::vector<Autolab::Assessment> &asmts) {
+  check_and_create_cache_directory();
+
+  std::ostringstream out;
+  for (auto &a : asmts) {
+    out << "  " << a.name << " (" << a.display_name << ")\n";
   }
-  int res1p = system("cp /dev/null $HOME/.autolab/cache/courses.txt");
-  int res1 = system("autolab courses -q -i >> $HOME/.autolab/cache/courses.txt");
-  // We've gotta use this variable, or else g++ complains. Yeah, it's dumb.
-  res1p++;
-  if(res1) {
-    exit(1);
-  }
-}
+  std::string cache_contents = out.str();
 
-bool cache_asmt_entry_exists(std::string course_id) {
-  std::string home_dir(get_home_dir());
+  write_file(get_asmts_cache_file_full_path(course_id).c_str(),
+             cache_contents.c_str(), cache_contents.length());
 
-  std::string buf = home_dir + "/.autolab/cache/" + course_id + ".txt";
-
-  return file_exists(buf.c_str());
+  LogDebug("[Cache] asmts cache saved for course: " << course_id << Logger::endl);
 }
 
 void print_asmt_cache_entry(std::string course_id) {
-  std::string home_dir(get_home_dir());
-
-  std::string buf = home_dir + "/.autolab/cache/" + course_id + ".txt";
-
-  std::ifstream infile;
-  infile.open(buf.c_str());
-
-  std::string curr_line;
-
-  // Read through the cache file line by line, cat to Logger::info
-  while (std::getline(infile, curr_line)) {
-    Logger::info  << "  " << curr_line << Logger::endl;
-  }
-
-  infile.close();
-}
-
-void update_asmt_cache_entry(std::string course_id) {
-  if(!cache_exists()) {
-    int res = system("mkdir $HOME/.autolab/cache/");
-    if(res) {
-      exit(1);
-    }
-  }
-
-  std::string buf = "autolab asmts " + course_id + " -q -i >> $HOME/.autolab/cache/" + course_id + ".txt";
-  std::string buf2 = "cp /dev/null $HOME/.autolab/cache/" + course_id + ".txt";
-
-  int res1p = system(buf2.c_str());
-  int res1 = system(buf.c_str());
-
-  // We've gotta use this variable, or else g++ complains. Yeah, it's dumb.
-  res1p++;
-  if(res1) {
-    exit(1);
-  }
+  print_cache_entry(get_asmts_cache_file_full_path(course_id));
 }
