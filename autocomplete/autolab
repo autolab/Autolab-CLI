@@ -93,8 +93,6 @@ get_opts() {
         # autolab scores [<course_name:assessment_name>] [OPTIONS]
         num_words=$(echo "${1}" | wc -w)
 
-        touch $HOME/flag.txt
-
         if [[ ${num_words} = 2 ]]; then
           # Current command is:
           # autolab <x>
