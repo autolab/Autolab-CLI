@@ -134,6 +134,7 @@ int main(int argc, char *argv[]) {
       print_version();
       return 0;
     }
+
     print_help();
     return 0;
   }
@@ -156,6 +157,13 @@ int main(int argc, char *argv[]) {
 
       try {
         command_map.exec_command(cmd, command);
+        if(!cmd.has_option("-q", "--quiet")) {
+          // Yeah, we had something useful here
+          // Until we removed it
+          // Now we don't have time to refactor everything that uses '-q'
+          // So here it is, hopefully you'll need it for something
+          // TODO: Fix this :)
+        }
       } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl

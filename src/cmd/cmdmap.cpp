@@ -26,6 +26,7 @@ CommandMap init_autolab_command_map() {
   aliases["asmts"] = "assessments";
   aliases["problems"] = "problems";
   aliases["scores"] = "scores";
+  aliases["submissions"] = "scores";
   aliases["feedback"] = "feedback";
   aliases["enroll"] = "enroll";
 
@@ -37,7 +38,7 @@ CommandMap init_autolab_command_map() {
     {"courses",    {"courses             List all courses",                        &show_courses,     false}},
     {"assessments",{"assessments/asmts   List all assessments of a course",        &show_assessments, false}},
     {"problems",   {"problems            List all problems in an assessment",      &show_problems,    false}},
-    {"scores",     {"scores              Show scores got on an assessment",        &show_scores,      false}},
+    {"scores",     {"scores/submissions  Show scores got on an assessment",        &show_scores,      false}},
     {"feedback",   {"feedback            Show feedback on a submission",           &show_feedback,    false}},
     // instructor commands
     {"enroll",     {"enroll              Manage users affiliated with a course",   &manage_enrolls,   true}}

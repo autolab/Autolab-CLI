@@ -1,6 +1,6 @@
 add_executable(autolab-client
   main.cpp file/file_utils.cpp context_manager/context_manager.cpp
-  cmd/cmdargs.cpp pretty_print/pretty_print.cpp
+  cmd/cmdargs.cpp pretty_print/pretty_print.cpp cache/cache.cpp
   crypto/pseudocrypto.cpp cmd/cmdmap.cpp cmd/cmdimp.cpp)
 set_target_properties(autolab-client PROPERTIES OUTPUT_NAME autolab)
 

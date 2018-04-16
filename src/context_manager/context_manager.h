@@ -10,6 +10,9 @@
 
 #include <string>
 
+std::string get_cred_dir_full_path();
+bool check_and_create_token_directory();
+
 // read tokens from file. If nonexistent, return false.
 bool load_tokens(std::string &at, std::string &rt);
 

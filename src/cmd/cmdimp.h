@@ -11,6 +11,7 @@ int download_asmt(cmdargs &cmd);
 int submit_asmt(cmdargs &cmd);
 int show_courses(cmdargs &cmd);
 int show_assessments(cmdargs &cmd);
+int show_assessments_helper(cmdargs &cmd);
 int show_problems(cmdargs &cmd);
 int show_scores(cmdargs &cmd);
 int show_feedback(cmdargs &cmd);

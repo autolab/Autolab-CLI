@@ -12,6 +12,8 @@
 #include <thread> // sleep_for
 #include <vector>
 
+#include <fstream>
+
 #include "autolab/autolab.h"
 #include "autolab/client.h"
 #include "logger.h"
@@ -25,6 +27,7 @@
 #include "cmdmap.h"
 #include "cmdimp.h"
 #include "cmdargs.h"
+#include "../cache/cache.h"
 
 Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
 
@@ -409,6 +412,12 @@ int show_courses(cmdargs &cmd) {
   // set up logger
   Logger::fatal.set_prefix("Cannot get courses");
 
+  // hidden option --use-cache
+  if (cmd.has_option("-u", "--use-cache")) {
+    print_course_cache_entry();
+    return 0;
+  }
+
   std::vector<Autolab::Course> courses;
   client.get_courses(courses);
   LogDebug("Found " << courses.size() << " current courses." << Logger::endl);
@@ -431,6 +440,9 @@ int show_courses(cmdargs &cmd) {
       Logger::info << Logger::NONE;
     }
   }
+
+  // save to cache as well
+  update_course_cache_entry(courses);
 
   return 0;
 }
@@ -566,6 +578,12 @@ int show_assessments(cmdargs &cmd) {
 
   std::string course_name(cmd.args[2]);
 
+  // hidden option --use-cache
+  if (cmd.has_option("-u", "--use-cache")) {
+    print_asmt_cache_entry(course_name);
+    return 0;
+  }
+
   std::vector<Autolab::Assessment> asmts;
   client.get_assessments(asmts, course_name);
   LogDebug("Found " << asmts.size() << " assessments." << Logger::endl);
@@ -590,6 +608,9 @@ int show_assessments(cmdargs &cmd) {
       Logger::info << Logger::NONE;
     }
   }
+
+  // save to cache as well
+  update_asmt_cache_entry(course_name, asmts);
 
   return 0;
 }
