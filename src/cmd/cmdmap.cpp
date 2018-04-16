@@ -1,6 +1,7 @@
-#include "cmdmap.h"
 #include "logger.h"
+
 #include "cmdimp.h"
+#include "cmdmap.h"
 
 int CommandMap::exec_command(cmdargs &cmd, std::string raw_command) {
   // Translate to default command name and check if it's valid

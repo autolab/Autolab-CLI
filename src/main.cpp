@@ -1,27 +1,14 @@
-#include <cmath>
-#include <ctime>
-
-#include <algorithm>
-#include <chrono>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <string>
-#include <thread> // sleep_for
-#include <vector>
 
 #include "autolab/autolab.h"
 #include "autolab/client.h"
 #include "logger.h"
 
-#include "app_credentials.h"
 #include "build_config.h"
 #include "cmd/cmdargs.h"
-#include "context_manager/context_manager.h"
-#include "file/file_utils.h"
-#include "pretty_print/pretty_print.h"
-#include "cmd/cmdmap.h"
 #include "cmd/cmdimp.h"
+#include "cmd/cmdmap.h"
 
 extern Autolab::Client client;
 
@@ -157,13 +144,6 @@ int main(int argc, char *argv[]) {
 
       try {
         command_map.exec_command(cmd, command);
-        if(!cmd.has_option("-q", "--quiet")) {
-          // Yeah, we had something useful here
-          // Until we removed it
-          // Now we don't have time to refactor everything that uses '-q'
-          // So here it is, hopefully you'll need it for something
-          // TODO: Fix this :)
-        }
       } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl

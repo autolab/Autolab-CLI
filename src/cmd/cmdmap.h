@@ -1,3 +1,6 @@
+#ifndef AUTOLAB_CMDMAP_H_
+#define AUTOLAB_CMDMAP_H_
+
 #include <string>
 #include <vector>
 
@@ -47,3 +50,5 @@ class CommandMap {
   CLI uses for its operations.
 */
 CommandMap init_autolab_command_map();
+
+#endif /* AUTOLAB_CMDMAP_H_ */

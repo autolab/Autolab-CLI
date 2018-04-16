@@ -1,7 +1,9 @@
-#ifndef CMDIMP
-#define CMDIMP
+#ifndef AUTOLAB_CMDIMP_H_
+#define AUTOLAB_CMDIMP_H_
 
 #include "autolab/client.h"
+
+#include "cmdargs.h"
 
 bool init_autolab_client();
 int perform_device_flow(Autolab::Client &client);
@@ -21,4 +23,4 @@ int manage_enrolls(cmdargs &cmd);
 
 extern Autolab::Client client;
 
-#endif
+#endif /* AUTOLAB_CMDIMP_H_ */

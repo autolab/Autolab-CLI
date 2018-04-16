@@ -8,9 +8,10 @@
 
 #include "logger.h"
 
-#include "cache.h"
 #include "../context_manager/context_manager.h"
 #include "../file/file_utils.h"
+
+#include "cache.h"
 
 const std::string courses_cache_filename = "courses.txt";
 const std::string cache_dirname = "cache";

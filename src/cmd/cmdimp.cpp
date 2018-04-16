@@ -1,5 +1,3 @@
-// I literally just copied the imports from main.cpp, so not all of these are
-// necessary
 #include <cmath>
 #include <ctime>
 
@@ -12,22 +10,19 @@
 #include <thread> // sleep_for
 #include <vector>
 
-#include <fstream>
-
 #include "autolab/autolab.h"
 #include "autolab/client.h"
 #include "logger.h"
 
 #include "../app_credentials.h"
-#include "build_config.h"
-#include "cmdargs.h"
+#include "../cache/cache.h"
 #include "../context_manager/context_manager.h"
 #include "../file/file_utils.h"
 #include "../pretty_print/pretty_print.h"
-#include "cmdmap.h"
-#include "cmdimp.h"
+
 #include "cmdargs.h"
-#include "../cache/cache.h"
+#include "cmdimp.h"
+#include "cmdmap.h"
 
 Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
 

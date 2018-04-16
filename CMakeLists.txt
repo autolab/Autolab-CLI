@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 project(autolab-cli)
 
 # The version number
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 7)
+set(VERSION_MAJOR 1)
+set(VERSION_MINOR 0)
 
 # command line options
 option(release "build release version (no debug output)" OFF)
