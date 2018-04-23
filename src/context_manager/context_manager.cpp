@@ -22,8 +22,8 @@ bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std:
   if (split_pos_1 == std::string::npos) return false;
   std::string::size_type split_pos_2 = src.find('\n', split_pos_1+1);
 
-  at.assign(src.substr(0, split_pos_1));
-  rt.assign(src.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
+  at.assign(src, 0, split_pos_1);
+  rt.assign(src, split_pos_1+1, split_pos_2 - split_pos_1 - 1);
   return true;
 }
 
@@ -116,8 +116,8 @@ bool read_asmt_file(std::string &course_name, std::string &asmt_name) {
   if (split_pos_1 == std::string::npos) return false;
   std::string::size_type split_pos_2 = result.find('\n', split_pos_1+1);
 
-  course_name.assign(result.substr(0, split_pos_1));
-  asmt_name.assign(result.substr(split_pos_1+1, split_pos_2 - split_pos_1 - 1));
+  course_name.assign(result, 0, split_pos_1);
+  asmt_name.assign(result, split_pos_1+1, split_pos_2 - split_pos_1 - 1);
 
   return true;
 }

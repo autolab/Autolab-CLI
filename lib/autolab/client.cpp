@@ -111,8 +111,8 @@ void Client::get_courses(std::vector<Course> &courses) {
     course.name         = get_string_force(c_doc, "name");
     course.display_name = get_string(c_doc, "display_name");
     course.semester     = get_string(c_doc, "semester");
-    course.late_slack   = get_int_force(c_doc, "late_slack");
-    course.grace_days   = get_int_force(c_doc, "grace_days");
+    course.late_slack   = get_int(c_doc, "late_slack", 0);
+    course.grace_days   = get_int(c_doc, "grace_days", 0);
     course.auth_level   = Utility::string_to_authorization_level(
         get_string_force(c_doc, "auth_level"));
 
@@ -120,7 +120,7 @@ void Client::get_courses(std::vector<Course> &courses) {
   }
 }
 
-void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_name) {
+void Client::get_assessments(std::vector<Assessment> &asmts, const std::string &course_name) {
   rapidjson::Document asmts_doc;
   raw_client.get_assessments(asmts_doc, course_name);
   check_for_error_response(asmts_doc);
@@ -135,7 +135,7 @@ void Client::get_assessments(std::vector<Assessment> &asmts, std::string course_
 }
 
 void Client::get_assessment_details(DetailedAssessment &dasmt,
-    std::string course_name, std::string asmt_name) {
+    const std::string &course_name, const std::string &asmt_name) {
   rapidjson::Document dasmt_doc;
   raw_client.get_assessment_details(dasmt_doc, course_name, asmt_name);
   check_for_error_response(dasmt_doc);
@@ -145,20 +145,20 @@ void Client::get_assessment_details(DetailedAssessment &dasmt,
   assessment_from_json(dasmt.asmt, dasmt_doc);
   
   dasmt.description     = get_string(dasmt_doc, "description");
-  dasmt.max_grace_days  = get_int_force(dasmt_doc, "max_grace_days");
-  dasmt.max_submissions = get_int_force(dasmt_doc, "max_submissions");
-  dasmt.group_size      = get_int_force(dasmt_doc, "group_size");
-  dasmt.disable_handins = get_bool_force(dasmt_doc, "disable_handins");
-  dasmt.has_scoreboard  = get_bool_force(dasmt_doc, "has_scoreboard");
-  dasmt.has_autograder  = get_bool_force(dasmt_doc, "has_autograder");
+  dasmt.max_grace_days  = get_int(dasmt_doc, "max_grace_days", -1);
+  dasmt.max_submissions = get_int(dasmt_doc, "max_submissions", -1);
+  dasmt.group_size      = get_int(dasmt_doc, "group_size", 1);
+  dasmt.disable_handins = get_bool(dasmt_doc, "disable_handins", false);
+  dasmt.has_scoreboard  = get_bool(dasmt_doc, "has_scoreboard", false);
+  dasmt.has_autograder  = get_bool(dasmt_doc, "has_autograder", false);
   dasmt.handout_format  = Utility::string_to_attachment_format(
       get_string_force(dasmt_doc, "handout_format"));
   dasmt.writeup_format  = Utility::string_to_attachment_format(
       get_string_force(dasmt_doc, "writeup_format"));
 }
 
-void Client::get_problems(std::vector<Problem> &probs, std::string course_name,
-    std::string asmt_name) {
+void Client::get_problems(std::vector<Problem> &probs, const std::string &course_name,
+    const std::string &asmt_name) {
   rapidjson::Document probs_doc;
   raw_client.get_problems(probs_doc, course_name, asmt_name);
   check_for_error_response(probs_doc);
@@ -169,14 +169,14 @@ void Client::get_problems(std::vector<Problem> &probs, std::string course_name,
     prob.name        = get_string_force(p_doc, "name");
     prob.description = get_string(p_doc, "description");
     prob.max_score   = get_double(p_doc, "max_score");
-    prob.optional    = get_bool_force(p_doc, "optional");
+    prob.optional    = get_bool(p_doc, "optional", false);
 
     probs.push_back(prob);
   }
 }
 
 void Client::get_submissions(std::vector<Submission> &subs, 
-    std::string course_name, std::string asmt_name) {
+    const std::string &course_name, const std::string &asmt_name) {
   rapidjson::Document subs_doc;
   raw_client.get_submissions(subs_doc, course_name, asmt_name);
   check_for_error_response(subs_doc);
@@ -193,7 +193,7 @@ void Client::get_submissions(std::vector<Submission> &subs,
     require_is_object(scores_doc);
     // iterate through members of the object
     for (auto &m : scores_doc.GetObject()) {
-      std::string problem_name = m.name.GetString();
+      const std::string &problem_name = m.name.GetString();
       double score;
       if (m.value.IsDouble()) {
         score = m.value.GetDouble();
@@ -207,8 +207,8 @@ void Client::get_submissions(std::vector<Submission> &subs,
   }
 }
 
-void Client::get_feedback(std::string &feedback, std::string course_name,
-    std::string asmt_name, int sub_version, std::string problem_name) {
+void Client::get_feedback(std::string &feedback, const std::string &course_name,
+    const std::string &asmt_name, int sub_version, const std::string &problem_name) {
   rapidjson::Document feedback_doc;
   raw_client.get_feedback(feedback_doc, course_name, asmt_name, sub_version, problem_name);
   check_for_error_response(feedback_doc);
@@ -217,7 +217,7 @@ void Client::get_feedback(std::string &feedback, std::string course_name,
   feedback = get_string_force(feedback_doc, "feedback");
 }
 
-void Client::get_enrollments(std::vector<Enrollment> &enrollments, std::string course_name) {
+void Client::get_enrollments(std::vector<Enrollment> &enrollments, const std::string &course_name) {
   rapidjson::Document enrolls_doc;
   raw_client.get_enrollments(enrolls_doc, course_name);
   check_for_error_response(enrolls_doc);
@@ -231,7 +231,7 @@ void Client::get_enrollments(std::vector<Enrollment> &enrollments, std::string c
   }
 }
 
-void Client::crud_enrollment(Enrollment &result, std::string course_name,
+void Client::crud_enrollment(Enrollment &result, const std::string &course_name,
     std::string email, EnrollmentOption &input, CrudAction action) {
   RawClient::Params in_params;
 
@@ -262,7 +262,7 @@ void Client::crud_enrollment(Enrollment &result, std::string course_name,
 
 
 void Client::download_handout(Attachment &handout, std::string download_dir,
-    std::string course_name, std::string asmt_name) {
+    const std::string &course_name, const std::string &asmt_name) {
   rapidjson::Document response_doc;
   raw_client.download_handout(response_doc, download_dir, course_name, asmt_name);
   check_for_error_response(response_doc);
@@ -271,7 +271,7 @@ void Client::download_handout(Attachment &handout, std::string download_dir,
 }
 
 void Client::download_writeup(Attachment &writeup, std::string download_dir,
-    std::string course_name, std::string asmt_name) {
+    const std::string &course_name, const std::string &asmt_name) {
   rapidjson::Document response_doc;
   raw_client.download_writeup(response_doc, download_dir, course_name, asmt_name);
   check_for_error_response(response_doc);
@@ -279,7 +279,7 @@ void Client::download_writeup(Attachment &writeup, std::string download_dir,
   download_response_to_attachment_format(writeup, response_doc);
 }
 
-int Client::submit_assessment(std::string course_name, std::string asmt_name,
+int Client::submit_assessment(const std::string &course_name, const std::string &asmt_name,
       std::string filename) {
   rapidjson::Document response_doc;
   raw_client.submit_assessment(response_doc, course_name, asmt_name, filename);

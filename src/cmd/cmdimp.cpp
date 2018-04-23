@@ -192,7 +192,12 @@ int show_status(cmdargs &cmd) {
     Logger::info << dasmt.max_submissions << Logger::endl;
   }
 
-  Logger::info << "Max grace days: " << dasmt.max_grace_days << Logger::endl;
+  Logger::info << "Max grace days: ";
+  if (dasmt.max_grace_days < 0) {
+    Logger::info << "As many as you have left" << Logger::endl;
+  } else {
+    Logger::info << dasmt.max_grace_days << Logger::endl;
+  }
 
   return 0;
 }

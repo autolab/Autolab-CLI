@@ -77,16 +77,16 @@ public:
   /* REST interface methods */
   void get_user_info(rapidjson::Document &result);
   void get_courses(rapidjson::Document &result);
-  void get_assessments(rapidjson::Document &result, std::string course_name);
-  void get_assessment_details(rapidjson::Document &result, std::string course_name, std::string asmt_name);
-  void get_problems(rapidjson::Document &result, std::string course_name, std::string asmt_name);
-  void download_handout(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name);
-  void download_writeup(rapidjson::Document &result, std::string download_dir, std::string course_name, std::string asmt_name);
-  void submit_assessment(rapidjson::Document &result, std::string course_name, std::string asmt_name, std::string filename);
-  void get_submissions(rapidjson::Document &result, std::string course_name, std::string asmt_name);
-  void get_feedback(rapidjson::Document &result, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
-  void get_enrollments(rapidjson::Document &result, std::string course_name);
-  void crud_enrollment(rapidjson::Document &result, std::string course_name, std::string email, Params &in_params, CrudAction action);
+  void get_assessments(rapidjson::Document &result, const std::string &course_name);
+  void get_assessment_details(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);
+  void get_problems(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);
+  void download_handout(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name);
+  void download_writeup(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name);
+  void submit_assessment(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, std::string filename);
+  void get_submissions(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);
+  void get_feedback(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, int sub_version, const std::string &problem_name);
+  void get_enrollments(rapidjson::Document &result, const std::string &course_name);
+  void crud_enrollment(rapidjson::Document &result, const std::string &course_name, std::string email, Params &in_params, CrudAction action);
 
 private:
   // domain of the autolab service

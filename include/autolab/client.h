@@ -34,20 +34,20 @@ public:
   /* resource-related */
   void get_user_info(User &user);
   void get_courses(std::vector<Course> &courses);
-  void get_assessments(std::vector<Assessment> &asmts, std::string course_name);
-  void get_assessment_details(DetailedAssessment &dasmt, std::string course_name, std::string asmt_name);
-  void get_problems(std::vector<Problem> &probs, std::string course_name, std::string asmt_name);
-  void get_submissions(std::vector<Submission> &subs, std::string course_name, std::string asmt_name);
-  void get_feedback(std::string &feedback, std::string course_name, std::string asmt_name, int sub_version, std::string problem_name);
+  void get_assessments(std::vector<Assessment> &asmts, const std::string &course_name);
+  void get_assessment_details(DetailedAssessment &dasmt, const std::string &course_name, const std::string &asmt_name);
+  void get_problems(std::vector<Problem> &probs, const std::string &course_name, const std::string &asmt_name);
+  void get_submissions(std::vector<Submission> &subs, const std::string &course_name, const std::string &asmt_name);
+  void get_feedback(std::string &feedback, const std::string &course_name, const std::string &asmt_name, int sub_version, const std::string &problem_name);
 
-  void get_enrollments(std::vector<Enrollment> &enrollments, std::string course_name);
-  void crud_enrollment(Enrollment &result, std::string course_name, std::string email, EnrollmentOption &input, CrudAction action);
+  void get_enrollments(std::vector<Enrollment> &enrollments, const std::string &course_name);
+  void crud_enrollment(Enrollment &result, const std::string &course_name, std::string email, EnrollmentOption &input, CrudAction action);
 
   /* action-related */
-  void download_handout(Attachment &handout, std::string download_dir, std::string course_name, std::string asmt_name);
-  void download_writeup(Attachment &writeup, std::string download_dir, std::string course_name, std::string asmt_name);
+  void download_handout(Attachment &handout, std::string download_dir, const std::string &course_name, const std::string &asmt_name);
+  void download_writeup(Attachment &writeup, std::string download_dir, const std::string &course_name, const std::string &asmt_name);
   // returns the new submission version number on success
-  int submit_assessment(std::string course_name, std::string asmt_name, std::string filename);
+  int submit_assessment(const std::string &course_name, const std::string &asmt_name, std::string filename);
 };
 
 }
