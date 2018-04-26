@@ -162,9 +162,6 @@ int show_status(cmdargs &cmd) {
       "directory, the details of the assessment will be shown.");
   cmd.setup_done();
 
-  // set up logger
-  Logger::fatal.set_prefix("Cannot show status");
-
   std::string course_name, asmt_name;
   bool in_asmt_dir = read_asmt_file(course_name, asmt_name);
   if (!in_asmt_dir) {
@@ -213,9 +210,6 @@ int download_asmt(cmdargs &cmd) {
       "the names of the course and assessment.");
   cmd.new_arg("course_name:assessment_name", true);
   cmd.setup_done();
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot download assessment");
 
   // parse course and assessment name
   std::string course_name, asmt_name;
@@ -299,9 +293,6 @@ int submit_asmt(cmdargs &cmd) {
   cmd.setup_done();
 
   std::string course_name, asmt_name, filename;
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot submit assessment");
 
   if (cmd.nargs() >= 4) {
     // user provided course and assessment name with filename
@@ -409,9 +400,6 @@ int show_courses(cmdargs &cmd) {
       "List all current courses of the user.");
   cmd.setup_done();
 
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get courses");
-
   // hidden option --use-cache
   if (cmd.has_option("-u", "--use-cache")) {
     print_course_cache_entry();
@@ -470,9 +458,6 @@ int manage_enrolls(cmdargs &cmd) {
   bool option_verbose = cmd.new_flag_option("-v","--verbose","Show the resulting "
       "enrollment data after new, edit, or delete");
   cmd.setup_done();
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get enrollments");
 
   std::vector<Autolab::Enrollment> enrollments;
   if (cmd.nargs() == 4) {
@@ -573,9 +558,6 @@ int show_assessments(cmdargs &cmd) {
   cmd.new_arg("course_name", true);
   cmd.setup_done();
 
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get assessments");
-
   std::string course_name(cmd.args[2]);
 
   // hidden option --use-cache
@@ -622,9 +604,6 @@ int show_problems(cmdargs &cmd) {
   cmd.new_arg("course_name:assessment_name", false);
   cmd.setup_done();
 
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get problems");
-
   std::string course_name, asmt_name;
   // user-specified names take precedence
   if (cmd.nargs() >= 3) {
@@ -661,9 +640,6 @@ int show_scores(cmdargs &cmd) {
   bool option_all = cmd.new_flag_option("-a", "--all",
       "Show scores from all submission. Default shows only the latest");
   cmd.setup_done();
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get scores");
 
   std::string course_name, asmt_name;
   // user-specified names take precedence
@@ -712,9 +688,6 @@ int show_feedback(cmdargs &cmd) {
   std::string option_version = cmd.new_option("-v", "--version","version_num",
       "Get feedback for this particular version");
   cmd.setup_done();
-
-  // set up logger
-  Logger::fatal.set_prefix("Cannot get feedback");
 
   std::string course_name, asmt_name;
   // user-specified names take precedence

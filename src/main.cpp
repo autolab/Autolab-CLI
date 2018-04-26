@@ -133,8 +133,6 @@ int main(int argc, char *argv[]) {
     if ("setup" == command) {
       return user_setup(cmd);
     } else {
-      Logger::fatal.set_prefix("Cannot start autolab client");
-
       if (!init_autolab_client()) {
         Logger::fatal << "No user set up on this client yet." << Logger::endl
           << Logger::endl
