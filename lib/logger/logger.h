@@ -52,7 +52,10 @@ namespace Logger {
     fatal_logger &operator<<(T val) {
       if (!prefix_used) {
         prefix_used = true;
-        std::cerr << "fatal: " << prefix << std::endl;
+        std::cerr << "fatal: ";
+        if (prefix.length() > 0) {
+          std::cerr << prefix << std::endl;
+        }
       }
       std::cerr << val;
       return *this;
