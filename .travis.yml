@@ -8,6 +8,7 @@ addons:
     - libssl-dev
     - libcurl4-openssl-dev
 before_script:
+  - sed 's/\[ENTER STRING HERE\]/"abcdefgh"/g' src/app_credentials.h.template > src/app_credentials.h
   - mkdir build && cd build
 script:
   - cmake .. -Drelease=OFF && make
