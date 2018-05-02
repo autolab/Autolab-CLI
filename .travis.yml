@@ -1,0 +1,15 @@
+dist: trusty
+sudo: false
+language: cpp
+addons:
+  apt:
+    packages:
+    - cmake
+    - libssl-dev
+    - libcurl4-openssl-dev
+before_script:
+  - mkdir build && cd build
+script:
+  - cmake .. -Drelease=OFF && make
+  - make clean
+  - cmake .. -Drelease=ON && make
