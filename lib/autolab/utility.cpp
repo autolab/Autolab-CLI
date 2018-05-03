@@ -20,6 +20,7 @@ double get_timezone_offset() {
   std::time(&raw_time_utc);
 
   std::tm *utc = std::gmtime(&raw_time_utc);
+  utc->tm_isdst = -1;
   std::time_t raw_time_local = std::mktime(utc);
 
   double diff_in_seconds = std::difftime(raw_time_utc, raw_time_local);
