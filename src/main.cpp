@@ -5,6 +5,7 @@
 #include "autolab/client.h"
 #include "logger.h"
 
+#include "app_credentials.h"
 #include "build_config.h"
 #include "cmd/cmdargs.h"
 #include "cmd/cmdimp.h"
@@ -49,7 +50,14 @@ void print_help() {
 }
 
 void print_version() {
-  Logger::info << "autolab-cli version " << VERSION_MAJOR << "." << VERSION_MINOR << Logger::endl;
+  Logger::info << "autolab-cli " << VERSION_MAJOR
+    << "." << VERSION_MINOR
+    << "." << VERSION_PATCH;
+  if (BUILD_VARIANT.length() > 0) {
+    Logger::info << " (" << BUILD_VARIANT << ")";
+  }
+  Logger::info << Logger::endl
+    << "Target server: " << server_domain << Logger::endl;
 }
 
 /* must manually init client */

@@ -5,6 +5,8 @@ project(autolab-cli)
 # The version number
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 0)
+set(VERSION_PATCH 1)
+set(variant "" CACHE STRING "build variant")
 
 # command line options
 option(release "build release version (no debug output)" OFF)
@@ -20,6 +22,7 @@ else(NOT release)
 endif(NOT release)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Build variant: ${variant}")
 
 # compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror")

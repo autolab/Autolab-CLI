@@ -6,8 +6,12 @@
 #ifndef AUTOLAB_BUILD_CONFIG_H_
 #define AUTOLAB_BUILD_CONFIG_H_
 
+#include <string>
+
 const int VERSION_MAJOR = @VERSION_MAJOR@;
 const int VERSION_MINOR = @VERSION_MINOR@;
+const int VERSION_PATCH = @VERSION_PATCH@;
+const std::string BUILD_VARIANT = "@variant@";
 
 #cmakedefine PRINT_DEBUG
 
