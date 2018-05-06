@@ -56,9 +56,17 @@ This will move our autocompletion script out of a local folder and into the bash
 
 ### Build Options
 
-There are two builds available: release and non-release. Release builds do not contain debug output (output that use Logger::debug).
+#### Release vs Debug
+
+There are two kinds of builds available: release and non-release. Release builds do not contain debug output (output that use Logger::debug).
 
 The default is non-release builds. To build a release version, when inside the 'build' directory, run `cmake -Drelease=ON ..` (note the periods at the end), then run `make`.
+
+#### Build Variant
+
+In addition to specifying the version number in CMakeLists.txt, a 'build variant' string can be used to include metadata about the build. This info will be shown when running `autolab --version`.
+
+For example, in our official build for the CMU shark machines, we run cmake with `-Dvariant=cmu-shark`. This helps indicate what the executable was built for.
 
 ## How to use
 
