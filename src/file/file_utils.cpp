@@ -109,7 +109,7 @@ size_t read_file(const char *filename, char *result, size_t max_length) {
 
   ssize_t amount = 0;
   size_t total_read = 0;
-  while (amount = TEMP_FAILURE_RETRY(read(fd, result + total_read, max_length))) {
+  while ((amount = TEMP_FAILURE_RETRY(read(fd, result + total_read, max_length)))) {
     if (amount < 0) {
       close(fd);
       exit_with_errno();
