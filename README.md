@@ -18,7 +18,7 @@ Please make sure openssl and libcurl libraries are installed prior to building. 
 
 The program requires client credentials in order to build.
 
-First, register a new application on your deployment of Autolab. The redirect_uri should be '\<host\>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method. To test building without credentials, use empty strings as credentials and continue.
+First, register a new application on your deployment of Autolab. The redirect_uri should be '\<host\>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method. The scopes should be `user_info user_courses user_scores user_submit`. To test building without credentials, use empty strings as credentials and continue.
 
 Then, create file src/app_credentials.h by making a copy of src/app_credentials.h.template, and enter the generated client_id and client_secret into the predefined fields in the file.
 
