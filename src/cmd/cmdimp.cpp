@@ -661,7 +661,6 @@ int show_scores(cmdargs &cmd) {
   LogDebug("Found " << subs.size() << " submissions." << Logger::endl);
 
   Logger::info << "Scores for " << course_name << ":" << asmt_name << Logger::endl
-    << "(Only submissions made via this client can be shown)" << Logger::endl
     << Logger::endl;
 
   std::vector<std::vector<std::string>> sub_table;
