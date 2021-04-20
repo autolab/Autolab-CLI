@@ -189,6 +189,14 @@ int show_status(cmdargs &cmd) {
     Logger::info << dasmt.max_submissions << Logger::endl;
   }
 
+  Logger::info << "Max penalty-free submissions: ";
+
+  if (dasmt.max_unpenalized_submissions < 0) {
+    Logger::info << "Infinite" << Logger::endl;
+  } else {
+    Logger::info << dasmt.max_unpenalized_submissions << Logger::endl;
+  }
+
   Logger::info << "Max grace days: ";
   if (dasmt.max_grace_days < 0) {
     Logger::info << "As many as you have left" << Logger::endl;
