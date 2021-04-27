@@ -68,6 +68,7 @@ struct DetailedAssessment {
   std::string description;
   int max_grace_days;
   int max_submissions;
+  int max_unpenalized_submissions;
   int group_size;
   bool disable_handins;
   bool has_scoreboard;

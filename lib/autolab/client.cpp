@@ -147,6 +147,7 @@ void Client::get_assessment_details(DetailedAssessment &dasmt,
   dasmt.description     = get_string(dasmt_doc, "description");
   dasmt.max_grace_days  = get_int(dasmt_doc, "max_grace_days", -1);
   dasmt.max_submissions = get_int(dasmt_doc, "max_submissions", -1);
+  dasmt.max_unpenalized_submissions = get_int(dasmt_doc, "max_unpenalized_submissions", -1);
   dasmt.group_size      = get_int(dasmt_doc, "group_size", 1);
   dasmt.disable_handins = get_bool(dasmt_doc, "disable_handins", false);
   dasmt.has_scoreboard  = get_bool(dasmt_doc, "has_scoreboard", false);
