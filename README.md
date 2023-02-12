@@ -21,16 +21,17 @@ For example, on Ubuntu, users can install these dependencies by running:
 
 The program requires client credentials in order to build.
 
-First, register a new application on your deployment of Autolab. Go to 'Manage Autolab' and click on 'Manage API Applications.' Click on 'New Application'
+First, register a new application on your deployment of Autolab. Go to "Manage Autolab" and click on "Manage API Applications". Then, click on "New Application".
+
 ![Screen Shot 2023-02-12 at 14 49 56](https://user-images.githubusercontent.com/25730111/218333728-fba04ebb-fea2-437b-abad-4aaae91c9794.png)
 
-Then in 'New Application,' specify a name, and the redirect_uri. The redirect_uri should be '\<host\>/device_flow_auth_cb' since this application uses the 'device_flow' authorization method, where '<host>' is the your Autolab domain. For example, for Nightly, use 'https://nightly.autolabproject.com/device_flow_auth_cb'.
+Then in "New Application", specify a name for the application, and the `redirect_uri`. The `redirect_uri` should be `<host>/device_flow_auth_cb` since this application uses the `device_flow` authorization method, where `<host>` is the your Autolab domain. For example, for Nightly, use `https://nightly.autolabproject.com/device_flow_auth_cb`.
 
 The scopes should be `user_info user_courses user_scores user_submit`. To test building without credentials, use empty strings as credentials and continue.
 
 ![Screen Shot 2023-02-12 at 14 55 39](https://user-images.githubusercontent.com/25730111/218333852-f739cc46-bcb7-44d6-9209-6b049bfbb31c.png)
 
-Then, create file src/app_credentials.h by making a copy of src/app_credentials.h.template, and enter the generated client_id and client_secret into the predefined fields in the file, as well as the Autolab server domain and redirect_uri (same as the one entered into the Autolab Oauth2 manager).
+Then, create file `src/app_credentials.h` by making a copy of `src/app_credentials.h.template`, and enter the generated `client_id` and `client_secret` into the predefined fields in the file, as well as the Autolab server domain and `redirect_uri` (same as the one entered into the Autolab Oauth2 manager).
 
 ![Screen Shot 2023-02-12 at 14 58 41](https://user-images.githubusercontent.com/25730111/218334013-f4c2efb5-d98e-4595-bc3b-2fc747f8a299.png)
 
