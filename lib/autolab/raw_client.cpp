@@ -47,7 +47,7 @@ void RawClient::set_tokens(std::string at, std::string rt) {
 
 
 // libcurl header callback function
-size_t header_callback(char *data, size_t size, size_t nmemb, 
+size_t header_callback(char *data, size_t size, size_t nmemb,
                   RawClient::request_state *rstate) {
   if (!data) return 0;
 
@@ -57,7 +57,8 @@ size_t header_callback(char *data, size_t size, size_t nmemb,
     std::string header_str(data, size*nmemb);
     std::string::size_type name_start, name_end;
 
-    if (header_str.find("Content-Disposition:") != std::string::npos) {
+    if (header_str.find("Content-Disposition:") != std::string::npos ||
+        header_str.find("content-disposition:") != std::string::npos) {
       rstate->is_download = true;
       LogDebug(header_str << Logger::endl);
       // look for filename
@@ -151,7 +152,7 @@ long RawClient::raw_request(RawClient::request_state *rstate,
 
   LogDebug("Requesting " << full_path << " with params " << param_str << Logger::endl
     << Logger::endl);
-  
+
   if (method == POST) {
     if (rstate->file_upload) {
       // setup form
@@ -205,7 +206,7 @@ long RawClient::raw_request(RawClient::request_state *rstate,
   return response_code;
 }
 
-bool RawClient::document_has_error(RawClient::request_state *rstate, 
+bool RawClient::document_has_error(RawClient::request_state *rstate,
   const std::string &error_msg)
 {
   if (rstate->is_download) return false;
@@ -223,8 +224,8 @@ bool RawClient::document_has_error(RawClient::request_state *rstate,
  */
 const std::string oauth_auth_failed_response = "OAuth2 authorization failed";
 long RawClient::raw_request_optional_refresh(
-  RawClient::request_state *rstate, 
-  RawClient::path_segments &path, RawClient::param_list &params, 
+  RawClient::request_state *rstate,
+  RawClient::path_segments &path, RawClient::param_list &params,
   RawClient::HttpMethod method = GET, bool refresh = true)
 {
   long rc = raw_request(rstate, path, params, method);
@@ -312,13 +313,13 @@ void RawClient::clear_device_flow_strings() {
   device_flow_user_code.clear();
 }
 
-/* 
+/*
  * param: timeout in seconds
  * response:  1 - denied by user
  *            0 - granted by user
  *           -1 - error, device_flow_init not called
  *           -2 - timed out
- */          
+ */
 int RawClient::device_flow_authorize(size_t timeout) {
   if (!device_flow_device_code.length()) {
     // device flow init not called
