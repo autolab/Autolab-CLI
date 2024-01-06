@@ -26,23 +26,23 @@ message(STATUS "Build variant: ${variant}")
 
 # compiler flags
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -Wall -Wextra -stdlib=libc++ -Wc++11-extensions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+# For OS X
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   execute_process(
-    COMMAND arch -arm64e /opt/homebrew/bin/brew --prefix openssl@1.1
+    COMMAND /opt/homebrew/bin/brew --prefix openssl@1.1
     RESULT_VARIABLE BREW_OPENSSL
     OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   if (BREW_OPENSSL EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
-    message(STATUS "Found openssl keg installed by Homebrew at ${BREW_OPENSSL_PREFIX}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -Wall -Wextra -stdlib=libc++ -Wc++11-extensions -I${BREW_OPENSSL_PREFIX}/include")
+    include_directories("${BREW_OPENSSL_PREFIX}/include")
     link_libraries("-L${BREW_OPENSSL_PREFIX}/lib")
   endif()
-  message(STATUS "BRUH FADSSF ${BREW_OPENSSL}")
 endif()
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # configure a header file to pass the version number to the source code
 configure_file(
