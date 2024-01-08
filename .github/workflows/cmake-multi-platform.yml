@@ -33,7 +33,7 @@ jobs:
       - name: Prepare app_credentials.h
         run: >
           cp ${{ github.workspace }}/src/app_credentials.h.template ${{ github.workspace }}/src/app_credentials.h
-          sed -i '' 's/\[ENTER STRING HERE\]/"placeholder"/g' src/app_credentials.h
+          sed -i '' 's/\[ENTER STRING HERE\]/"placeholder"/g' ${{ github.workspace }}/src/app_credentials.h
 
       - name: Install Ubuntu dependencies
         if: ${{ matrix.os == 'ubuntu-latest' }}
