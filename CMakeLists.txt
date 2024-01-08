@@ -38,8 +38,11 @@ if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   if (BREW_OPENSSL EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+    message(STATUS "OpenSSL keg: ${BREW_OPENSSL_PREFIX}")
     include_directories("${BREW_OPENSSL_PREFIX}/include")
     link_libraries("-L${BREW_OPENSSL_PREFIX}/lib")
+  else()
+    message(FATAL_ERROR "OpenSSL keg not found")
   endif()
 endif()
 
