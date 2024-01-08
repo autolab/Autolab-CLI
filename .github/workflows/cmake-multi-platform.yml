@@ -7,6 +7,8 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  merge_group:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -36,17 +38,11 @@ jobs:
           cp ${{ github.workspace }}/src/app_credentials.h.template ${{ github.workspace }}/src/app_credentials.h
           sed -i'' -e 's/\[ENTER STRING HERE\]/"placeholder"/g' ${{ github.workspace }}/src/app_credentials.h
 
-      - name: Install Ubuntu dependencies
+      - name: Install libcurl
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get update
-          sudo apt-get -y install libssl-dev libcurl4-openssl-dev
-
-      - name: Install Mac OS dependencies
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          brew update
-          brew install openssl
+          sudo apt-get -y install libcurl4-openssl-dev
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
