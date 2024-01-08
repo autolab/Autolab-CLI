@@ -31,7 +31,7 @@ jobs:
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
       - name: Prepare app_credentials.h
-        run: >
+        run: |
           cp ${{ github.workspace }}/src/app_credentials.h.template ${{ github.workspace }}/src/app_credentials.h
           sed -i '' 's/\[ENTER STRING HERE\]/"placeholder"/g' ${{ github.workspace }}/src/app_credentials.h
 
@@ -44,7 +44,7 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: |
+        run: >
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
