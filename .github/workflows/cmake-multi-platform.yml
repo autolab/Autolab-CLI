@@ -30,16 +30,23 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+      # https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
       - name: Prepare app_credentials.h
         run: |
           cp ${{ github.workspace }}/src/app_credentials.h.template ${{ github.workspace }}/src/app_credentials.h
-          sed -i '' 's/\[ENTER STRING HERE\]/"placeholder"/g' ${{ github.workspace }}/src/app_credentials.h
+          sed -i '' -e 's/\[ENTER STRING HERE\]/"placeholder"/g' ${{ github.workspace }}/src/app_credentials.h
 
       - name: Install Ubuntu dependencies
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           sudo apt-get update
           sudo apt-get -y install libssl-dev libcurl4-openssl-dev
+
+      - name: Install Mac OS dependencies
+        if: ${{ matrix.os == 'macos-latest' }}
+        run: |
+          brew update
+          brew install openssl
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
