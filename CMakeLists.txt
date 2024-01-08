@@ -32,7 +32,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # For OS X
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   execute_process(
-    COMMAND /opt/homebrew/bin/brew --prefix openssl@1.1
+    COMMAND brew --prefix openssl
     RESULT_VARIABLE BREW_OPENSSL
     OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
     OUTPUT_STRIP_TRAILING_WHITESPACE
