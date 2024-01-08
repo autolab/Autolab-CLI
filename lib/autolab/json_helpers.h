@@ -6,7 +6,7 @@
 #define LIBAUTOLAB_JSON_HELPERS_H_
 
 #include <cmath>
-
+#include <string>
 #include <rapidjson/document.h>
 
 void require_is_array(rapidjson::Value &obj);
