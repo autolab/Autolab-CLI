@@ -77,7 +77,8 @@ void store_tokens(std::string at, std::string rt) {
       write_file(get_token_cache_file_full_path().c_str(),
                  token_pair.c_str(), token_pair.length());
   } catch (Autolab::CryptoException &e) {
-    Logger::fatal << "OpenSSL error in store_tokens " << e.what() << Logger::endl;
+    Logger::fatal << "OpenSSL error in store_tokens." << Logger::endl;
+    Logger::fatal << e.what() << Logger::endl;
     exit(-1);
   }
   LogDebug("[ContextManager] tokens stored" << Logger::endl);
@@ -97,7 +98,9 @@ bool load_tokens(std::string &at, std::string &rt) {
   try {
     if (!token_pair_from_string(raw_result, num_read, at, rt)) return false;
   } catch (Autolab::CryptoException &e) {
-    Logger::fatal << "OpenSSL error in load_tokens " << e.what() << Logger::endl;
+    Logger::fatal << "OpenSSL error in load_tokens." << Logger::endl;
+    Logger::fatal << e.what() << Logger::endl;
+    remove(get_token_cache_file_full_path().c_str());
     return false;
   }
   LogDebug("[ContextManager] tokens loaded" << Logger::endl);
