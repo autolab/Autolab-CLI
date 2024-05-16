@@ -7,14 +7,13 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
+#include "autolab/autolab.h"
 #include "logger.h"
 
 #define MAX_CIPHERTEXT_LEN 256
 
-void exit_with_crypto_error() {
-  Logger::fatal << "OpenSSL error" << Logger::endl;
-  ERR_print_errors_fp(stderr);
-  exit(-1);
+void raise_crypto_error() {
+  throw Autolab::CryptoException(ERR_error_string(ERR_get_error(), nullptr));
 }
 
 void check_key_and_iv_lengths(unsigned char *key, unsigned char *iv) {
@@ -42,17 +41,17 @@ std::string encrypt_string(std::string srctext, unsigned char *key,
 
   // create context
   if (!(ctx = EVP_CIPHER_CTX_new()))
-    exit_with_crypto_error();
+    raise_crypto_error();
 
-  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
-    exit_with_crypto_error();
+  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
+    raise_crypto_error();
 
   if (1 != EVP_EncryptUpdate(ctx, ciphertext, &temp_len, plaintext, input_len))
-    exit_with_crypto_error();
+    raise_crypto_error();
   total_len = temp_len;
 
   if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + temp_len, &temp_len))
-    exit_with_crypto_error();
+    raise_crypto_error();
   total_len += temp_len;
 
   EVP_CIPHER_CTX_free(ctx);
@@ -74,17 +73,17 @@ std::string decrypt_string(char *srctext, size_t srclength, unsigned char *key,
   int input_len = (int)srclength;
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
-    exit_with_crypto_error();
+    raise_crypto_error();
 
-  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv))
-    exit_with_crypto_error();
+  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
+    raise_crypto_error();
 
   if (1 != EVP_DecryptUpdate(ctx, plaintext, &temp_len, ciphertext, input_len))
-    exit_with_crypto_error();
+    raise_crypto_error();
   total_len = temp_len;
 
   if (1 != EVP_DecryptFinal_ex(ctx, plaintext + temp_len, &temp_len))
-    exit_with_crypto_error();
+    raise_crypto_error();
   total_len += temp_len;
 
   EVP_CIPHER_CTX_free(ctx);
