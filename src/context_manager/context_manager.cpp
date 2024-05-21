@@ -98,8 +98,9 @@ bool load_tokens(std::string &at, std::string &rt) {
   try {
     if (!token_pair_from_string(raw_result, num_read, at, rt)) return false;
   } catch (Autolab::CryptoException &e) {
-    Logger::fatal << "OpenSSL error in load_tokens." << Logger::endl;
-    Logger::fatal << e.what() << Logger::endl;
+    LogDebug("OpenSSL error in load_tokens." << Logger::endl);
+    LogDebug(e.what() << Logger::endl);
+    LogDebug("Removing token cache file." << Logger::endl);
     remove(get_token_cache_file_full_path().c_str());
     return false;
   }
