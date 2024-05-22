@@ -75,7 +75,6 @@ void assessment_from_json(Assessment &asmt, rapidjson::Value &asmt_json) {
   asmt.start_at = Utility::string_to_time(get_string_force(asmt_json, "start_at"));
   asmt.due_at   = Utility::string_to_time(get_string_force(asmt_json, "due_at"));
   asmt.end_at   = Utility::string_to_time(get_string_force(asmt_json, "end_at"));
-  asmt.grading_deadline = Utility::string_to_time(get_string(asmt_json, "grading_deadline"));
 }
 
 void enrollment_from_json(Enrollment &enrollment, rapidjson::Value &enrollment_json) {

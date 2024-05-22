@@ -59,8 +59,6 @@ struct Assessment {
   std::time_t start_at;
   std::time_t due_at;
   std::time_t end_at;
-  // available only if user is an instructor of the course
-  std::time_t grading_deadline;
 };
 
 struct DetailedAssessment {
@@ -128,8 +126,8 @@ class HttpException: public std::exception {
 private:
   std::string msg;
 public:
-  explicit HttpException(std::string m) : msg(m) {}
-  virtual const char* what() const throw() {
+  explicit HttpException(std::string m) : msg(std::move(m)) {}
+  const char* what() const noexcept override {
       return msg.c_str();
   }
 };
@@ -138,7 +136,7 @@ public:
 // A new set of tokens should be acquired by re-preforming user authorization.
 class InvalidTokenException: public std::exception {
 public:
-  virtual const char* what() const throw() {
+  const char* what() const noexcept override {
       return "The provided access token is invalid and the refresh operation failed.";
   }
 };
@@ -149,8 +147,8 @@ class InvalidResponseException: public std::exception {
 private:
   std::string msg;
 public:
-  explicit InvalidResponseException(std::string m) : msg(m) {}
-  virtual const char* what() const throw() {
+  explicit InvalidResponseException(std::string m) : msg(std::move(m)) {}
+  const char* what() const noexcept override {
       return msg.c_str();
   }
 };
@@ -163,10 +161,22 @@ class ErrorResponseException: public std::exception {
 private:
   std::string msg;
 public:
-  explicit ErrorResponseException(std::string m) : msg(m) {}
-  virtual const char* what() const throw() {
+  explicit ErrorResponseException(std::string m) : msg(std::move(m)) {}
+  const char* what() const noexcept override {
       return msg.c_str();
   }
+};
+
+// Indicates that an error occurred while encrypting or decrypting data.
+// This exception's msg will contain the error message returned by openssl.
+class CryptoException: public std::exception {
+private:
+  std::string msg;
+public:
+    explicit CryptoException(std::string m) : msg(std::move(m)) {}
+    const char* what() const noexcept override {
+        return msg.c_str();
+    }
 };
 
 namespace Utility {

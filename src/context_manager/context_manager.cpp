@@ -2,6 +2,7 @@
 
 #include "../app_credentials.h"
 #include "../file/file_utils.h"
+#include "autolab/autolab.h"
 #include "logger.h"
 #include "../crypto/pseudocrypto.h"
 
@@ -70,10 +71,16 @@ bool token_cache_file_exists() {
 /* interface */
 void store_tokens(std::string at, std::string rt) {
   check_and_create_token_directory();
-  std::string token_pair = token_pair_to_string(at, rt);
+  try {
+      std::string token_pair = token_pair_to_string(at, rt);
 
-  write_file(get_token_cache_file_full_path().c_str(),
-             token_pair.c_str(), token_pair.length());
+      write_file(get_token_cache_file_full_path().c_str(),
+                 token_pair.c_str(), token_pair.length());
+  } catch (Autolab::CryptoException &e) {
+    Logger::fatal << "OpenSSL error in store_tokens." << Logger::endl;
+    Logger::fatal << e.what() << Logger::endl;
+    exit(-1);
+  }
   LogDebug("[ContextManager] tokens stored" << Logger::endl);
 }
 
@@ -88,7 +95,15 @@ bool load_tokens(std::string &at, std::string &rt) {
             raw_result, TOKEN_CACHE_FILE_MAXSIZE);
   LogDebug("read size " << num_read << "\n");
 
-  if (!token_pair_from_string(raw_result, num_read, at, rt)) return false;
+  try {
+    if (!token_pair_from_string(raw_result, num_read, at, rt)) return false;
+  } catch (Autolab::CryptoException &e) {
+    LogDebug("OpenSSL error in load_tokens." << Logger::endl);
+    LogDebug(e.what() << Logger::endl);
+    LogDebug("Removing token cache file." << Logger::endl);
+    remove(get_token_cache_file_full_path().c_str());
+    return false;
+  }
   LogDebug("[ContextManager] tokens loaded" << Logger::endl);
   return true;
 }
