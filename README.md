@@ -70,9 +70,9 @@ This will move our autocompletion script out of a local folder and into the bash
 
 #### Release vs Debug
 
-There are two kinds of builds available: release and non-release. Release builds do not contain debug output (output that use `Logger::debug`).
+There are two kinds of builds available: release and debug. Release builds do not contain debug output (output that use `Logger::debug`).
 
-The default is non-release builds. To build a release version, when inside the 'build' directory, run `cmake -DCMAKE_BUILD_TYPE=Release ..` (note the periods at the end), then run `make`.
+The default are debug builds. To build a release version, when inside the 'build' directory, run `cmake -DCMAKE_BUILD_TYPE=Release ..` (note the periods at the end), then run `make`.
 Alternatively (but less preferable), you can use the flag `-Drelease=ON`.
 
 #### Build Variant
