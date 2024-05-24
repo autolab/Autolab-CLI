@@ -73,7 +73,7 @@ namespace Logger {
   };
   struct debug_logger {
     template<class T>
-    debug_logger &operator<<(T val) {
+    debug_logger &operator<<([[maybe_unused]] T val) {
     #ifdef PRINT_DEBUG
       std::cout << val;
     #endif

@@ -20,7 +20,7 @@ jobs:
 
       matrix:
         os: [ubuntu-latest, macos-latest]
-        build_type: [Release]
+        build_type: [Release, Debug]
 
     steps:
       - uses: actions/checkout@v4

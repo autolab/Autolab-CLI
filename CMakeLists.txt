@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 project(autolab-cli)
 
@@ -11,15 +11,20 @@ set(variant "" CACHE STRING "build variant")
 # command line options
 option(release "build release version (no debug output)" OFF)
 
-if(NOT release)
-  # build debug
-  set(CMAKE_BUILD_TYPE Debug)
+# Existing CMAKE_BUILD_TYPE takes priority if directly defined
+if(NOT CMAKE_BUILD_TYPE)
+  if(release)
+    set(CMAKE_BUILD_TYPE Release)
+  else()
+    set(CMAKE_BUILD_TYPE Debug)
+  endif()
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
   set(PRINT_DEBUG TRUE)
-else(NOT release)
-  # build release
-  set(CMAKE_BUILD_TYPE Release)
+else()
   set(PRINT_DEBUG FALSE)
-endif(NOT release)
+endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Build variant: ${variant}")
