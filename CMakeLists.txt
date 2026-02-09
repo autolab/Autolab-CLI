@@ -63,7 +63,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 ExternalProject_Add(rapidjson
   PREFIX thirdparty
   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-  GIT_TAG v1.1.0
+  GIT_TAG master
   STEP_TARGETS download
   CONFIGURE_COMMAND true
   BUILD_COMMAND true
