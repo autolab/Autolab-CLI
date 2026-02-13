@@ -3,6 +3,7 @@
 
 #include "autolab/autolab.h"
 #include "autolab/client.h"
+#include "autolab/multi_server.h"
 #include "logger.h"
 
 #include "app_credentials.h"
@@ -66,23 +67,44 @@ int user_setup(cmdargs &cmd) {
       "Initiate user setup for the current user.");
   bool option_force = cmd.new_flag_option("-f", "--force",
       "Force user setup, removing the current user");
+  std::string course_name = cmd.new_option("-c", "--course", "Specify the course that you are setting up for");
   cmd.setup_done();
 
+  if (course_name.length() == 0) {
+    // -c/--course was not specified
+    Logger::info << "Please specify the course which you would like to set up." << Logger::endl;
+    return 1;
+  }
+
+  Autolab::ServerInfo target_server_info = g_all_servers.get_server_from_course(course_name);
+  std::string target_server = target_server_info.server_name;
+  if (target_server.length() == 0) {
+    Logger::info << "Please specify a valid course. List of courses: " << Logger::endl;
+    std::vector<std::string> all_courses = g_all_servers.get_all_courses();
+    for (const auto& course: all_courses) {
+      Logger::info << course << " | ";
+    }
+    Logger::info << Logger::endl;
+    return 1;
+  }
+
+  init_autolab_client(); 
   if (!option_force) {
-    bool user_exists = init_autolab_client();
+    bool user_exists = client.has_auth_for_server(target_server);
 
     if (user_exists) {
       // perform a check if not a forced setup
       bool token_valid = true;
       Autolab::User user_info;
       try {
-        client.get_user_info(user_info);
+        client.get_user_info(user_info, target_server);
       } catch (Autolab::InvalidTokenException &e) {
         token_valid = false;
       }
       if (token_valid) {
         Logger::info << "User '" << user_info.first_name
-          << "' is currently set up on this client." << Logger::endl
+          << "' is currently set up on this client for course " << course_name
+          << "." << Logger::endl
           << "To force reset of user info, use the '-f' option." << Logger::endl;
         return 0;
       }
@@ -104,7 +126,7 @@ int user_setup(cmdargs &cmd) {
   // Success, user has agreed to comply
 
   // user non-existant, or existing user's credentials no longer work, or forced
-  int result = perform_device_flow(client);
+  int result = perform_device_flow(client, target_server_info);
   if (result == 0) {
     Logger::info << Logger::endl << "User setup complete." << Logger::endl;
     return 0;

@@ -19,6 +19,7 @@
 #include <rapidjson/document.h>
 
 #include "autolab/autolab.h"
+#include "autolab/multi_server.h"
 
 namespace Autolab {
 
@@ -28,17 +29,14 @@ public:
     const std::string &st, const std::string &ru, 
     void (*tk_cb)(std::string, std::string));
 
-  // setters and getters
-  void set_tokens(std::string at, std::string rt);
-  const std::string get_access_token() { return access_token; }
-  const std::string get_refresh_token() { return refresh_token; }
-  void set_new_tokens_callback(void (*cb)(std::string, std::string)) {
-    new_tokens_callback = cb;
-  }
 
   /* oauth-related */
-  void device_flow_init(std::string &user_code, std::string &verification_uri);
-  int device_flow_authorize(size_t timeout);
+  void set_auth_info_list(std::vector<AuthInfo> auth_info_list);
+  bool has_auth_for_server(const std::string& server_name);
+  void device_flow_init(std::string &user_code, std::string &verification_uri, 
+    std::string& device_code, const ServerInfo& server_info);
+  int device_flow_authorize(size_t timeout, const std::string& device_code,
+    const ServerInfo& server_info);
 
   // keeps track of state and config for the current request.
   struct request_state {
@@ -75,7 +73,7 @@ public:
   typedef std::vector<std::pair<std::string, std::string>> Params;
 
   /* REST interface methods */
-  void get_user_info(rapidjson::Document &result);
+  void get_user_info(rapidjson::Document &result, const ServerInfo& server_info__);
   void get_courses(rapidjson::Document &result);
   void get_assessments(rapidjson::Document &result, const std::string &course_name);
   void get_assessment_details(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);
@@ -89,15 +87,12 @@ public:
   void crud_enrollment(rapidjson::Document &result, const std::string &course_name, std::string email, Params &in_params, CrudAction action);
 
 private:
-  // domain of the autolab service
-  std::string base_uri;
 
   // initializes curl interface. Must be called before anything else.
   static int curl_ready;
   static int init_curl();
 
   // tokens-related
-  void (*new_tokens_callback)(std::string, std::string);
 
   enum HttpMethod {GET, POST, PUT, DELETE};
   HttpMethod crud_to_http(CrudAction action);
@@ -129,29 +124,27 @@ private:
   // private instance vars
   int api_version;
 
+  std::string base_uri;
   std::string client_id;
   std::string client_secret;
   std::string redirect_uri;
-  std::string access_token;
-  std::string refresh_token;
-  std::string device_flow_device_code;
-  std::string device_flow_user_code;
+  AllAuthInfo all_auth_info;
 
   // perform HTTP request and return result, default method is GET.
   long raw_request(request_state *rstate, path_segments &path, param_list &params, HttpMethod method);
-  long raw_request_optional_refresh(request_state *rstate, path_segments &path, param_list &params, HttpMethod method, bool refresh);
-  long make_request(rapidjson::Document &response, path_segments &path, param_list &params, HttpMethod method, bool refresh, 
+  long raw_request_optional_refresh(request_state *rstate, path_segments &path, param_list &params, const ServerInfo& server_info__, HttpMethod method, bool refresh);
+  long make_request(rapidjson::Document &response, path_segments &path, param_list &params, const ServerInfo& server_info__, HttpMethod method, bool refresh, 
     const std::string &download_dir, const std::string &suggested_filename, const std::string &upload_filename);
 
   void clear_device_flow_strings();
 
-  bool save_tokens_from_response(rapidjson::Document &response);
-  bool get_token_from_authorization_code(std::string authorization_code);
+  bool save_tokens_from_response(rapidjson::Document &response, const std::string& server_name);
+  bool get_token_from_authorization_code(std::string authorization_code, const ServerInfo& server_name);
   bool perform_token_refresh();
 
   bool document_has_error(request_state *rstate, const std::string &error_msg);
   void init_regular_path(path_segments &path);
-  void init_regular_params(param_list &params);
+  void init_regular_params(param_list &params, const ServerInfo& server_info__);
   void init_oauth_token_path(path_segments &path);
   void init_device_flow_init_path(path_segments &path);
   void init_device_flow_authorize_path(path_segments &path);

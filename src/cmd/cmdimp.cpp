@@ -26,10 +26,27 @@
 
 Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
 
-bool init_autolab_client() {
-  std::string at, rt;
-  if (!load_tokens(at, rt)) return false;
-  client.set_tokens(at, rt);
+// Loads every token that it can find into all_auth_info
+void init_autolab_client() {
+  std::vector<std::string> servers = g_all_servers.get_all_server_names; 
+  std::vector<Autolab::AuthInfo> auth_info_list {};
+
+  for (const auto& server_name : servers) {
+    Autolab::AuthInfo auth_info {};
+    std::string at, rt;
+    auth_info.server_name = server_name;
+    if (load_tokens(at, rt, server_name)) {
+      auth_info.exists = true;
+      auth_info.access_token = at;
+      auth_info.refresh_token = rt;
+    } else {
+      auth_info.exists = false;
+      auth_info.access_token = "";
+      auth_info.refresh_token = "";
+    }
+    auth_info_list.push_back(auth_info);
+  }
+  client.set_auth_info_list(auth_info_list); // TODO: move constructor?
   return true;
 }
 
@@ -40,10 +57,10 @@ void print_not_in_asmt_dir_error() {
 }
 
 /* helpers */
-int perform_device_flow(Autolab::Client &client) {
+int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& server_info) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
   std::string user_code, verification_uri;
-  client.device_flow_init(user_code, verification_uri);
+  client.device_flow_init(user_code, verification_uri, server_info);
   Logger::info << "Please visit "
     << Logger::CYAN << verification_uri << Logger::NONE << " and enter the code: "
     << Logger::CYAN << user_code << Logger::NONE << Logger::endl;

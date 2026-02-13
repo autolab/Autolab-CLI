@@ -18,13 +18,19 @@ Client::Client(std::string domain, std::string client_id,
                void (*new_token_callback)(std::string, std::string))
   : raw_client(domain, client_id, client_secret, redirect_uri, new_token_callback) {}
 
-void Client::set_tokens(std::string access_token, std::string refresh_token) {
-  raw_client.set_tokens(access_token, refresh_token);
-}
 
 /* oauth-related */
-void Client::device_flow_init(std::string &user_code, std::string &verification_uri) {
-  raw_client.device_flow_init(user_code, verification_uri);
+void Client::set_auth_info_list(std::vector<AuthInfo> auth_info_list) {
+  raw_client.set_auth_info_list(auth_info_list);
+}
+
+
+bool Client::has_auth_for_server(const std::string& server_name) {
+  raw_client.has_auth_for_server(server_name);
+}
+
+void Client::device_flow_init(std::string &user_code, std::string &verification_uri, const ServerInfo& server_info) {
+  raw_client.device_flow_init(user_code, verification_uri, server_info);
 }
 
 int Client::device_flow_authorize(size_t timeout) {
@@ -89,9 +95,9 @@ void enrollment_from_json(Enrollment &enrollment, rapidjson::Value &enrollment_j
 }
 
 /* resource-related */
-void Client::get_user_info(User &user) {
+void Client::get_user_info(User &user, const std::string& server_name) {
   rapidjson::Document user_info_doc;
-  raw_client.get_user_info(user_info_doc);
+  raw_client.get_user_info(user_info_doc, server_name);
   check_for_error_response(user_info_doc);
 
   require_is_object(user_info_doc);
