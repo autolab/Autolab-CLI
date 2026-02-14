@@ -29,8 +29,8 @@ public:
   /* oauth-related */
   void set_auth_info_list(std::vector<AuthInfo> auth_info_list);
   bool has_auth_for_server(const std::string& server_name);
-  void device_flow_init(std::string &user_code, std::string &verification_uri);
-  int device_flow_authorize(size_t timeout);
+  void device_flow_init(std::string &user_code, std::string &verification_uri, std::string& device_code, const ServerInfo& server_info);
+  int device_flow_authorize(size_t timeout, const std::string& device_code, const ServerInfo& server_info);
 
   /* resource-related */
   void get_user_info(User &user, const ServerInfo& server_info__);

@@ -97,7 +97,7 @@ int user_setup(cmdargs &cmd) {
       bool token_valid = true;
       Autolab::User user_info;
       try {
-        client.get_user_info(user_info, target_server);
+        client.get_user_info(user_info, target_server_info);
       } catch (Autolab::InvalidTokenException &e) {
         token_valid = false;
       }

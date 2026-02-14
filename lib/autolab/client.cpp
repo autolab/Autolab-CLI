@@ -29,12 +29,12 @@ bool Client::has_auth_for_server(const std::string& server_name) {
   raw_client.has_auth_for_server(server_name);
 }
 
-void Client::device_flow_init(std::string &user_code, std::string &verification_uri, const ServerInfo& server_info) {
-  raw_client.device_flow_init(user_code, verification_uri, server_info);
+void Client::device_flow_init(std::string &user_code, std::string &verification_uri, std::string& device_code, const ServerInfo& server_info) {
+  raw_client.device_flow_init(user_code, verification_uri, device_code, server_info);
 }
 
-int Client::device_flow_authorize(size_t timeout) {
-  return raw_client.device_flow_authorize(timeout);
+int Client::device_flow_authorize(size_t timeout, const std::string& device_code, const ServerInfo& server_info) {
+  return raw_client.device_flow_authorize(timeout, device_code, server_info);
 }
 
 /* custom utility */

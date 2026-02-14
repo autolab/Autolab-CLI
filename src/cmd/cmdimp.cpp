@@ -59,8 +59,8 @@ void print_not_in_asmt_dir_error() {
 /* helpers */
 int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& server_info) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
-  std::string user_code, verification_uri;
-  client.device_flow_init(user_code, verification_uri, server_info);
+  std::string user_code, verification_uri, device_code;
+  client.device_flow_init(user_code, verification_uri, device_code, server_info);
   Logger::info << "Please visit "
     << Logger::CYAN << verification_uri << Logger::NONE << " and enter the code: "
     << Logger::CYAN << user_code << Logger::NONE << Logger::endl;

@@ -26,7 +26,6 @@ public:
 
     // Returns "" if there is no such course
     ServerInfo get_server_from_course(const std::string& course_name);
-    ServerInfo get_server_from_name(const std::string& server_name);
 };
 
 struct AuthInfo {
@@ -41,7 +40,7 @@ public:
     std::vector<AuthInfo> m_auth_info_list;
     bool has_auth_for_server(const std::string& server_name);
     bool set_tokens_for_server(const std::string& server_name, 
-        const std::string& access_token, const std::string& refresh_token)
+        const std::string& access_token, const std::string& refresh_token);
 
     // Returns "" if it does not exist
     std::string get_access_token_from_server(const std::string& server_name);
