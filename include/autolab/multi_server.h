@@ -19,14 +19,14 @@ class AllServers {
 public:
     std::vector<ServerInfo> m_server_list;
 
-    AllServers(); // parses the JSON file to populate itself
+    AllServers(const std::string& all_servers_filename); // parses the JSON file to populate itself
 
-    std::vector<std::string> get_all_courses();
-    std::vector<std::string> get_all_server_names();
+    std::vector<std::string> get_all_courses() const;
+    std::vector<std::string> get_all_server_names() const;
 
     // Returns "" if there is no such course
-    ServerInfo get_server_from_course(const std::string& course_name);
-    ServerInfo get_server_from_name(const std::string& server_name);
+    ServerInfo get_server_from_course(const std::string& course_name) const;
+    ServerInfo get_server_from_name(const std::string& server_name) const;
 };
 
 struct AuthInfo {

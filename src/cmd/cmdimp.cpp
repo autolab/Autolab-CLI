@@ -46,7 +46,7 @@ void init_autolab_client() {
     }
     auth_info_list.push_back(auth_info);
   }
-  client.set_auth_info_list(auth_info_list); // TODO: move constructor?
+  client.set_auth_info_list(std::move(auth_info_list));
 }
 
 void print_not_in_asmt_dir_error() {
@@ -65,7 +65,7 @@ int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& serv
     << Logger::CYAN << user_code << Logger::NONE << Logger::endl;
   Logger::info << Logger::endl << "Waiting for user authorization ..." << Logger::endl;
 
-  int res = client.device_flow_authorize(300); // wait for 5 minutes max
+  int res = client.device_flow_authorize(300, device_code, server_info); // wait for 5 minutes max
   switch (res) {
     case 1:
       Logger::info << Logger::RED << "User denied authorization." << Logger::NONE << Logger::endl;

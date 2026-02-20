@@ -67,7 +67,7 @@ int user_setup(cmdargs &cmd) {
       "Initiate user setup for the current user.");
   bool option_force = cmd.new_flag_option("-f", "--force",
       "Force user setup, removing the current user");
-  std::string course_name = cmd.new_option("-c", "--course", "Specify the course that you are setting up for");
+  std::string course_name = cmd.new_option("-c", "--course", "course", "Specify the course that you are setting up for");
   cmd.setup_done();
 
   if (course_name.length() == 0) {
@@ -78,15 +78,7 @@ int user_setup(cmdargs &cmd) {
 
   Autolab::ServerInfo target_server_info = g_all_servers.get_server_from_course(course_name);
   std::string target_server = target_server_info.server_name;
-  if (target_server.length() == 0) {
-    Logger::info << "Please specify a valid course. List of courses: " << Logger::endl;
-    std::vector<std::string> all_courses = g_all_servers.get_all_courses();
-    for (const auto& course: all_courses) {
-      Logger::info << course << " | ";
-    }
-    Logger::info << Logger::endl;
-    return 1;
-  }
+
 
   init_autolab_client(); 
   if (!option_force) {
