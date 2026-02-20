@@ -26,6 +26,7 @@ public:
 
     // Returns "" if there is no such course
     ServerInfo get_server_from_course(const std::string& course_name);
+    ServerInfo get_server_from_name(const std::string& server_name);
 };
 
 struct AuthInfo {

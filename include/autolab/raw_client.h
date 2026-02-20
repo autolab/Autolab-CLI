@@ -71,7 +71,7 @@ public:
 
   /* REST interface methods */
   void get_user_info(rapidjson::Document &result, const ServerInfo& server_info__);
-  void get_courses(rapidjson::Document &result);
+  void get_courses(rapidjson::Document &result, const ServerInfo& server_info);
   void get_assessments(rapidjson::Document &result, const std::string &course_name);
   void get_assessment_details(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);
   void get_problems(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name);

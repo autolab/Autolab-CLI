@@ -24,7 +24,7 @@
 #include "cmdimp.h"
 #include "cmdmap.h"
 
-Autolab::Client client();
+Autolab::Client client {};
 
 // Loads every token that it can find into all_auth_info
 void init_autolab_client() {

@@ -104,22 +104,30 @@ void Client::get_user_info(User &user, const ServerInfo& server_info) {
 }
 
 void Client::get_courses(std::vector<Course> &courses) {
-  rapidjson::Document courses_doc;
-  raw_client.get_courses(courses_doc);
-  check_for_error_response(courses_doc);
+  std::vector<std::string> all_servers = g_all_servers.get_all_server_names();
 
-  require_is_array(courses_doc);
-  for (auto &c_doc : courses_doc.GetArray()) {
-    Course course;
-    course.name         = get_string_force(c_doc, "name");
-    course.display_name = get_string(c_doc, "display_name");
-    course.semester     = get_string(c_doc, "semester");
-    course.late_slack   = get_int(c_doc, "late_slack", 0);
-    course.grace_days   = get_int(c_doc, "grace_days", 0);
-    course.auth_level   = Utility::string_to_authorization_level(
-        get_string_force(c_doc, "auth_level"));
+  for (const auto& server_name : all_servers) {
+    if (!raw_client.has_auth_for_server(server_name)) continue;
+    ServerInfo server_info = g_all_servers.get_server_from_name(server_name);
 
-    courses.push_back(course);
+    rapidjson::Document courses_doc;
+    raw_client.get_courses(courses_doc, server_info);
+    check_for_error_response(courses_doc);
+
+
+    require_is_array(courses_doc);
+    for (auto &c_doc : courses_doc.GetArray()) {
+      Course course;
+      course.name         = get_string_force(c_doc, "name");
+      course.display_name = get_string(c_doc, "display_name");
+      course.semester     = get_string(c_doc, "semester");
+      course.late_slack   = get_int(c_doc, "late_slack", 0);
+      course.grace_days   = get_int(c_doc, "grace_days", 0);
+      course.auth_level   = Utility::string_to_authorization_level(
+          get_string_force(c_doc, "auth_level"));
+
+      courses.push_back(course);
+    }
   }
 }
 

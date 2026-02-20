@@ -498,15 +498,18 @@ void RawClient::get_user_info(rapidjson::Document &result, const ServerInfo& ser
   make_request(result, path, params, server_info__);
 }
 
-void RawClient::get_courses(rapidjson::Document &result) {
+/**
+ * @pre The user has 
+ */
+void RawClient::get_courses(rapidjson::Document &result, const ServerInfo& server_info) {
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   params.emplace_back("state", "current");
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_assessments(rapidjson::Document &result, const std::string &course_name) {
