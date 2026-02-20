@@ -25,9 +25,7 @@ namespace Autolab {
 
 class RawClient {
 public:
-  RawClient(const std::string &domain, const std::string &id, 
-    const std::string &st, const std::string &ru, 
-    void (*tk_cb)(std::string, std::string));
+  RawClient();
 
 
   /* oauth-related */

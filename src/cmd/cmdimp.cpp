@@ -24,7 +24,7 @@
 #include "cmdimp.h"
 #include "cmdmap.h"
 
-Autolab::Client client(server_domain, client_id, client_secret, redirect_uri);
+Autolab::Client client();
 
 // Loads every token that it can find into all_auth_info
 void init_autolab_client() {
@@ -507,6 +507,7 @@ int manage_enrolls(cmdargs &cmd) {
   if (cmd.nargs() == 4) {
     std::string action(cmd.args[2]);
     std::string course_name(cmd.args[3]);
+    if (!check_for_setup(course_name)) return -1;
     // member actions on enrollments require the email
     if (option_user == "") {
       Logger::fatal << "Must specify email of user with '-u'" << Logger::endl;
@@ -558,6 +559,7 @@ int manage_enrolls(cmdargs &cmd) {
     enrollments.push_back(result);
   } else {
     std::string course_name(cmd.args[2]);
+    if (!check_for_setup(course_name)) return -1;
     // list all enrollments
     client.get_enrollments(enrollments, course_name);
     LogDebug("Found " << enrollments.size() << " enrollments." << Logger::endl);

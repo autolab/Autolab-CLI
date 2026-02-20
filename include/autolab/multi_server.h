@@ -45,7 +45,7 @@ public:
     // Returns "" if it does not exist
     std::string get_access_token_from_server(const std::string& server_name);
     std::string get_refresh_token_from_server(const std::string& server_name);
-}
+};
 
 }
 

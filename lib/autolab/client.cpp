@@ -13,10 +13,8 @@
 
 namespace Autolab {
 
-Client::Client(std::string domain, std::string client_id,
-               std::string client_secret, std::string redirect_uri,
-               void (*new_token_callback)(std::string, std::string))
-  : raw_client(domain, client_id, client_secret, redirect_uri, new_token_callback) {}
+Client::Client()
+  : raw_client() {}
 
 
 /* oauth-related */
@@ -95,9 +93,9 @@ void enrollment_from_json(Enrollment &enrollment, rapidjson::Value &enrollment_j
 }
 
 /* resource-related */
-void Client::get_user_info(User &user, const std::string& server_name) {
+void Client::get_user_info(User &user, const ServerInfo& server_info) {
   rapidjson::Document user_info_doc;
-  raw_client.get_user_info(user_info_doc, server_name);
+  raw_client.get_user_info(user_info_doc, server_info);
   check_for_error_response(user_info_doc);
 
   require_is_object(user_info_doc);

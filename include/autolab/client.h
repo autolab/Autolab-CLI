@@ -23,8 +23,7 @@ private:
 
 public:
   /* setup-related */
-  Client(std::string domain, std::string client_id, std::string client_secret,
-         std::string redirect_uri, void (*new_token_callback)(std::string, std::string));
+  Client();
 
   /* oauth-related */
   void set_auth_info_list(std::vector<AuthInfo> auth_info_list);

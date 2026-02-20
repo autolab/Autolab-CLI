@@ -10,7 +10,7 @@
 #include "json_helpers.h"
 #include "logger.h"
 #include "autolab/multi_server.h"
-#include "context_manager.h"
+#include "../../src/context_manager/context_manager.h"
 
 namespace Autolab {
 
@@ -19,10 +19,8 @@ const std::chrono::seconds device_flow_authorize_wait_duration(5);
 /* initialization */
 int RawClient::curl_ready = false;
 
-RawClient::RawClient(const std::string &domain, const std::string &id,
-  const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string))
-  : base_uri(domain), api_version(1),
-    client_id(id), client_secret(st), redirect_uri(ru)
+RawClient::RawClient()
+  : api_version(1)
 {
   RawClient::init_curl();
 }
@@ -508,11 +506,12 @@ void RawClient::get_courses(rapidjson::Document &result) {
   RawClient::param_list params;
   init_regular_params(params);
   params.emplace_back("state", "current");
-  make_request
   make_request(result, path, params);
 }
 
 void RawClient::get_assessments(rapidjson::Document &result, const std::string &course_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
+
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -520,12 +519,13 @@ void RawClient::get_assessments(rapidjson::Document &result, const std::string &
   path.emplace_back("assessments");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_assessment_details(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -534,12 +534,13 @@ void RawClient::get_assessment_details(rapidjson::Document &result, const std::s
   path.emplace_back(asmt_name);
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_problems(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -549,12 +550,13 @@ void RawClient::get_problems(rapidjson::Document &result, const std::string &cou
   path.emplace_back("problems");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::download_handout(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -564,12 +566,13 @@ void RawClient::download_handout(rapidjson::Document &result, std::string downlo
   path.emplace_back("handout");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, GET, true, download_dir, "handout");
+  make_request(result, path, params, server_info, GET, true, download_dir, "handout");
 }
 
 void RawClient::download_writeup(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -579,12 +582,13 @@ void RawClient::download_writeup(rapidjson::Document &result, std::string downlo
   path.emplace_back("writeup");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, GET, true, download_dir, "writeup");
+  make_request(result, path, params, server_info, GET, true, download_dir, "writeup");
 }
 
 void RawClient::submit_assessment(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, std::string filename) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -594,12 +598,13 @@ void RawClient::submit_assessment(rapidjson::Document &result, const std::string
   path.emplace_back("submit");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, POST, true, "", "", filename);
+  make_request(result, path, params, server_info, POST, true, "", "", filename);
 }
 
 void RawClient::get_submissions(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -609,12 +614,13 @@ void RawClient::get_submissions(rapidjson::Document &result, const std::string &
   path.emplace_back("submissions");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_feedback(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, int sub_version, const std::string &problem_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -626,13 +632,14 @@ void RawClient::get_feedback(rapidjson::Document &result, const std::string &cou
   path.emplace_back("feedback");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   params.emplace_back("problem", problem_name);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_enrollments(rapidjson::Document &result, const std::string &course_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -640,12 +647,13 @@ void RawClient::get_enrollments(rapidjson::Document &result, const std::string &
   path.emplace_back("course_user_data");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &course_name, std::string email, RawClient::Params &in_params, CrudAction action) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -654,7 +662,7 @@ void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &
   if (action != Create) path.emplace_back(email);
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   for (auto &kv : in_params) {
     params.emplace_back(kv.first, kv.second);
   }
@@ -662,7 +670,7 @@ void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &
 
   HttpMethod method = crud_to_http(action);
 
-  make_request(result, path, params, method);
+  make_request(result, path, params, server_info, method);
 }
 
 } /* namespace Autolab */
