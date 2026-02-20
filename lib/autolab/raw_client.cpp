@@ -10,6 +10,7 @@
 #include "json_helpers.h"
 #include "logger.h"
 #include "autolab/multi_server.h"
+#include "context_manager.h"
 
 namespace Autolab {
 
@@ -377,6 +378,7 @@ bool RawClient::save_tokens_from_response(rapidjson::Document &response,
     // looks good
     std::string access_token = response["access_token"].GetString();
     std::string refresh_token = response["refresh_token"].GetString();
+    store_tokens(access_token, refresh_token, server_name); // used to be a callback function but that was needless indirection
     return all_auth_info.set_tokens_for_server(server_name, access_token, refresh_token);
   }
   return false;

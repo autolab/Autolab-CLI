@@ -163,19 +163,13 @@ int main(int argc, char *argv[]) {
     if ("setup" == command) {
       return user_setup(cmd);
     } else {
-      if (!init_autolab_client()) {
-        Logger::fatal << "No user set up on this client yet." << Logger::endl
-          << Logger::endl
-          << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
-        return 0;
-      }
-
+      init_autolab_client();
       try {
         command_map.exec_command(cmd, command);
-      } catch (Autolab::InvalidTokenException &e) {
+      } catch (Autolab::InvalidTokenException &e) { // TODO: replicate this scenario
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl
-          << "Please re-authorize this client by running 'autolab-setup'" << Logger::endl;
+          << "Please re-authorize this client by running 'autolab setup'" << Logger::endl;
         return 0;
       }
     }

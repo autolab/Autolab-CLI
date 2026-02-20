@@ -14,10 +14,10 @@ std::string get_cred_dir_full_path();
 bool check_and_create_token_directory();
 
 // read tokens from file. If nonexistent, return false.
-bool load_tokens(std::string &at, std::string &rt);
+bool load_tokens(std::string &at, std::string &rt, const std::string& server_name);
 
 // store tokens to file.
-void store_tokens(std::string at, std::string rt);
+void store_tokens(std::string at, std::string rt, const std::string& server_name);
 
 bool read_asmt_file(std::string &course_name, std::string &asmt_name);
 void write_asmt_file(std::string filename, std::string course_name, std::string asmt_name);

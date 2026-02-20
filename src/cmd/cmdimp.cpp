@@ -24,11 +24,11 @@
 #include "cmdimp.h"
 #include "cmdmap.h"
 
-Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
+Autolab::Client client(server_domain, client_id, client_secret, redirect_uri);
 
 // Loads every token that it can find into all_auth_info
 void init_autolab_client() {
-  std::vector<std::string> servers = g_all_servers.get_all_server_names; 
+  std::vector<std::string> servers = g_all_servers.get_all_server_names(); 
   std::vector<Autolab::AuthInfo> auth_info_list {};
 
   for (const auto& server_name : servers) {
@@ -47,7 +47,6 @@ void init_autolab_client() {
     auth_info_list.push_back(auth_info);
   }
   client.set_auth_info_list(auth_info_list); // TODO: move constructor?
-  return true;
 }
 
 void print_not_in_asmt_dir_error() {
@@ -81,6 +80,21 @@ int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& serv
   Logger::info << Logger::GREEN << "Received authorization!" << Logger::NONE << Logger::endl;
 
   return 0;
+}
+
+
+/** @brief Checks if we have performed the necessary setup for course_name 
+ *  @pre init_autolab_client() has already been called 
+ */
+bool check_for_setup(const std::string& course_name) {
+  const std::string& server_name = g_all_servers.get_server_from_course(course_name).server_name;
+  bool result = client.has_auth_for_server(server_name);
+  if (!result) {
+    Logger::fatal << "No user set up on this client yet." << Logger::endl
+      << Logger::endl
+      << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
+  }
+  return result;
 }
 
 /* exit if failed to parse */
@@ -188,6 +202,7 @@ int show_status(cmdargs &cmd) {
       << "of its parent directories (up to " << DEFAULT_RECUR_LEVEL << " levels)." << Logger::endl;
     return 0;
   }
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Assessment Config: " << course_name << ":" << asmt_name
     << Logger::endl << Logger::endl;
@@ -239,6 +254,8 @@ int download_asmt(cmdargs &cmd) {
   // parse course and assessment name
   std::string course_name, asmt_name;
   parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Querying assessment '" << asmt_name << "' of course '" <<
     course_name << "' ..." << Logger::endl;
@@ -341,6 +358,8 @@ int submit_asmt(cmdargs &cmd) {
     Logger::fatal << "File not found: " << filename << Logger::endl;
     return 0;
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Submitting to " << course_name << ":" << asmt_name << " ...";
   if (option_force) {
@@ -577,6 +596,7 @@ int manage_enrolls(cmdargs &cmd) {
   return 0;
 }
 
+// ^ Note that currently we do not utilize the error code
 int show_assessments(cmdargs &cmd) {
   cmd.setup_help("autolab assessments",
       "List all available assessments of a course.");
@@ -584,6 +604,8 @@ int show_assessments(cmdargs &cmd) {
   cmd.setup_done();
 
   std::string course_name(cmd.args[2]);
+
+  if (!check_for_setup(course_name)) return -1;
 
   // hidden option --use-cache
   if (cmd.has_option("-u", "--use-cache")) {
@@ -639,6 +661,8 @@ int show_problems(cmdargs &cmd) {
       exit(0);
     }
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   std::vector<Autolab::Problem> problems;
   client.get_problems(problems, course_name, asmt_name);
@@ -723,6 +747,8 @@ int show_feedback(cmdargs &cmd) {
       exit(0);
     }
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   // determine version number
   int version = -1;
