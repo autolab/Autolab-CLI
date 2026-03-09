@@ -28,6 +28,7 @@ AllServers::AllServers(const std::string& all_servers_filename) {
         Logger::fatal << "Not able to read file " << all_servers_filename << Logger::endl;
         return;
     }
+    json_string[num_read] = '\0';
     rapidjson::Document document;
     document.Parse(json_string);
     require_is_array(document);
@@ -116,7 +117,7 @@ ServerInfo AllServers::get_server_from_name(const std::string& server_name) cons
 
 bool AllAuthInfo::has_auth_for_server(const std::string& server_name) {
     for (const AuthInfo& info : m_auth_info_list) {
-        if (server_name == info.server_name) return true;
+        if (server_name == info.server_name) return info.exists;
     }
     return false;
 }

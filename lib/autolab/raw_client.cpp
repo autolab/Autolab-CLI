@@ -294,7 +294,7 @@ void RawClient::set_auth_info_list(std::vector<AuthInfo> auth_info_list) {
 }
 
 bool RawClient::has_auth_for_server(const std::string& server_name) {
-  all_auth_info.has_auth_for_server(server_name);
+  return all_auth_info.has_auth_for_server(server_name);
 }
 
 

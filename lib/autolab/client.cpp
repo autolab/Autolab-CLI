@@ -24,7 +24,7 @@ void Client::set_auth_info_list(std::vector<AuthInfo> auth_info_list) {
 
 
 bool Client::has_auth_for_server(const std::string& server_name) {
-  raw_client.has_auth_for_server(server_name);
+  return raw_client.has_auth_for_server(server_name);
 }
 
 void Client::device_flow_init(std::string &user_code, std::string &verification_uri, std::string& device_code, const ServerInfo& server_info) {

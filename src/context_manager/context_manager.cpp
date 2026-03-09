@@ -32,7 +32,6 @@ bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std:
 
 /* private helpers */
 std::string cred_dir_full_path;
-std::string token_cache_file_full_path;
 
 std::string get_cred_dir_full_path() {
   if (cred_dir_full_path.length() > 0)
@@ -45,8 +44,7 @@ std::string get_cred_dir_full_path() {
 }
 
 std::string get_token_cache_file_full_path(const std::string& server_name) {
-  if (token_cache_file_full_path.length() > 0)
-    return token_cache_file_full_path;
+  std::string token_cache_file_full_path;
 
   token_cache_file_full_path.append(get_cred_dir_full_path());
   token_cache_file_full_path.append("/");
