@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <unordered_set>
 #include <autolab/autolab.h>
-#include "../all_servers_filename.h"
+#include "../all_servers_dirname.h"
+#include <dirent.h>
 
 namespace Autolab
 {
@@ -31,30 +32,41 @@ static std::string sanitize_string(std::string str) {
     return "_" + str;
 }
 
-AllServers::AllServers(const std::string& all_servers_filename) {
-    if (!file_exists(all_servers_filename.c_str())) {
-        Logger::fatal << "Could not read all_servers_filename at " 
-                      << all_servers_filename << Logger::endl;
+AllServers::AllServers(const std::string& all_servers_dirname) {
+    if (all_servers_dirname.at(all_servers_dirname.length() - 1) != '/') {
+        Logger::fatal << "The directory name should be terminated with a /";
+        throw InvalidInputException {};
+    } 
+    if (!dir_exists(all_servers_dirname.c_str())) {
+        Logger::fatal << "The directory containing server information does not"
+                         "exist. Contact your administrator." << Logger::endl;
         throw InvalidInputException {};
     }
-    char json_string[MAX_JSON_LENGTH];
-    size_t num_read = read_file(all_servers_filename.c_str(), json_string, MAX_JSON_LENGTH - 1);
-    if (num_read <= 0) {
-        Logger::fatal << "Not able to read file " << all_servers_filename << Logger::endl;
-        throw InvalidInputException {};
-    }
-    json_string[num_read] = '\0';
-    rapidjson::Document document;
-    document.Parse(json_string);
-    require_is_array(document);
 
     // For keeping track of duplicates
     std::unordered_set<std::string> seen_server_names;
     std::unordered_set<std::string> seen_course_names;
 
-    m_server_list.reserve(document.Size());
-    for (int i = 0; i < document.Size(); i++) {
-        rapidjson::Value& server_value = document[i];
+    DIR *dir = opendir(all_servers_dirname.c_str());
+    assert(dir != NULL);
+    struct dirent *entry;
+    while ((entry = readdir(dir))) {
+        if (entry->d_type != DT_REG) continue;
+
+        char json_string[MAX_JSON_LENGTH];
+        size_t num_read = read_file((
+            all_servers_dirname + std::string(entry->d_name)).c_str(), 
+            json_string, MAX_JSON_LENGTH - 1);
+        if (num_read <= 0) {
+            Logger::fatal << "Not able to read file in directory" << Logger::endl;
+            throw InvalidInputException {};
+        }
+        json_string[num_read] = '\0';
+        rapidjson::Document document;
+        document.Parse(json_string);
+        require_is_object(document);
+
+        rapidjson::Value& server_value = document;
         require_is_object(server_value);
         ServerInfo server_info;
         server_info.server_name = sanitize_string(std::move(
@@ -70,8 +82,7 @@ AllServers::AllServers(const std::string& all_servers_filename) {
         server_info.client_secret = get_string_force(server_value, "client_secret");
         server_info.redirect_uri = get_string_force(server_value, "redirect_uri");
         if (!server_value.HasMember("courses")) {
-            Logger::fatal << "JSON file " << all_servers_filename 
-                          << " not correctly formatted." << Logger::endl;
+            Logger::fatal << "JSON file not correctly formatted." << Logger::endl;
             throw InvalidInputException {};
         }
         rapidjson::Value& courses_value = server_value["courses"];
@@ -87,6 +98,11 @@ AllServers::AllServers(const std::string& all_servers_filename) {
         }
         m_server_list.push_back(server_info);
     }
+
+
+
+
+
 }
 
 std::vector<std::string> AllServers::get_all_courses() const {
@@ -180,4 +196,4 @@ std::string AllAuthInfo::get_refresh_token_from_server(const std::string& server
 
 } // namespace Autolab
 
-Autolab::AllServers g_all_servers {all_server_filename};
+Autolab::AllServers g_all_servers {all_servers_dirname};

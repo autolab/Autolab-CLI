@@ -1,0 +1,10 @@
+/* download the file from the Autolab "Manage API Applications" page (it should
+look similar to this one), and add it to the directory in all_servers_dirname.h
+{
+    "server_name": "https://example2.com",
+    "base_uri": "https://example2.com",
+    "client_id": "D",
+    "client_secret": "E",
+    "redirect_uri": "https://example2.com/device_flow_auth_cb",
+    "courses": ["course2", "15-122 fall 25"]
+}
