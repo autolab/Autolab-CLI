@@ -33,8 +33,14 @@ static std::string sanitize_string(std::string str) {
 }
 
 AllServers::AllServers(const std::string& all_servers_dirname) {
+    if (all_servers_dirname.at(0) != '/') {
+        Logger::fatal << "The directory path should be an absolute path (start"
+                         " with /)." << Logger::endl;;
+        throw InvalidInputException {};
+    }
     if (all_servers_dirname.at(all_servers_dirname.length() - 1) != '/') {
-        Logger::fatal << "The directory name should be terminated with a /";
+        Logger::fatal << "The directory name should be terminated with a /"
+                      << Logger::endl;
         throw InvalidInputException {};
     } 
     if (!dir_exists(all_servers_dirname.c_str())) {
