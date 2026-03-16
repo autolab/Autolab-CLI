@@ -428,10 +428,6 @@ void RawClient::init_regular_path(RawClient::path_segments &path) {
 void RawClient::init_regular_params(RawClient::param_list &params, const ServerInfo& server_info__) {
   params.clear();
   std::string access_token = all_auth_info.get_access_token_from_server(server_info__.server_name);
-  if (access_token == "") {
-    // TODO: this should not be caught here
-    Logger::fatal << "Could not send request to server " << server_info__.server_name << ", tokens not found. Call autolab setup first." << Logger::endl;;
-  }
   params.emplace_back("access_token", access_token);
 }
 
@@ -456,10 +452,6 @@ void RawClient::init_device_flow_authorize_path(RawClient::path_segments &path) 
 
 void RawClient::update_access_token_in_params(RawClient::param_list &params, const ServerInfo& server_info__) {
   std::string access_token = all_auth_info.get_access_token_from_server(server_info__.server_name);
-  if (access_token == "") {
-    // TODO: this should not be caught here
-    Logger::fatal << "Could not send request to server " << server_info__.server_name << ", tokens not found. Call autolab setup first." << Logger::endl;;
-  }
   for (auto &param : params) {
     if (param.key == "access_token") {
       param.value = access_token;

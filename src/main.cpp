@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
       init_autolab_client();
       try {
         command_map.exec_command(cmd, command);
-      } catch (Autolab::InvalidTokenException &e) { // TODO: replicate this scenario
+      } catch (Autolab::InvalidTokenException &e) {
         Logger::fatal << "Authorization invalid or expired." << Logger::endl
           << Logger::endl
           << "Please re-authorize this client by running 'autolab setup'" << Logger::endl;

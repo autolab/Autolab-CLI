@@ -57,7 +57,6 @@ std::string get_token_cache_file_full_path(const std::string& server_name) {
 // returns true if exists, returns false if had to create dir
 bool check_and_create_token_directory() {
   const char *homedir = get_home_dir();
-  std::cout << "CRED DIRAME: " << cred_dirname.c_str() << std::endl;
 
   bool exists = dir_find(homedir, cred_dirname.c_str(), true);
   if (exists) return true;

@@ -13,20 +13,35 @@ namespace Autolab
 
 static constexpr size_t MAX_JSON_LENGTH = 1000;
 
-    // TODO: when parsing, make sure that there are no duplicate names or courses.
-    // TODO: do we want to actually reveal all_servers_filename to the user
-    // or just leave it at "contact your administrator"
+static std::string sanitize_string(std::string str) {
+    if (str.empty() || str == "." || str == "..") {
+        Logger::fatal << "Invalid server name information. Contact your administrator" << Logger::endl;
+        throw InvalidInputException {};
+    }
+    // Set of characters commonly disallowed or problematic in filenames on major OSes
+    static const std::string invalid_chars = R"(\/:*?"<>|)";
+    // Replace each invalid character with '_'
+    for (char& c : str) {
+        if (invalid_chars.find(c) != std::string::npos) {
+            c = '_';
+        }
+    }
+
+    // Prepend with '_'
+    return "_" + str;
+}
+
 AllServers::AllServers(const std::string& all_servers_filename) {
     if (!file_exists(all_servers_filename.c_str())) {
         Logger::fatal << "Could not read all_servers_filename at " 
                       << all_servers_filename << Logger::endl;
-        return;
+        throw InvalidInputException {};
     }
     char json_string[MAX_JSON_LENGTH];
     size_t num_read = read_file(all_servers_filename.c_str(), json_string, MAX_JSON_LENGTH - 1);
     if (num_read <= 0) {
         Logger::fatal << "Not able to read file " << all_servers_filename << Logger::endl;
-        return;
+        throw InvalidInputException {};
     }
     json_string[num_read] = '\0';
     rapidjson::Document document;
@@ -42,11 +57,12 @@ AllServers::AllServers(const std::string& all_servers_filename) {
         rapidjson::Value& server_value = document[i];
         require_is_object(server_value);
         ServerInfo server_info;
-        server_info.server_name = get_string_force(server_value, "server_name");
+        server_info.server_name = sanitize_string(std::move(
+            get_string_force(server_value, "server_name")));
         auto [_, server_success] = seen_server_names.emplace(server_info.server_name);
         if (!server_success) {
-            Logger::fatal << "Duplicate server name" << Logger::endl;
-            return;
+            Logger::fatal << "Duplicate server name. Contact your administrator" << Logger::endl;
+            throw InvalidInputException {};
         }
 
         server_info.base_uri = get_string_force(server_value, "base_uri");
@@ -56,16 +72,16 @@ AllServers::AllServers(const std::string& all_servers_filename) {
         if (!server_value.HasMember("courses")) {
             Logger::fatal << "JSON file " << all_servers_filename 
                           << " not correctly formatted." << Logger::endl;
-            return;
+            throw InvalidInputException {};
         }
         rapidjson::Value& courses_value = server_value["courses"];
         require_is_array(courses_value);
-        for (int course_idx; course_idx < courses_value.Size(); course_idx++) {
+        for (int course_idx = 0; course_idx < courses_value.Size(); course_idx++) {
             std::string course_name = courses_value[course_idx].GetString();
             auto [_, course_success] = seen_course_names.emplace(course_name);
             if (!course_success) {
-                Logger::fatal << "Duplicate course name" << Logger::endl;
-                return;
+                Logger::fatal << "Duplicate course name. Contact your administrator." << Logger::endl;
+                throw InvalidInputException {};
             }
             server_info.courses.emplace_back(std::move(course_name));
         }
@@ -148,7 +164,8 @@ std::string AllAuthInfo::get_access_token_from_server(const std::string& server_
             return info.access_token;
         }
     }
-    return "";
+    Logger::fatal << "Could not find access token. Please rerun autolab setup for this course." << Logger::endl;
+    throw std::runtime_error("fatal");
 }
     
 
