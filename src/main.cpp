@@ -65,10 +65,12 @@ void print_version() {
 int user_setup(cmdargs &cmd) {
   cmd.setup_help("autolab setup",
       "Initiate user setup for the current user.");
+  cmd.new_arg("course_name", true);
   bool option_force = cmd.new_flag_option("-f", "--force",
       "Force user setup, removing the current user");
-  std::string course_name = cmd.new_option("-c", "--course", "course", "Specify the course that you are setting up for");
   cmd.setup_done();
+
+  std::string course_name = cmd.args[2];
 
   if (course_name.length() == 0) {
     // -c/--course was not specified
