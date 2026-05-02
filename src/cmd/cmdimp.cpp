@@ -14,7 +14,6 @@
 #include "autolab/client.h"
 #include "logger.h"
 
-#include "../app_credentials.h"
 #include "../cache/cache.h"
 #include "../context_manager/context_manager.h"
 #include "../file/file_utils.h"

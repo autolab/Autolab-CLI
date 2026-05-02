@@ -1,6 +1,5 @@
 #include "context_manager.h"
 
-#include "../app_credentials.h"
 #include "../file/file_utils.h"
 #include "autolab/autolab.h"
 #include "logger.h"
@@ -15,11 +14,11 @@ const std::string cred_dirname = ".autolab";
 
 std::string token_pair_to_string(std::string at, std::string rt) {
   std::string pre_crypt = at + "\n" + rt;
-  return encrypt_string(pre_crypt, crypto_key, crypto_iv);
+  return encrypt_string(pre_crypt);
 }
 
 bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std::string &rt) {
-  std::string src = decrypt_string(raw_src, raw_len, crypto_key, crypto_iv);
+  std::string src = decrypt_string(raw_src, raw_len);
 
   std::string::size_type split_pos_1 = src.find('\n');
   if (split_pos_1 == std::string::npos) return false;

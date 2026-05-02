@@ -31,6 +31,7 @@ The scopes should be `user_info user_courses user_scores user_submit`. To test b
 
 ![Screen Shot 2023-02-12 at 14 55 39](https://user-images.githubusercontent.com/25730111/218333852-f739cc46-bcb7-44d6-9209-6b049bfbb31c.png)
 
+Create file "src/crypto/secrets.h" by making a copy of "src/crypto/secrets.h.template", changing the secrest to strings of your choosing.
 
 Then, create file `lib/all_servers_dirname.h` by making a copy of `lib/all_servers_dirname.h.template`, decide where you want to store info text files
 for each Autolab server and enter the absolute path to that directory into the

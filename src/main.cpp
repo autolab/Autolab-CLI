@@ -6,7 +6,6 @@
 #include "autolab/multi_server.h"
 #include "logger.h"
 
-#include "app_credentials.h"
 #include "build_config.h"
 #include "cmd/cmdargs.h"
 #include "cmd/cmdimp.h"
@@ -57,8 +56,6 @@ void print_version() {
   if (BUILD_VARIANT.length() > 0) {
     Logger::info << " (" << BUILD_VARIANT << ")";
   }
-  Logger::info << Logger::endl
-    << "Target server: " << server_domain << Logger::endl;
 }
 
 /* must manually init client */

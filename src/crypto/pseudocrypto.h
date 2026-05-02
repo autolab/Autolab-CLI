@@ -16,9 +16,7 @@
 const std::size_t key_length_in_chars = 32;
 const std::size_t iv_length_in_chars = 16;
 
-std::string encrypt_string(std::string srctext, unsigned char *key,
-    unsigned char *iv);
-std::string decrypt_string(char *srctext, size_t srclength, unsigned char *key,
-    unsigned char *iv);
+std::string encrypt_string(std::string srctext);
+std::string decrypt_string(char *srctext, size_t srclength);
 
 #endif /* AUTOLAB_PSEUDOCRYPTO_H_ */

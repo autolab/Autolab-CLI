@@ -9,5 +9,6 @@ compile_commands.json
 CTestTestfile.cmake
 build
 
-src/app_credentials.h
+lib/all_servers_dirname.h
+src/crypto/secrets.h
 .vscode
