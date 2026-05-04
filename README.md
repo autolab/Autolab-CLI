@@ -52,7 +52,11 @@ This project uses CMake. On Linux, it generates Makefiles for the project, which
 
 #### Quick Build & Install Script for Bash Users
 
-We've written an install script that builds the entire project, installs the binary to your system, and installs the bash autocompletion script. You can run it by executing `./install/install.sh`. It needs sudo access in order to copy files to protected directories (details below)
+We've written helper scripts to build and install the project. These are located in `scripts/`. All of them need to be run from the repo root.
+
+To build the project using CMake, run `scripts/build.sh`.
+
+To install the autolab binary to a particular location, run `scripts/install.sh [DIRNAME]`. If no location is supplied, a default will be used, usually `/usr/local/bin`. This may prompt for a sudo password if the location is protected.
 
 #### Manual Build and Install
 
@@ -68,10 +72,7 @@ You can optionally run `sudo make install` to install the built binaries (typica
 
 ##### Autocompletion ( bash users only :( )
 
-After installing manually, users can cd out of build and execute the following commands:
-
-1. `sudo cp autocomplete/autolab /etc/bash_completion.d/`
-2. `. /etc/bash_completion.d/autolab`
+From the repo root, bash users can run `sudo ./scripts/bash_autocomplete.sh`, which will enable autocompletion.
 
 This will move our autocompletion script out of a local folder and into the bash autocompletion directory. To learn more about bash autocompletion, see https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
 
