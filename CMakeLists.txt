@@ -34,6 +34,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+string(RANDOM LENGTH 32 ALPHABET "abcdefghijklmnopqrstuvwxyz" RANDSTR32)
+string(RANDOM LENGTH 16 ALPHABET "abcdefghijklmnopqrstuvwxyz" RANDSTR16)
+add_definitions(-DRANDSTR32="${RANDSTR32}")
+add_definitions(-DRANDSTR16="${RANDSTR16}")
+
 # For OS X
 if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
   execute_process(
@@ -63,7 +68,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 ExternalProject_Add(rapidjson
   PREFIX thirdparty
   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-  GIT_TAG v1.1.0
+  GIT_TAG master
   STEP_TARGETS download
   CONFIGURE_COMMAND true
   BUILD_COMMAND true

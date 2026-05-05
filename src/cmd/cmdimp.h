@@ -5,8 +5,8 @@
 
 #include "cmdargs.h"
 
-bool init_autolab_client();
-int perform_device_flow(Autolab::Client &client);
+void init_autolab_client();
+int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& server_info);
 
 int show_status(cmdargs &cmd);
 int download_asmt(cmdargs &cmd);

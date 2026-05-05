@@ -11,6 +11,8 @@
 #include "logger.h"
 
 #define MAX_CIPHERTEXT_LEN 256
+#define CRYPTO_KEY ((unsigned char*) RANDSTR32)
+#define CRYPTO_IV ((unsigned char*) RANDSTR16)
 
 void raise_crypto_error() {
   throw Autolab::CryptoException(ERR_error_string(ERR_get_error(), nullptr));
@@ -27,9 +29,8 @@ void check_key_and_iv_lengths(unsigned char *key, unsigned char *iv) {
   }
 }
 
-std::string encrypt_string(std::string srctext, unsigned char *key,
-    unsigned char *iv) {
-  check_key_and_iv_lengths(key, iv);
+std::string encrypt_string(std::string srctext) {
+  check_key_and_iv_lengths(CRYPTO_KEY, CRYPTO_IV);
 
   EVP_CIPHER_CTX *ctx;
   unsigned char ciphertext[MAX_CIPHERTEXT_LEN];
@@ -43,7 +44,7 @@ std::string encrypt_string(std::string srctext, unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
     raise_crypto_error();
 
-  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
+  if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, CRYPTO_KEY, CRYPTO_IV))
     raise_crypto_error();
 
   if (1 != EVP_EncryptUpdate(ctx, ciphertext, &temp_len, plaintext, input_len))
@@ -60,9 +61,8 @@ std::string encrypt_string(std::string srctext, unsigned char *key,
   return std::string((char *)ciphertext, total_len);
 }
 
-std::string decrypt_string(char *srctext, size_t srclength, unsigned char *key,
-    unsigned char *iv) {
-  check_key_and_iv_lengths(key, iv);
+std::string decrypt_string(char *srctext, size_t srclength) {
+  check_key_and_iv_lengths(CRYPTO_KEY, CRYPTO_IV);
 
   EVP_CIPHER_CTX *ctx;
   unsigned char plaintext[MAX_CIPHERTEXT_LEN];
@@ -75,7 +75,7 @@ std::string decrypt_string(char *srctext, size_t srclength, unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
     raise_crypto_error();
 
-  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv))
+  if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, CRYPTO_KEY, CRYPTO_IV))
     raise_crypto_error();
 
   if (1 != EVP_DecryptUpdate(ctx, plaintext, &temp_len, ciphertext, input_len))

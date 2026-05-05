@@ -14,7 +14,6 @@
 #include "autolab/client.h"
 #include "logger.h"
 
-#include "../app_credentials.h"
 #include "../cache/cache.h"
 #include "../context_manager/context_manager.h"
 #include "../file/file_utils.h"
@@ -24,13 +23,29 @@
 #include "cmdimp.h"
 #include "cmdmap.h"
 
-Autolab::Client client(server_domain, client_id, client_secret, redirect_uri, store_tokens);
+Autolab::Client client {};
 
-bool init_autolab_client() {
-  std::string at, rt;
-  if (!load_tokens(at, rt)) return false;
-  client.set_tokens(at, rt);
-  return true;
+// Loads every token that it can find into all_auth_info
+void init_autolab_client() {
+  std::vector<std::string> servers = g_all_servers.get_all_server_names(); 
+  std::vector<Autolab::AuthInfo> auth_info_list {};
+
+  for (const auto& server_name : servers) {
+    Autolab::AuthInfo auth_info {};
+    std::string at, rt;
+    auth_info.server_name = server_name;
+    if (load_tokens(at, rt, server_name)) {
+      auth_info.exists = true;
+      auth_info.access_token = at;
+      auth_info.refresh_token = rt;
+    } else {
+      auth_info.exists = false;
+      auth_info.access_token = "";
+      auth_info.refresh_token = "";
+    }
+    auth_info_list.push_back(auth_info);
+  }
+  client.set_auth_info_list(std::move(auth_info_list));
 }
 
 void print_not_in_asmt_dir_error() {
@@ -40,16 +55,16 @@ void print_not_in_asmt_dir_error() {
 }
 
 /* helpers */
-int perform_device_flow(Autolab::Client &client) {
+int perform_device_flow(Autolab::Client &client, const Autolab::ServerInfo& server_info) {
   Logger::info << "Initiating authorization..." << Logger::endl << Logger::endl;
-  std::string user_code, verification_uri;
-  client.device_flow_init(user_code, verification_uri);
+  std::string user_code, verification_uri, device_code;
+  client.device_flow_init(user_code, verification_uri, device_code, server_info);
   Logger::info << "Please visit "
     << Logger::CYAN << verification_uri << Logger::NONE << " and enter the code: "
     << Logger::CYAN << user_code << Logger::NONE << Logger::endl;
   Logger::info << Logger::endl << "Waiting for user authorization ..." << Logger::endl;
 
-  int res = client.device_flow_authorize(300); // wait for 5 minutes max
+  int res = client.device_flow_authorize(300, device_code, server_info); // wait for 5 minutes max
   switch (res) {
     case 1:
       Logger::info << Logger::RED << "User denied authorization." << Logger::NONE << Logger::endl;
@@ -64,6 +79,21 @@ int perform_device_flow(Autolab::Client &client) {
   Logger::info << Logger::GREEN << "Received authorization!" << Logger::NONE << Logger::endl;
 
   return 0;
+}
+
+
+/** @brief Checks if we have performed the necessary setup for course_name 
+ *  @pre init_autolab_client() has already been called 
+ */
+bool check_for_setup(const std::string& course_name) {
+  const std::string& server_name = g_all_servers.get_server_from_course(course_name).server_name;
+  bool result = client.has_auth_for_server(server_name);
+  if (!result) {
+    Logger::fatal << "No user set up on this client yet." << Logger::endl
+      << Logger::endl
+      << "Please run 'autolab setup' to setup your Autolab account." << Logger::endl;
+  }
+  return result;
 }
 
 /* exit if failed to parse */
@@ -171,6 +201,7 @@ int show_status(cmdargs &cmd) {
       << "of its parent directories (up to " << DEFAULT_RECUR_LEVEL << " levels)." << Logger::endl;
     return 0;
   }
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Assessment Config: " << course_name << ":" << asmt_name
     << Logger::endl << Logger::endl;
@@ -222,6 +253,8 @@ int download_asmt(cmdargs &cmd) {
   // parse course and assessment name
   std::string course_name, asmt_name;
   parse_course_and_asmt(cmd.args[2], course_name, asmt_name);
+
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Querying assessment '" << asmt_name << "' of course '" <<
     course_name << "' ..." << Logger::endl;
@@ -324,6 +357,8 @@ int submit_asmt(cmdargs &cmd) {
     Logger::fatal << "File not found: " << filename << Logger::endl;
     return 0;
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   Logger::info << "Submitting to " << course_name << ":" << asmt_name << " ...";
   if (option_force) {
@@ -471,6 +506,7 @@ int manage_enrolls(cmdargs &cmd) {
   if (cmd.nargs() == 4) {
     std::string action(cmd.args[2]);
     std::string course_name(cmd.args[3]);
+    if (!check_for_setup(course_name)) return -1;
     // member actions on enrollments require the email
     if (option_user == "") {
       Logger::fatal << "Must specify email of user with '-u'" << Logger::endl;
@@ -522,6 +558,7 @@ int manage_enrolls(cmdargs &cmd) {
     enrollments.push_back(result);
   } else {
     std::string course_name(cmd.args[2]);
+    if (!check_for_setup(course_name)) return -1;
     // list all enrollments
     client.get_enrollments(enrollments, course_name);
     LogDebug("Found " << enrollments.size() << " enrollments." << Logger::endl);
@@ -560,6 +597,7 @@ int manage_enrolls(cmdargs &cmd) {
   return 0;
 }
 
+// ^ Note that currently we do not utilize the error code
 int show_assessments(cmdargs &cmd) {
   cmd.setup_help("autolab assessments",
       "List all available assessments of a course.");
@@ -567,6 +605,8 @@ int show_assessments(cmdargs &cmd) {
   cmd.setup_done();
 
   std::string course_name(cmd.args[2]);
+
+  if (!check_for_setup(course_name)) return -1;
 
   // hidden option --use-cache
   if (cmd.has_option("-u", "--use-cache")) {
@@ -622,6 +662,8 @@ int show_problems(cmdargs &cmd) {
       exit(0);
     }
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   std::vector<Autolab::Problem> problems;
   client.get_problems(problems, course_name, asmt_name);
@@ -706,6 +748,8 @@ int show_feedback(cmdargs &cmd) {
       exit(0);
     }
   }
+
+  if (!check_for_setup(course_name)) return -1;
 
   // determine version number
   int version = -1;

@@ -31,9 +31,16 @@ The scopes should be `user_info user_courses user_scores user_submit`. To test b
 
 ![Screen Shot 2023-02-12 at 14 55 39](https://user-images.githubusercontent.com/25730111/218333852-f739cc46-bcb7-44d6-9209-6b049bfbb31c.png)
 
-Then, create file `src/app_credentials.h` by making a copy of `src/app_credentials.h.template`, and enter the generated `client_id` and `client_secret` into the predefined fields in the file, as well as the Autolab server domain and `redirect_uri` (same as the one entered into the Autolab Oauth2 manager).
+Then, create file `lib/all_servers_dirname.h` by making a copy of `lib/all_servers_dirname.h.template`, decide where you want to store info text files
+for each Autolab server and enter the absolute path to that directory into the
+`all_servers_dirname` field in the file.
 
-![Screen Shot 2023-02-12 at 14 58 41](https://user-images.githubusercontent.com/25730111/218334013-f4c2efb5-d98e-4595-bc3b-2fc747f8a299.png)
+Inside of this directory that you created, insert files that follow the format as can be seen in
+`lib/server_info_example.json`. While this can be populated manually, you can
+also go back to Manage API Applications and click "Download Config" to download
+the file. A daemon can populate the courses field with course names according
+to the Autolab server. Make sure that there are no duplicate courses or server 
+names (the automatic config sets this to be equal to the URL). The name of the files do not matter. 
 
 You should then after building autolab-cli, be able to run `autolab setup`, and successfully authorize the CLI with your Autolab deployment.
 
@@ -43,7 +50,11 @@ This project uses CMake. On Linux, it generates Makefiles for the project, which
 
 #### Quick Build & Install Script for Bash Users
 
-We've written an install script that builds the entire project, installs the binary to your system, and installs the bash autocompletion script. You can run it by executing `./install/install.sh`. It needs sudo access in order to copy files to protected directories (details below)
+We've written helper scripts to build and install the project. These are located in `scripts/`. All of them need to be run from the repo root.
+
+To build the project using CMake, run `scripts/build.sh`.
+
+To install the autolab binary to a particular location, run `scripts/install.sh [DIRNAME]`. If no location is supplied, a default will be used, usually `/usr/local/bin`. This may prompt for a sudo password if the location is protected.
 
 #### Manual Build and Install
 
@@ -59,10 +70,7 @@ You can optionally run `sudo make install` to install the built binaries (typica
 
 ##### Autocompletion ( bash users only :( )
 
-After installing manually, users can cd out of build and execute the following commands:
-
-1. `sudo cp autocomplete/autolab /etc/bash_completion.d/`
-2. `. /etc/bash_completion.d/autolab`
+From the repo root, bash users can run `sudo ./scripts/bash_autocomplete.sh`, which will enable autocompletion.
 
 This will move our autocompletion script out of a local folder and into the bash autocompletion directory. To learn more about bash autocompletion, see https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2
 

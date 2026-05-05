@@ -9,6 +9,8 @@
 #include "autolab/autolab.h"
 #include "json_helpers.h"
 #include "logger.h"
+#include "autolab/multi_server.h"
+#include "../../src/context_manager/context_manager.h"
 
 namespace Autolab {
 
@@ -17,10 +19,8 @@ const std::chrono::seconds device_flow_authorize_wait_duration(5);
 /* initialization */
 int RawClient::curl_ready = false;
 
-RawClient::RawClient(const std::string &domain, const std::string &id,
-  const std::string &st, const std::string &ru, void (*tk_cb)(std::string, std::string))
-  : base_uri(domain), new_tokens_callback(tk_cb), api_version(1),
-    client_id(id), client_secret(st), redirect_uri(ru)
+RawClient::RawClient()
+  : api_version(1)
 {
   RawClient::init_curl();
 }
@@ -33,12 +33,6 @@ int RawClient::init_curl() {
 
   RawClient::curl_ready = true;
   return 0;
-}
-
-// set access_token and refresh_token
-void RawClient::set_tokens(std::string at, std::string rt) {
-  access_token = at;
-  refresh_token = rt;
 }
 
 // set the function that should be called when tokens are refreshed
@@ -135,6 +129,7 @@ void RawClient::free_params(RawClient::param_list &params) {
  */
 long RawClient::raw_request(RawClient::request_state *rstate,
   RawClient::path_segments &path, RawClient::param_list &params,
+  const ServerInfo& server_info__,
   RawClient::HttpMethod method = GET)
 {
   CURL *curl;
@@ -147,7 +142,7 @@ long RawClient::raw_request(RawClient::request_state *rstate,
     throw HttpException("Error initializing libcurl easy interface");
   }
 
-  std::string full_path = construct_path(curl, base_uri, path);
+  std::string full_path = construct_path(curl, server_info__.base_uri, path);
   std::string param_str = construct_params(curl, params);
 
   LogDebug("Requesting " << full_path << " with params " << param_str << Logger::endl
@@ -226,19 +221,20 @@ const std::string oauth_auth_failed_response = "OAuth2 authorization failed";
 long RawClient::raw_request_optional_refresh(
   RawClient::request_state *rstate,
   RawClient::path_segments &path, RawClient::param_list &params,
+  const ServerInfo& server_info__,
   RawClient::HttpMethod method = GET, bool refresh = true)
 {
-  long rc = raw_request(rstate, path, params, method);
+  long rc = raw_request(rstate, path, params, server_info__, method); 
   if (!refresh) return rc;
 
   if (rc == 200 || !document_has_error(rstate, oauth_auth_failed_response)) {
     return rc;
   }
 
-  if (perform_token_refresh()) {
+  if (perform_token_refresh(server_info__)) {
     rstate->reset();
-    update_access_token_in_params(params);
-    rc = raw_request(rstate, path, params, method);
+    update_access_token_in_params(params, server_info__);
+    rc = raw_request(rstate, path, params, server_info__, method);
     if (rc == 200 || !document_has_error(rstate, oauth_auth_failed_response)) {
       // all good now
       LogDebug("Successfully refreshed token" << Logger::endl);
@@ -265,7 +261,8 @@ long RawClient::raw_request_optional_refresh(
  *   - upload_filename: the name of the file to upload. (relative path)
  */
 long RawClient::make_request(rapidjson::Document &response,
-  RawClient::path_segments &path, RawClient::param_list &params,
+  RawClient::path_segments &path, RawClient::param_list &params, 
+  const ServerInfo& server_info__,
   RawClient::HttpMethod method = GET, bool refresh = true,
   const std::string &download_dir = "",
   const std::string &suggested_filename = "",
@@ -277,7 +274,7 @@ long RawClient::make_request(rapidjson::Document &response,
     rstate.file_upload = true;
   }
 
-  long rc = raw_request_optional_refresh(&rstate, path, params, method, refresh);
+  long rc = raw_request_optional_refresh(&rstate, path, params, server_info__, method, refresh);
 
   LogDebug("Completed make request" << Logger::endl);
 
@@ -292,26 +289,32 @@ long RawClient::make_request(rapidjson::Document &response,
 
 /* Authorization (device-flow) & Authentication */
 
-void RawClient::device_flow_init(std::string &user_code, std::string &verification_uri) {
+void RawClient::set_auth_info_list(std::vector<AuthInfo> auth_info_list) {
+  all_auth_info.m_auth_info_list = auth_info_list;
+}
+
+bool RawClient::has_auth_for_server(const std::string& server_name) {
+  return all_auth_info.has_auth_for_server(server_name);
+}
+
+
+void RawClient::device_flow_init(std::string &user_code, std::string &verification_uri,
+    std::string& device_code, const ServerInfo& server_info) {
   RawClient::path_segments path;
   init_device_flow_init_path(path);
 
   // make a local copy and start building params
   RawClient::param_list params;
-  params.emplace_back("client_id", client_id);
+  params.emplace_back("client_id", server_info.client_id);
 
   rapidjson::Document response;
-  make_request(response, path, params, GET, false);
+  make_request(response, path, params, server_info, GET, false);
 
-  device_flow_device_code = get_string_force(response, "device_code");
+  device_code = get_string_force(response, "device_code");
   user_code = get_string_force(response, "user_code");
   verification_uri = get_string(response, "verification_uri");
 }
 
-void RawClient::clear_device_flow_strings() {
-  device_flow_device_code.clear();
-  device_flow_user_code.clear();
-}
 
 /*
  * param: timeout in seconds
@@ -320,8 +323,9 @@ void RawClient::clear_device_flow_strings() {
  *           -1 - error, device_flow_init not called
  *           -2 - timed out
  */
-int RawClient::device_flow_authorize(size_t timeout) {
-  if (!device_flow_device_code.length()) {
+int RawClient::device_flow_authorize(size_t timeout, const std::string& device_code, 
+  const ServerInfo& server_info) {
+  if (!device_code.length()) {
     // device flow init not called
     return -1;
   }
@@ -330,8 +334,8 @@ int RawClient::device_flow_authorize(size_t timeout) {
   init_device_flow_authorize_path(path);
 
   RawClient::param_list params;
-  params.emplace_back("client_id", client_id);
-  params.emplace_back("device_code", device_flow_device_code);
+  params.emplace_back("client_id", server_info.client_id);
+  params.emplace_back("device_code", device_code);
 
   rapidjson::Document response;
 
@@ -341,12 +345,11 @@ int RawClient::device_flow_authorize(size_t timeout) {
   // find out end time
 
   while (t_now < t_end) {
-    make_request(response, path, params, GET, false);
+    make_request(response, path, params, server_info, GET, false);
     if (response.HasMember("code")) {
       // success!
       std::string code = response["code"].GetString();
-      get_token_from_authorization_code(code);
-      clear_device_flow_strings();
+      get_token_from_authorization_code(code, server_info);
       return 0;
     }
 
@@ -354,7 +357,6 @@ int RawClient::device_flow_authorize(size_t timeout) {
     std::string error_string = response["error"].GetString();
     if (error_string != "authorization_pending") {
       // denied!
-      clear_device_flow_strings();
       return 1;
     }
 
@@ -368,50 +370,52 @@ int RawClient::device_flow_authorize(size_t timeout) {
   return -2;
 }
 
-bool RawClient::save_tokens_from_response(rapidjson::Document &response) {
+bool RawClient::save_tokens_from_response(rapidjson::Document &response,
+  const std::string& server_name) {
   if (response.HasMember("access_token") && response.HasMember("refresh_token")) {
     // looks good
-    access_token = response["access_token"].GetString();
-    refresh_token = response["refresh_token"].GetString();
-    if (new_tokens_callback) {
-      new_tokens_callback(access_token, refresh_token);
-    }
-    return true;
+    std::string access_token = response["access_token"].GetString();
+    std::string refresh_token = response["refresh_token"].GetString();
+    store_tokens(access_token, refresh_token, server_name); // used to be a callback function but that was needless indirection
+    return all_auth_info.set_tokens_for_server(server_name, access_token, refresh_token);
   }
   return false;
 }
 
-bool RawClient::get_token_from_authorization_code(std::string authorization_code) {
+bool RawClient::get_token_from_authorization_code(std::string authorization_code, const ServerInfo& server_info) {
   RawClient::path_segments path;
   init_oauth_token_path(path);
 
   RawClient::param_list params;
   params.emplace_back("grant_type", "authorization_code");
-  params.emplace_back("client_id", client_id);
-  params.emplace_back("client_secret", client_secret);
-  params.emplace_back("redirect_uri", redirect_uri);
+  params.emplace_back("client_id", server_info.client_id);
+  params.emplace_back("client_secret", server_info.client_secret);
+  params.emplace_back("redirect_uri", server_info.redirect_uri);
   params.emplace_back("code", authorization_code);
 
   rapidjson::Document response;
-  make_request(response, path, params, POST, false);
+  make_request(response, path, params, server_info, POST, false);
 
-  return save_tokens_from_response(response);
+  return save_tokens_from_response(response, server_info.server_name);
 }
 
-bool RawClient::perform_token_refresh() {
+bool RawClient::perform_token_refresh(const ServerInfo& server_info__) {
   RawClient::path_segments path;
   init_oauth_token_path(path);
 
   RawClient::param_list params;
+
+  std::string refresh_token = all_auth_info.get_refresh_token_from_server(server_info__.server_name);
+
   params.emplace_back("grant_type", "refresh_token");
-  params.emplace_back("client_id", client_id);
-  params.emplace_back("client_secret", client_secret);
+  params.emplace_back("client_id", server_info__.client_id);
+  params.emplace_back("client_secret", server_info__.client_secret);
   params.emplace_back("refresh_token", refresh_token);
 
   rapidjson::Document response;
-  make_request(response, path, params, POST, false);
+  make_request(response, path, params, server_info__, POST, false);
 
-  return save_tokens_from_response(response);
+  return save_tokens_from_response(response, server_info__.server_name);
 }
 
 /* REST Interface wrappers */
@@ -421,8 +425,9 @@ void RawClient::init_regular_path(RawClient::path_segments &path) {
   path.emplace_back("v" + std::to_string(api_version));
 }
 
-void RawClient::init_regular_params(RawClient::param_list &params) {
+void RawClient::init_regular_params(RawClient::param_list &params, const ServerInfo& server_info__) {
   params.clear();
+  std::string access_token = all_auth_info.get_access_token_from_server(server_info__.server_name);
   params.emplace_back("access_token", access_token);
 }
 
@@ -445,7 +450,8 @@ void RawClient::init_device_flow_authorize_path(RawClient::path_segments &path) 
   path.emplace_back("device_flow_authorize");
 }
 
-void RawClient::update_access_token_in_params(RawClient::param_list &params) {
+void RawClient::update_access_token_in_params(RawClient::param_list &params, const ServerInfo& server_info__) {
+  std::string access_token = all_auth_info.get_access_token_from_server(server_info__.server_name);
   for (auto &param : params) {
     if (param.key == "access_token") {
       param.value = access_token;
@@ -473,30 +479,34 @@ RawClient::HttpMethod RawClient::crud_to_http(CrudAction action) {
   return method;
 }
 
-void RawClient::get_user_info(rapidjson::Document &result) {
+void RawClient::get_user_info(rapidjson::Document &result, const ServerInfo& server_info__) {
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("user");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info__);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info__);
 }
 
-void RawClient::get_courses(rapidjson::Document &result) {
+/**
+ * @pre The user has 
+ */
+void RawClient::get_courses(rapidjson::Document &result, const ServerInfo& server_info) {
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   params.emplace_back("state", "current");
-
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_assessments(rapidjson::Document &result, const std::string &course_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
+
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -504,12 +514,13 @@ void RawClient::get_assessments(rapidjson::Document &result, const std::string &
   path.emplace_back("assessments");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_assessment_details(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -518,12 +529,13 @@ void RawClient::get_assessment_details(rapidjson::Document &result, const std::s
   path.emplace_back(asmt_name);
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_problems(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -533,12 +545,13 @@ void RawClient::get_problems(rapidjson::Document &result, const std::string &cou
   path.emplace_back("problems");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::download_handout(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -548,12 +561,13 @@ void RawClient::download_handout(rapidjson::Document &result, std::string downlo
   path.emplace_back("handout");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, GET, true, download_dir, "handout");
+  make_request(result, path, params, server_info, GET, true, download_dir, "handout");
 }
 
 void RawClient::download_writeup(rapidjson::Document &result, std::string download_dir, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -563,12 +577,13 @@ void RawClient::download_writeup(rapidjson::Document &result, std::string downlo
   path.emplace_back("writeup");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, GET, true, download_dir, "writeup");
+  make_request(result, path, params, server_info, GET, true, download_dir, "writeup");
 }
 
 void RawClient::submit_assessment(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, std::string filename) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -578,12 +593,13 @@ void RawClient::submit_assessment(rapidjson::Document &result, const std::string
   path.emplace_back("submit");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params, POST, true, "", "", filename);
+  make_request(result, path, params, server_info, POST, true, "", "", filename);
 }
 
 void RawClient::get_submissions(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -593,12 +609,13 @@ void RawClient::get_submissions(rapidjson::Document &result, const std::string &
   path.emplace_back("submissions");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_feedback(rapidjson::Document &result, const std::string &course_name, const std::string &asmt_name, int sub_version, const std::string &problem_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -610,13 +627,14 @@ void RawClient::get_feedback(rapidjson::Document &result, const std::string &cou
   path.emplace_back("feedback");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   params.emplace_back("problem", problem_name);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::get_enrollments(rapidjson::Document &result, const std::string &course_name) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -624,12 +642,13 @@ void RawClient::get_enrollments(rapidjson::Document &result, const std::string &
   path.emplace_back("course_user_data");
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
 
-  make_request(result, path, params);
+  make_request(result, path, params, server_info);
 }
 
 void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &course_name, std::string email, RawClient::Params &in_params, CrudAction action) {
+  const ServerInfo& server_info = g_all_servers.get_server_from_course(course_name);
   RawClient::path_segments path;
   init_regular_path(path);
   path.emplace_back("courses");
@@ -638,7 +657,7 @@ void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &
   if (action != Create) path.emplace_back(email);
 
   RawClient::param_list params;
-  init_regular_params(params);
+  init_regular_params(params, server_info);
   for (auto &kv : in_params) {
     params.emplace_back(kv.first, kv.second);
   }
@@ -646,7 +665,7 @@ void RawClient::crud_enrollment(rapidjson::Document &result, const std::string &
 
   HttpMethod method = crud_to_http(action);
 
-  make_request(result, path, params, method);
+  make_request(result, path, params, server_info, method);
 }
 
 } /* namespace Autolab */

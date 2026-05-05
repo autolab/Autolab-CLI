@@ -1,5 +1,5 @@
 add_library(autolab
-  json_helpers.cpp utility.cpp client.cpp raw_client.cpp)
+  json_helpers.cpp utility.cpp client.cpp raw_client.cpp multi_server.cpp)
 
 add_dependencies(autolab rapidjson-download)
 

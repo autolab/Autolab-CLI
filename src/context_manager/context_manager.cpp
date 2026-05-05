@@ -1,23 +1,24 @@
 #include "context_manager.h"
 
-#include "../app_credentials.h"
 #include "../file/file_utils.h"
 #include "autolab/autolab.h"
 #include "logger.h"
 #include "../crypto/pseudocrypto.h"
+#include <iostream>
 
 #define TOKEN_CACHE_FILE_MAXSIZE 256
 
+// the token files will be stored as .arcache_<server_name>
 const std::string token_cache_filename = ".arcache";
 const std::string cred_dirname = ".autolab";
 
 std::string token_pair_to_string(std::string at, std::string rt) {
   std::string pre_crypt = at + "\n" + rt;
-  return encrypt_string(pre_crypt, crypto_key, crypto_iv);
+  return encrypt_string(pre_crypt);
 }
 
 bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std::string &rt) {
-  std::string src = decrypt_string(raw_src, raw_len, crypto_key, crypto_iv);
+  std::string src = decrypt_string(raw_src, raw_len);
 
   std::string::size_type split_pos_1 = src.find('\n');
   if (split_pos_1 == std::string::npos) return false;
@@ -30,7 +31,6 @@ bool token_pair_from_string(char *raw_src, size_t raw_len, std::string &at, std:
 
 /* private helpers */
 std::string cred_dir_full_path;
-std::string token_cache_file_full_path;
 
 std::string get_cred_dir_full_path() {
   if (cred_dir_full_path.length() > 0)
@@ -42,13 +42,14 @@ std::string get_cred_dir_full_path() {
   return cred_dir_full_path;
 }
 
-std::string get_token_cache_file_full_path() {
-  if (token_cache_file_full_path.length() > 0)
-    return token_cache_file_full_path;
+std::string get_token_cache_file_full_path(const std::string& server_name) {
+  std::string token_cache_file_full_path;
 
   token_cache_file_full_path.append(get_cred_dir_full_path());
   token_cache_file_full_path.append("/");
   token_cache_file_full_path.append(token_cache_filename);
+  token_cache_file_full_path.append("_");
+  token_cache_file_full_path.append(server_name);
   return token_cache_file_full_path;
 }
 
@@ -63,18 +64,18 @@ bool check_and_create_token_directory() {
   return false;
 }
 
-bool token_cache_file_exists() {
+bool token_cache_file_exists(const std::string& server_name) {
   return dir_find(get_cred_dir_full_path().c_str(),
-                  token_cache_filename.c_str());
+                  (token_cache_filename + "_" + server_name).c_str());
 }
 
 /* interface */
-void store_tokens(std::string at, std::string rt) {
+void store_tokens(std::string at, std::string rt, const std::string& server_name) {
   check_and_create_token_directory();
   try {
       std::string token_pair = token_pair_to_string(at, rt);
 
-      write_file(get_token_cache_file_full_path().c_str(),
+      write_file(get_token_cache_file_full_path(server_name).c_str(),
                  token_pair.c_str(), token_pair.length());
   } catch (Autolab::CryptoException &e) {
     Logger::fatal << "OpenSSL error in store_tokens." << Logger::endl;
@@ -86,12 +87,12 @@ void store_tokens(std::string at, std::string rt) {
 
 // returns true if got token, false if failed to get token.
 // Failure likely because token cache file doesn't exist.
-bool load_tokens(std::string &at, std::string &rt) {
+bool load_tokens(std::string &at, std::string &rt, const std::string& server_name) {
   if (!check_and_create_token_directory()) return false;
-  if (!token_cache_file_exists()) return false;
+  if (!token_cache_file_exists(server_name)) return false;
 
   char raw_result[TOKEN_CACHE_FILE_MAXSIZE];
-  size_t num_read = read_file(get_token_cache_file_full_path().c_str(),
+  size_t num_read = read_file(get_token_cache_file_full_path(server_name).c_str(),
             raw_result, TOKEN_CACHE_FILE_MAXSIZE);
   LogDebug("read size " << num_read << "\n");
 
@@ -101,7 +102,7 @@ bool load_tokens(std::string &at, std::string &rt) {
     LogDebug("OpenSSL error in load_tokens." << Logger::endl);
     LogDebug(e.what() << Logger::endl);
     LogDebug("Removing token cache file." << Logger::endl);
-    remove(get_token_cache_file_full_path().c_str());
+    remove(get_token_cache_file_full_path(server_name).c_str());
     return false;
   }
   LogDebug("[ContextManager] tokens loaded" << Logger::endl);

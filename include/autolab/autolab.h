@@ -121,6 +121,12 @@ struct EnrollmentOption {
 
 /* exceptions */
 
+class InvalidInputException: public std::exception {
+  const char * what() const noexcept override {
+    return "Invalid input from user.";
+  }
+};
+
 // Indicates an error that occurred in HTTP operations.
 class HttpException: public std::exception {
 private:
