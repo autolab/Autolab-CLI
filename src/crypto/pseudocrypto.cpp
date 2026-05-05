@@ -1,5 +1,4 @@
 #include "pseudocrypto.h"
-#include "secrets.h"
 
 #include <cstring>
 
@@ -12,6 +11,8 @@
 #include "logger.h"
 
 #define MAX_CIPHERTEXT_LEN 256
+#define CRYPTO_KEY ((unsigned char*) RANDSTR32)
+#define CRYPTO_IV ((unsigned char*) RANDSTR16)
 
 void raise_crypto_error() {
   throw Autolab::CryptoException(ERR_error_string(ERR_get_error(), nullptr));

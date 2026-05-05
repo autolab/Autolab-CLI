@@ -10,5 +10,4 @@ CTestTestfile.cmake
 build
 
 lib/all_servers_dirname.h
-src/crypto/secrets.h
 .vscode
